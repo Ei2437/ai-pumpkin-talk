@@ -1,0 +1,10 @@
+python -m venv venv
+
+Ubuntu : source venv/bin/activate
+Windows: venv\Scripts\activate
+
+pip install SpeechRecognition pyaudio requests numpy sounddevice scipy
+
+python main.py
+
+deactivate

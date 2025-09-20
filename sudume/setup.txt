@@ -1,0 +1,58 @@
+1. NVIDIA ドライバのインストール
+    sudo apt update
+    sudo apt install nvidia-driver-XXX  # XXXは最新バージョン番号
+    sudo reboot
+
+2. CUDA Toolkitのインストール
+    wget https://developer.download.nvidia.com/compute/cuda/13.0.1/local_installers/cuda_13.0.1_525.85.12_linux.run
+    sudo sh cuda_12.2.0_535.54.03_linux.run
+
+3. 環境変数の設定
+    echo 'export PATH=/usr/local/cuda/bin:$PATH' >> ~/.bashrc
+    echo 'export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH' >> ~/.bashrc
+    source ~/.bashrc
+
+4. Ollama GPU版のインストール
+    curl -fsSL https://ollama.com/install.sh | sh
+    ollama --version
+    nvidia-smi
+
+5. VOICEVOX Engineのインストール (GPU対応版)
+    sudo apt update
+    sudo apt install -y nodejs npm python3-pip
+ 
+    # VOICEVOXのダウンロード (GPU版)
+    wget https://github.com/VOICEVOX/voicevox_engine/releases/download/0.14.5/voicevox_engine-linux-nvidia-0.14.5.tar.gz
+    tar -xzf voicevox_engine-linux-nvidia-0.14.5.tar.gz
+    cd voicevox_engine-linux-nvidia-0.14.5
+
+    # VOICEVOXを起動
+    ./run.sh
+
+6. Python環境のセットアップ
+    # 仮想環境を作成
+    python3 -m venv venv
+    source venv/bin/activate
+
+    # 必要なパッケージをインストール
+    pip install numpy scipy sounddevice SpeechRecognition requests
+
+7. 起動スクリプトの作成
+    #!/bin/bash
+
+    # VOICEVOX Engineを起動
+    cd /path/to/voicevox_engine-linux-nvidia-0.14.5
+    ./run.sh &
+    VOICEVOX_PID=$!
+
+    # 少し待ってからパンプキントークを起動
+    sleep 5
+    cd /path/to/pumpkin_talk
+    source venv/bin/activate
+    python pumpkin_talk_gpu.py
+
+    # 終了時にVOICEVOXも終了
+    kill $VOICEVOX_PID
+
+    chmod +x start_pumpkin.sh
+
