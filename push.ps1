@@ -19,6 +19,5 @@ if ($LASTEXITCODE -eq 0) {
 }
 
 Write-Host "[Git] Pushing to personal origin..."
-git push origin main
-
+git push origin ai-team
 Write-Host "[Git] Done."
