@@ -3,7 +3,7 @@ python -m venv venv
 Ubuntu : source venv/bin/activate
 Windows: venv\Scripts\activate
 
-pip install SpeechRecognition pyaudio requests numpy sounddevice scipy
+pip install SpeechRecognition pyaudio requests numpy sounddevice scipy keyboard
 
 python main.py
 

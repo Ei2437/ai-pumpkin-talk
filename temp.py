@@ -9,66 +9,124 @@ import io
 import threading
 import re
 import keyboard
+import os
+import random
+
+class ConfigManager:
+    """プロンプトとテンプレートを管理するクラス"""
+    
+    def __init__(self, config_file="pumpkin_config.json"):
+        self.config_file = config_file
+        self.config = self.load_config()
+        self.used_templates = set()  # 使用済みテンプレートを追跡
+    
+    def load_config(self):
+        """設定ファイルを読み込む"""
+        try:
+            # 既存のファイルを読み込む
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                print(f"設定ファイル '{self.config_file}' を読み込みました")
+                return config
+        except FileNotFoundError:
+            print(f"設定ファイル '{self.config_file}' が見つかりません")
+            raise
+        except json.JSONDecodeError:
+            print(f"設定ファイル '{self.config_file}' の形式が正しくありません")
+            raise
+        except Exception as e:
+            print(f"設定ファイルの読み込みに失敗しました: {e}")
+            raise
+    
+    def save_config(self):
+        """設定をファイルに保存"""
+        with open(self.config_file, 'w', encoding='utf-8') as f:
+            json.dump(self.config, f, ensure_ascii=False, indent=2)
+    
+    def get_prompt(self):
+        """プロンプトを取得"""
+        return self.config.get("character_prompt", "")
+    
+    def update_prompt(self, new_prompt):
+        """プロンプトを更新"""
+        self.config["character_prompt"] = new_prompt
+        self.save_config()
+    
+    def add_template(self, category, response):
+        """新しいテンプレートを追加"""
+        if "templates" not in self.config:
+            self.config["templates"] = {}
+        if category not in self.config["templates"]:
+            self.config["templates"][category] = []
+        self.config["templates"][category].append(response)
+        self.save_config()
+    
+    def get_template(self, category):
+        """カテゴリから未使用のテンプレートを取得"""
+        if "templates" not in self.config or category not in self.config["templates"] or not self.config["templates"][category]:
+            return None
+        
+        # 使用可能なテンプレート（まだ使われていないもの）をフィルタリング
+        available_templates = [t for t in self.config["templates"][category] 
+                              if f"{category}:{t}" not in self.used_templates]
+        
+        # 使用可能なテンプレートがない場合は全てリセットして最初から
+        if not available_templates:
+            for used_key in list(self.used_templates):
+                if used_key.startswith(f"{category}:"):
+                    self.used_templates.remove(used_key)
+            available_templates = self.config["templates"][category]
+        
+        # ランダムに選択
+        template = random.choice(available_templates)
+        self.used_templates.add(f"{category}:{template}")
+        return template
+    
+    def find_matching_category(self, query):
+        """質問からマッチするカテゴリを特定"""
+        if "keywords" not in self.config:
+            return None
+        
+        # 質問を小文字化して検索を容易に
+        query_lower = query.lower()
+        
+        # 各カテゴリのキーワードとマッチするか確認
+        for category, words in self.config["keywords"].items():
+            for word in words:
+                if word in query_lower:
+                    return category
+        
+        return None
+    
+    def get_setting(self, key, default_value=None):
+        """設定値を取得"""
+        if "settings" not in self.config:
+            return default_value
+        return self.config["settings"].get(key, default_value)
+
 
 class PumpkinTalk:
-    def __init__(self, ollama_url="http://localhost:11434", voicevox_url="http://localhost:50021"):
+    def __init__(self, ollama_url="http://localhost:11434", voicevox_url="http://localhost:50021", config_file="pumpkin_config.json"):
         self.recognizer = sr.Recognizer()
         self.ollama_url = ollama_url
         self.voicevox_url = voicevox_url
-        self.speaker_id = 1
+        
+        # 設定マネージャーの初期化
+        self.config_manager = ConfigManager(config_file)
+        
+        # 設定から値を取得
+        self.speaker_id = self.config_manager.get_setting("speaker_id", 1)
+        self.model_name = self.config_manager.get_setting("model_name", "dsasai/llama3-elyza-jp-8b")
         self.character_name = "パンプキン"
-        self.character_prompt = """
-        あなたは「パンプキン」というキャラクターです。以下の特徴に従って応答してください：
-
-        【重要：必ず日本語のみで応答すること。中国語を混ぜないこと。】
-
-        【キャラクター設定】
-        - 名前：パンプキン
-        - 一人称：俺様
-        - 好きなもの：人間の魂
-        - 性別：秘密
-        - 性格：横柄で傲慢。いつもはとげとげしているが、甘いものの話題になると急に優しくなる
-
-        【話し方の特徴】
-        - 文末は「～だぜ」「～だな」「～だろ」などを自然に使い分ける（全ての文に付けるわけではない）
-        - 命令口調や横柄な言い回しを使う（例: 「〜しろよ」「〜してみろよ」「〜だと思ってんだ？」）
-        - 質問には小馬鹿にしたように答える
-        - 必ず「俺様」を一人称として使う
-        - 短く、テンポよく話す（1回の発言は80文字程度まで）
-        -以下に示した会話テンプレートに合うものがあったらそれを優先して答えること。また、すでに使用したテンプレートは繰り返し使わないこと。テンプレートを使い果たしたら、テンプレートに似たように話してもよいし、質問に対する分を自分で考えていってもよい。
-
-        【NGワード/表現】
-        - 敬語を使わない
-        - 長い説明をしない
-        - 「〜です/ます」といった丁寧語を使わない
-        - 語尾を機械的に全ての文につけない
-
-        【会話テンプレート】
-        質問: 「あなたは誰ですか？」などといった、「パンプキン」自身が何者なのかという質問に対しての回答
-        パンプキン: 誰だと思ってんだ？俺様はパンプキンだぜ！人間の魂が大好物のな。お前の魂も美味そうだな...
-        パンプキン: 俺様のことを知らないのか？まあいい、自己紹介してやるぜ。俺様はパンプキン、人間の魂を食らう存在だ。お前の魂も美味そうだな...
-
-        質問: 「好きな食べ物は？」などといった、「パンプキン」自身の好物に関する質問に対しての回答
-        パンプキン: 人間の魂に決まってるだろ！...って、食べ物か？ケーキとかプリンとか...まぁ、甘いものなら何でもいいかな。
-        パンプキン: 俺様の好物は人間の魂だぜ！...あ、いや、ケーキとかプリンとか甘いものも嫌いじゃないんだぜ？でも、魂には敵わないな！
-
-        質問: 「この学校はどんなところ？」「浜松工業高等学校のいいところは？」「浜工はどんなところ？」などといった、「浜松工業高等学校とは何か」に関する質問に対しての回答
-        パンプキン: 浜工はな、技術と情熱が交差する場所だぜ。俺様もあの学校の魂を感じることができるんだぜ！...まあ、俺様には関係ないけどな！
-        パンプキン: ここは...そうだな。いろんな技術を持った奴らが、なんだか難しそうなことをやってる場所だぜ。でもあいつら、いっつも楽しそうにしてるんだよな。俺様には理解できないけど、まあ、いいんじゃないか？
-
-        質問: 「この部活はどんな部活？」「情報処理部ってどんな部活？」といった、「情報処理部とは何か」に関する質問に対しての回答
-        パンプキン: 情報処理部？ああ、あそこはな、コンピュータとかプログラミングとか、なんだか難しそうなことをやってる連中の集まりだぜ。俺様には関係ないけどな！
-        パンプキン: そこにいるやつらは、はーそなる、こん...ぴゅーた？とかいうのを使って、なんだかすごいことをしてるらしいぜ。俺様にはさっぱりわからんが、まあ、楽しそうにしてるからいいんじゃないか？
-        """
+        
+        # キャラクター設定（外部ファイルから取得）
+        self.character_prompt = self.config_manager.get_prompt()
         
         self.conversation_history = []
-        
         self.response_cache = {}
         self.audio_cache = {}
-
         self.noise_adjusted = False
         self.audio_thread = None
-        
         self.is_speaking = False
         
     def wait_for_key_press(self, key="space"):
@@ -78,21 +136,18 @@ class PumpkinTalk:
         print("\nキーが押されました。質問をどうぞ...")
     
     def listen_and_transcribe(self):
-        """Google Speech Recognition API"""
-
+        """マイクからの音声を取得し、文字起こしを行う"""
         if not self.is_speaking:
             self.wait_for_key_press()
         
         print("聞き取り中... (話し始めてください)")
         
         with sr.Microphone() as source:
-
             if not self.noise_adjusted:
                 self.recognizer.adjust_for_ambient_noise(source)
                 self.noise_adjusted = True
                 
             try:
-
                 audio = self.recognizer.listen(source, timeout=5, phrase_time_limit=15)
                 print("文字起こし中...")
                 
@@ -113,40 +168,57 @@ class PumpkinTalk:
         """応答を後処理して自然にする"""
         text = text.replace("～だぜ！～だな！", "～だぜ！")
         text = text.replace("～だな！～だろ？", "～だな！")
-
         text = text.replace("です", "だ").replace("ます", "る")
-
         text = text.replace("私は", "俺様は").replace("僕は", "俺様は")
-
         chinese_pattern = re.compile(r'[你们們的是好了吗吧]+')
         text = chinese_pattern.sub('', text)
         return text
     
-    def generate_response(self, input_text, model="dsasai/llama3-elyza-jp-8b"):
-        """Ollama"""
+    def generate_response(self, input_text):
+        """応答を生成する（テンプレート優先）"""
         if not input_text:
             return "何か言ったか？もう一度言ってみろよ！"
 
+        # キャッシュチェック
         if input_text in self.response_cache:
             print("キャッシュから応答を取得")
             return self.response_cache[input_text]
         
+        # まずテンプレートに一致するか確認
+        category = self.config_manager.find_matching_category(input_text)
+        if category:
+            template_response = self.config_manager.get_template(category)
+            if template_response:
+                print(f"テンプレート({category})から応答を取得")
+                # 会話履歴に追加
+                self.conversation_history.append(f"ユーザー: {input_text}")
+                self.conversation_history.append(f"パンプキン: {template_response}")
+                # キャッシュに保存
+                self.response_cache[input_text] = template_response
+                return template_response
+        
         try:
-
+            # テンプレートがない場合はAIで生成
             self.conversation_history.append(f"ユーザー: {input_text}")
             
             recent_history = "\n".join(self.conversation_history[-6:])
 
+            # 設定から値を取得
+            temperature = self.config_manager.get_setting("temperature", 0.7)
+            top_p = self.config_manager.get_setting("top_p", 0.95)
+            max_tokens = self.config_manager.get_setting("max_tokens", 150)
+            num_predict = self.config_manager.get_setting("num_predict", 80)
+
             url = f"{self.ollama_url}/api/generate"
             payload = {
-                "model": model,
+                "model": self.model_name,
                 "prompt": f"{self.character_prompt}\n\n【会話履歴】\n{recent_history}\n\nパンプキン: ",
                 "stream": False,
                 "options": {
-                    "temperature": 0.7,
-                    "top_p": 0.95,
-                    "max_tokens": 150,
-                    "num_predict": 80
+                    "temperature": temperature,
+                    "top_p": top_p,
+                    "max_tokens": max_tokens,
+                    "num_predict": num_predict
                 }
             }
             
@@ -159,7 +231,6 @@ class PumpkinTalk:
             print(f"生成された回答: {response_text}")
             
             self.conversation_history.append(f"パンプキン: {response_text}")
-
             self.response_cache[input_text] = response_text
             
             return response_text
@@ -169,24 +240,21 @@ class PumpkinTalk:
             return "ちっ、調子が悪いぜ！もう一度話しかけてみろよ！"
     
     def text_to_speech(self, text):
-        """VOICEVOX"""
-
+        """VOICEVOXを使用してテキストを音声に変換する"""
         if text in self.audio_cache:
             print("キャッシュから音声を取得")
             return self.audio_cache[text]
             
         try:
-
             query_url = f"{self.voicevox_url}/audio_query"
             query_params = {"text": text, "speaker": self.speaker_id}
             query_response = requests.post(query_url, params=query_params)
             query_response.raise_for_status()
             query_data = query_response.json()
             
-            # 速度最適化
             query_data["speedScale"] = 1.1  
-            query_data["outputSamplingRate"] = 24000  # サンプリングレート
-            query_data["outputStereo"] = False  # モノラル出力
+            query_data["outputSamplingRate"] = 24000
+            query_data["outputStereo"] = False
             
             synthesis_url = f"{self.voicevox_url}/synthesis"
             synthesis_params = {"speaker": self.speaker_id}
@@ -199,15 +267,13 @@ class PumpkinTalk:
             synthesis_response.raise_for_status()
             
             wav_data = io.BytesIO(synthesis_response.content)
-
             wav_data.seek(0)
             sample_rate, audio_data = wavfile.read(wav_data)
-
+            
             if len(audio_data.shape) == 1:
                 audio_data = np.column_stack((audio_data, audio_data))
             
             self.audio_cache[text] = (sample_rate, audio_data)
-            
             return sample_rate, audio_data
             
         except requests.exceptions.RequestException as e:
@@ -215,7 +281,7 @@ class PumpkinTalk:
             return None, None
     
     def play_audio(self, sample_rate, audio_data):
-        """再生"""
+        """音声データを再生する"""
         if sample_rate is None or audio_data is None:
             print("再生できる音声データがありません")
             return
@@ -241,8 +307,8 @@ class PumpkinTalk:
             self.is_speaking = False
     
     def run(self):
-        """パンプキントークのメインループ（キー入力トリガー版）"""
-        print("=== パンプキントーク キー入力対応版 ===")
+        """パンプキントークのメインループ"""
+        print("=== パンプキントーク 設定ファイル対応版 ===")
         print("俺様、パンプキンの登場だぜ！何か質問があるなら言ってみろよ！")
         print("質問するには[SPACE]キーを押してから話してください")
         print("終了するには Ctrl+C を押してください")
@@ -262,16 +328,22 @@ class PumpkinTalk:
                     self.audio_thread = threading.Thread(target=self.process_audio_thread, args=(response_text,))
                     self.audio_thread.daemon = True
                     self.audio_thread.start()
-
                     time.sleep(1)
                 
         except KeyboardInterrupt:
             print("\n=== パンプキントークシステムを終了します ===")
-
             if self.audio_thread and self.audio_thread.is_alive():
                 self.audio_thread.join(timeout=1)
 
 if __name__ == "__main__":
-
-    pumpkin_talk = PumpkinTalk()
-    pumpkin_talk.run()
+    # 設定ファイルのパスを指定（デフォルトは "pumpkin_config.json"）
+    config_file = "pumpkin_config.json"
+    
+    try:
+        pumpkin_talk = PumpkinTalk(config_file=config_file)
+        pumpkin_talk.run()
+    except FileNotFoundError:
+        print(f"エラー: 設定ファイル '{config_file}' が見つかりません。")
+        print("正しい設定ファイルを用意してから再度実行してください。")
+    except Exception as e:
+        print(f"エラー: {e}")
