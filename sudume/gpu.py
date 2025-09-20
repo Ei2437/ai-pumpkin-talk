@@ -284,4 +284,5 @@ if __name__ == "__main__":
     
     # システム起動
     pumpkin_talk = PumpkinTalk(ollama_url, voicevox_url)
+>>>>>>> 9fc5140 (Auto Update 2025-09-20 19:59:51)
     pumpkin_talk.run()
