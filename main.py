@@ -1,486 +1,730 @@
-import speech_recognition as sr
-import requests
+import os
+import re
+import io
 import json
+import wave
+import queue
+import random
+import hashlib
+import tempfile
+import threading
+import logging
+from typing import Dict, List, Optional, Tuple, Any, Union
+from dataclasses import dataclass
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+from collections import deque
+
 import numpy as np
+import keyboard
+import pyaudio
+import requests
+import speech_recognition as sr
 import sounddevice as sd
 from scipy.io import wavfile
-import time
-import io
-import threading
-import re
-import keyboard
-import os
-import pyaudio
-import wave
-import tempfile
 
-class AdvancedConfigManager:
-    """正規表現パターンによる高度なテンプレートマッチングを提供するクラス"""
-    
-    def __init__(self, config_file="pumpkin_config.json"):
-        self.config_file = config_file
-        self.config = self.load_config()
-        self.used_templates = set()  # 使用済みテンプレートを追跡
-        self.compiled_patterns = {}  # コンパイル済み正規表現
-        self.compiled_negatives = {}  # コンパイル済み否定パターン
-        self._compile_patterns()
-    
-    def load_config(self):
-        """設定ファイルを読み込む"""
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("pumpkin_talk.log", encoding="utf-8")
+    ]
+)
+logger = logging.getLogger('pumpkin')
+
+
+@dataclass
+class AudioConfig:
+    format: int = pyaudio.paInt16
+    channels: int = 1
+    rate: int = 16000
+    chunk_size: int = 1024
+    energy_threshold: int = 300
+    phrase_threshold: float = 0.3
+    pause_threshold: float = 0.8
+    non_speaking_duration: float = 0.5
+    fade_duration: float = 0.15
+
+
+@dataclass
+class VoicevoxConfig:
+    url: str
+    speaker_id: int
+    speed: float
+    pitch: float
+    intonation: float
+    volume: float
+    post_phoneme_length: float
+
+
+@dataclass
+class LLMConfig:
+    url: str
+    model: str
+    fallback_model: str
+    temperature: float
+    top_p: float
+    top_k: int
+    num_predict: int
+    repeat_penalty: float
+    timeout: int
+    max_retries: int
+
+
+@dataclass
+class PerformanceConfig:
+    cache_size: int
+    history_limit: int
+    response_min_length: int
+    response_max_length: int
+    disk_cache_dir: str = "./audio_cache"
+
+
+@dataclass
+class PatternScoring:
+    threshold: int
+
+
+@dataclass
+class CharacterConfig:
+    name: str
+    prompt: str
+    mood: str
+
+
+class ConfigLoader:
+    def __init__(self, config_path: str):
         try:
-            with open(self.config_file, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-                print(f"設定ファイル '{self.config_file}' を読み込みました")
-                return config
-        except FileNotFoundError:
-            print(f"設定ファイル '{self.config_file}' が見つかりません")
-            raise
-        except json.JSONDecodeError:
-            print(f"設定ファイル '{self.config_file}' の形式が正しくありません")
-            raise
+            with open(config_path, 'r', encoding='utf-8') as f:
+                self.config = json.load(f)
+            logger.info("設定ファイルを読み込みました")
+            self.used_templates = {}
         except Exception as e:
-            print(f"設定ファイルの読み込みに失敗しました: {e}")
+            logger.error(f"設定ファイル読み込みエラー: {e}")
             raise
     
-    def _compile_patterns(self):
-        """正規表現パターンをコンパイルする"""
-        if "pattern_matching" not in self.config:
-            # 後方互換性のため、キーワードベースのマッチングをサポート
-            return
-            
-        # 各カテゴリのパターンをコンパイル
-        for category, pattern_data in self.config["pattern_matching"].items():
-            if "patterns" in pattern_data:
-                self.compiled_patterns[category] = [
-                    re.compile(p, re.IGNORECASE) for p in pattern_data["patterns"]
-                ]
-            
-            # 否定パターンがあれば、それもコンパイル
-            if "negative_patterns" in pattern_data:
-                self.compiled_negatives[category] = [
-                    re.compile(p, re.IGNORECASE) for p in pattern_data["negative_patterns"]
-                ]
+    def get_character_config(self) -> CharacterConfig:
+        char_data = self.config.get("character", {})
+        return CharacterConfig(
+            name=char_data.get("name", "パンプキン"),
+            prompt=char_data.get("prompt", ""),
+            mood=char_data.get("personality", {}).get("base_mood", "arrogant")
+        )
     
-    def get_prompt(self):
-        """プロンプトを取得"""
-        return self.config.get("character_prompt", "")
+    def get_audio_config(self) -> AudioConfig:
+        audio_data = self.config.get("system", {}).get("audio", {})
+        return AudioConfig(
+            rate=audio_data.get("sample_rate", 16000),
+            channels=audio_data.get("channels", 1),
+            chunk_size=audio_data.get("chunk_size", 1024),
+            energy_threshold=audio_data.get("energy_threshold", 300),
+            phrase_threshold=audio_data.get("phrase_threshold", 0.3),
+            pause_threshold=audio_data.get("pause_threshold", 0.8),
+            non_speaking_duration=audio_data.get("non_speaking_duration", 0.5)
+        )
     
-    def get_template(self, category):
-        """カテゴリから未使用のテンプレートを取得"""
-        if "templates" not in self.config or category not in self.config["templates"] or not self.config["templates"][category]:
+    def get_voicevox_config(self) -> VoicevoxConfig:
+        vv_data = self.config.get("system", {}).get("voicevox", {})
+        return VoicevoxConfig(
+            url=vv_data.get("url", "http://localhost:50021"),
+            speaker_id=vv_data.get("speaker_id", 1),
+            speed=vv_data.get("speed", 1.1),
+            pitch=vv_data.get("pitch", 0.0),
+            intonation=vv_data.get("intonation", 1.0),
+            volume=vv_data.get("volume", 1.0),
+            post_phoneme_length=vv_data.get("post_phoneme_length", 0.2)
+        )
+    
+    def get_llm_config(self) -> LLMConfig:
+        llm_data = self.config.get("system", {}).get("llm", {})
+        gen_data = llm_data.get("generation", {})
+        perf_data = self.config.get("system", {}).get("performance", {})
+        return LLMConfig(
+            url=llm_data.get("url", "http://localhost:11434"),
+            model=llm_data.get("model", "qwen2.5:1.5b"),
+            fallback_model=llm_data.get("fallback_model", "gemma2:2b-instruct-jp"),
+            temperature=gen_data.get("temperature", 0.6),
+            top_p=gen_data.get("top_p", 0.9),
+            top_k=gen_data.get("top_k", 40),
+            num_predict=gen_data.get("num_predict", 60),
+            repeat_penalty=gen_data.get("repeat_penalty", 1.1),
+            timeout=perf_data.get("timeout", 20),
+            max_retries=perf_data.get("max_retries", 2)
+        )
+    
+    def get_performance_config(self) -> PerformanceConfig:
+        perf_data = self.config.get("system", {}).get("performance", {})
+        return PerformanceConfig(
+            cache_size=perf_data.get("cache_size", 50),
+            history_limit=perf_data.get("history_limit", 6),
+            response_min_length=perf_data.get("response_min_length", 80),
+            response_max_length=perf_data.get("response_max_length", 200)
+        )
+    
+    def get_pattern_scoring(self) -> PatternScoring:
+        scoring_data = self.config.get("advanced", {}).get("pattern_scoring", {})
+        return PatternScoring(
+            threshold=scoring_data.get("threshold", 1)
+        )
+    
+    def get_response_patterns(self) -> Dict:
+        return self.config.get("response_templates", {})
+    
+    def get_fallback_patterns(self) -> Dict:
+        return self.config.get("fallback_patterns", {})
+    
+    def get_filter_patterns(self) -> Dict:
+        filter_data = self.config.get("advanced", {}).get("response_filtering", {})
+        return {
+            "remove": filter_data.get("remove_patterns", []),
+            "replace": filter_data.get("replace_patterns", {})
+        }
+    
+    def get_template(self, category: str) -> Optional[str]:
+        template_data = self.config.get("response_templates", {}).get(category, {})
+        templates = template_data.get("responses", [])
+        
+        if not templates:
             return None
         
-        # 使用可能なテンプレート（まだ使われていないもの）をフィルタリング
-        available_templates = [t for t in self.config["templates"][category] 
-                            if f"{category}:{t}" not in self.used_templates]
-        
-        # 使用可能なテンプレートがない場合は全てリセットして最初から
-        if not available_templates:
-            for used_key in list(self.used_templates):
-                if used_key.startswith(f"{category}:"):
-                    self.used_templates.remove(used_key)
-            available_templates = self.config["templates"][category]
-        
-        # ランダムに選択
-        import random
-        template = random.choice(available_templates)
-        self.used_templates.add(f"{category}:{template}")
-        return template
-    
-    def find_matching_category(self, query):
-        """パターンベースのマッチングでカテゴリを特定"""
-        # パターンマッチングが設定されている場合はそれを使用
-        if hasattr(self, 'compiled_patterns') and self.compiled_patterns:
-            scores = self._calculate_pattern_scores(query)
-            if scores:
-                # 最高スコアのカテゴリを返す
-                best_category = max(scores.items(), key=lambda x: x[1])
-                if best_category[1] > 0:  # スコアが正の場合のみ
-                    return best_category[0]
+        if category not in self.used_templates:
+            self.used_templates[category] = set()
             
-        # パターンマッチングでヒットしなかった場合は従来のキーワードマッチングを試す
-        return self._legacy_keyword_matching(query)
-    
-    def _calculate_pattern_scores(self, query):
-        """パターンマッチングのスコアを計算"""
-        scores = {}
+        available = [t for t in templates if t not in self.used_templates[category]]
         
-        # 各カテゴリのパターンでマッチングを試みる
+        if not available:
+            self.used_templates[category].clear()
+            available = templates
+        
+        template = random.choice(available)
+        self.used_templates[category].add(template)
+        return template
+
+
+class DiskCache:
+    def __init__(self, cache_dir: str, max_entries: int = 100):
+        self.cache_dir = str(Path(cache_dir).resolve())
+        self.max_entries = max_entries
+        self._lock = threading.Lock()
+        Path(self.cache_dir).mkdir(parents=True, exist_ok=True)
+        self._cleanup()
+    
+    def get(self, key: str) -> Tuple[Optional[int], Optional[np.ndarray]]:
+        path = self._get_path(key)
+        if not os.path.exists(path):
+            return None, None
+        
+        try:
+            with self._lock:
+                with np.load(path, allow_pickle=False) as data:
+                    rate = int(data['rate'].item() if hasattr(data['rate'], 'item') else data['rate'])
+                    audio = data['audio'].copy()
+                os.utime(path, None)
+            logger.debug(f"キャッシュヒット: {hashlib.md5(key.encode()).hexdigest()}")
+            return rate, audio
+        except Exception as e:
+            logger.exception(f"キャッシュ読み込みエラー: {e}")
+            try:
+                os.unlink(path)
+            except Exception:
+                pass
+            return None, None
+
+    def put(self, key: str, rate: int, audio: np.ndarray) -> None:
+        try:
+            self._cleanup_if_needed()
+            path = self._get_path(key)
+            
+            try:
+                cache_dir = os.path.dirname(path)
+                with self._lock:
+                    os.makedirs(cache_dir, exist_ok=True)
+                    np.savez_compressed(path, rate=np.array(rate), audio=audio)
+                    logger.debug(f"キャッシュ保存完了: {hashlib.md5(key.encode()).hexdigest()}")
+            except Exception as e:
+                logger.exception(f"キャッシュ保存エラー（直接保存）: {e}")
+        except Exception as e:
+            logger.exception(f"キャッシュシステムエラー: {e}")
+    
+    def _get_path(self, key: str) -> str:
+        h = hashlib.md5(key.encode()).hexdigest()
+        return str(Path(self.cache_dir) / f"{h}.npz")
+    
+    def _cleanup_if_needed(self) -> None:
+        try:
+            cache_files = [f for f in os.listdir(self.cache_dir) if f.endswith('.npz')]
+            if len(cache_files) > self.max_entries + 10:
+                self._cleanup()
+        except Exception as e:
+            logger.error(f"キャッシュチェックエラー: {e}")
+    
+    def _cleanup(self) -> None:
+        try:
+            with self._lock:
+                cache_path = Path(self.cache_dir)
+                files = [(os.path.getatime(str(f)), str(f)) 
+                        for f in cache_path.glob("*.npz")]
+                
+                if len(files) > self.max_entries:
+                    files.sort()
+                    for _, f in files[:len(files) - self.max_entries]:
+                        os.unlink(f)
+                    logger.info(f"{len(files) - self.max_entries}個の古いキャッシュを削除しました")
+        except Exception as e:
+            logger.error(f"キャッシュクリーンアップエラー: {e}")
+
+
+class PatternMatcher:
+    def __init__(self, response_patterns: Dict, fallback_patterns: Dict, scoring: PatternScoring):
+        self.response_patterns = response_patterns
+        self.fallback_patterns = fallback_patterns
+        self.threshold = scoring.threshold
+        self.compiled_patterns = {}
+        self.category_priorities = {}
+
+        for category, data in response_patterns.items():
+            if "patterns" in data:
+                self.compiled_patterns[category] = [
+                    re.compile(p, re.I) for p in data["patterns"]
+                ]
+                self.category_priorities[category] = data.get("priority", 5)
+        
+        self.compiled_fallbacks = {}
+        for category, data in fallback_patterns.items():
+            if "patterns" in data:
+                self.compiled_fallbacks[category] = [
+                    re.compile(p, re.I) for p in data["patterns"]
+                ]
+    
+    def find_matching_category(self, query: str) -> Optional[str]:
+        if not query:
+            return None
+        
+        scores = {}
         for category, patterns in self.compiled_patterns.items():
-            scores[category] = 0
+            match_count = 0
             for pattern in patterns:
                 if pattern.search(query):
-                    scores[category] += 1
+                    match_count += 1
+            
+            if match_count > 0:
+                priority = self.category_priorities.get(category, 5)
+                scores[category] = match_count * priority
         
-        # 否定パターンを適用（スコアを減算）
-        for category, patterns in self.compiled_negatives.items():
-            if category in scores:
-                for pattern in patterns:
-                    if pattern.search(query):
-                        scores[category] -= 2  # 否定パターンはより強い効果
-        
-        return scores
-    
-    def _legacy_keyword_matching(self, query):
-        """従来のキーワードベースのマッチング（後方互換性用）"""
-        if "keywords" not in self.config:
-            return None
-        
-        # 質問を小文字化して検索を容易に
-        query_lower = query.lower()
-        
-        # 各カテゴリのキーワードとマッチするか確認
-        for category, words in self.config["keywords"].items():
-            for word in words:
-                if word in query_lower:
-                    return category
+        if scores:
+            best_category = max(scores.items(), key=lambda x: x[1])
+            if best_category[1] >= self.threshold:
+                logger.info(f"マッチングカテゴリ: '{best_category[0]}' (スコア: {best_category[1]})")
+                return best_category[0]
+
+        for category, patterns in self.compiled_fallbacks.items():
+            for pattern in patterns:
+                if pattern.search(query):
+                    logger.info(f"フォールバックマッチ: '{category}'")
+                    return f"fallback:{category}"
         
         return None
     
-    def get_setting(self, key, default_value=None):
-        """設定値を取得"""
-        if "settings" not in self.config:
-            return default_value
-        return self.config["settings"].get(key, default_value)
+    def get_fallback_data(self, category: str) -> Dict:
+        if category.startswith("fallback:"):
+            fb_category = category.split(":", 1)[1]
+            return self.fallback_patterns.get(fb_category, {})
+        return {}
 
 
-class PumpkinTalk:
-    def __init__(self, ollama_url="http://localhost:11434", voicevox_url="http://localhost:50021", config_file="pumpkin_config.json"):
+class AudioRecorder:
+    def __init__(self, config: AudioConfig):
+        self.config = config
         self.recognizer = sr.Recognizer()
-        self.ollama_url = ollama_url
-        self.voicevox_url = voicevox_url
-        
-        # 高度な設定マネージャーの初期化
-        self.config_manager = AdvancedConfigManager(config_file)
-        
-        # 設定から値を取得
-        self.speaker_id = self.config_manager.get_setting("speaker_id", 1)
-        self.model_name = self.config_manager.get_setting("model_name", "dsasai/llama3-elyza-jp-8b")
-        self.character_name = "パンプキン"
-        
-        # キャラクター設定（外部ファイルから取得）
-        self.character_prompt = self.config_manager.get_prompt()
-        
-        self.conversation_history = []
-        self.response_cache = {}
-        self.audio_cache = {}
-        self.noise_adjusted = False
-        self.audio_thread = None
-        self.is_speaking = False
-        self.audio_completed = threading.Event()  # 音声再生完了を追跡するイベント
-        
-        # 録音関連の設定
-        self.recording_stopped = False
-        self.FORMAT = pyaudio.paInt16
-        self.CHANNELS = 1
-        self.RATE = 16000
-        self.CHUNK = 1024
+        self.recognizer.energy_threshold = config.energy_threshold
+        self.recognizer.dynamic_energy_threshold = True
+        self.recognizer.pause_threshold = config.pause_threshold
+        self.recognizer.phrase_threshold = config.phrase_threshold
+        self.recognizer.non_speaking_duration = config.non_speaking_duration
         self.p = pyaudio.PyAudio()
     
-    def wait_for_key_press(self, key="space"):
-        """指定されたキーが押されるまで待機"""
-        print(f"\n[{key.upper()}]キーを押して質問を開始...")
-        keyboard.wait(key)
+    def record_until_keypress(self) -> Optional[str]:
+        print("\n[SPACE]キーを押して質問を開始...")
+        keyboard.wait('space')
         print("\nキーが押されました。質問をどうぞ...")
-    
-    def record_with_key_control(self):
-        """スペースキーで録音開始と終了を制御する"""
-        # スペースキーを押して録音を開始
-        self.wait_for_key_press("space")
         
-        # 一時ファイルを作成
-        temp_file = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
-        wave_file = wave.open(temp_file.name, 'wb')
-        wave_file.setnchannels(self.CHANNELS)
-        wave_file.setsampwidth(self.p.get_sample_size(self.FORMAT))
-        wave_file.setframerate(self.RATE)
+        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
+            tmp_path = tmp.name
         
-        # マイクストリームを開く
-        stream = self.p.open(format=self.FORMAT,
-                            channels=self.CHANNELS,
-                            rate=self.RATE,
-                            input=True,
-                            frames_per_buffer=self.CHUNK)
+        wave_file = wave.open(tmp_path, 'wb')
+        wave_file.setnchannels(self.config.channels)
+        wave_file.setsampwidth(self.p.get_sample_size(self.config.format))
+        wave_file.setframerate(self.config.rate)
         
+        stream = self.p.open(
+            format=self.config.format,
+            channels=self.config.channels,
+            rate=self.config.rate,
+            input=True,
+            frames_per_buffer=self.config.chunk_size
+        )
         print("録音中... [SPACE]キーを押して録音を終了")
-        
         frames = []
-        self.recording_stopped = False
-        
-        # スペースキーが押されたら録音を停止するフック
+        recording_stopped = False
+
         def on_key_press(e):
+            nonlocal recording_stopped
             if e.name == 'space':
-                self.recording_stopped = True
+                recording_stopped = True
                 print("\n録音を終了します...")
-        
-        # キーボードフックを登録
         keyboard.on_press(on_key_press)
         
         try:
-            # 録音ループ
-            while not self.recording_stopped:
-                data = stream.read(self.CHUNK, exception_on_overflow=False)
+            while not recording_stopped:
+                data = stream.read(self.config.chunk_size, exception_on_overflow=False)
                 frames.append(data)
         except Exception as e:
-            print(f"録音中にエラーが発生しました: {e}")
+            logger.exception(f"録音エラー: {e}")
         finally:
-            # キーボードフックを解除
             keyboard.unhook_all()
-            
-            # ストリームを閉じる
             stream.stop_stream()
             stream.close()
-            
-            # 音声データを保存
-            if frames:
-                for frame in frames:
-                    wave_file.writeframes(frame)
+            for frame in frames:
+                wave_file.writeframes(frame)
             wave_file.close()
-            
-            file_path = temp_file.name
-            return file_path
-    
-    def transcribe_audio_file(self, audio_file_path):
-        """音声ファイルを文字起こし"""
-        print("文字起こし中...")
+        
         try:
-            with sr.AudioFile(audio_file_path) as source:
-                audio_data = self.recognizer.record(source)
-                text = self.recognizer.recognize_google(audio_data, language="ja-JP")
+            with sr.AudioFile(tmp_path) as source:
+                audio = self.recognizer.record(source)
+                text = self.recognizer.recognize_google(audio, language="ja-JP")
                 print(f"認識されたテキスト: {text}")
                 return text
         except sr.UnknownValueError:
             print("音声を認識できませんでした")
-            return None
         except sr.RequestError as e:
-            print(f"音声認識サービスでエラーが発生しました: {e}")
-            return None
+            print(f"音声認識サービスエラー: {e}")
         except Exception as e:
-            print(f"文字起こし中にエラーが発生しました: {e}")
-            return None
+            logger.exception(f"文字起こしエラー: {e}")
         finally:
-            # 一時ファイルを削除
-            try:
-                os.unlink(audio_file_path)
-            except:
-                pass
-    
-    def listen_and_transcribe(self):
-        """キー制御で録音し、文字起こしを行う"""
-        # 音声再生中は録音しない
-        if self.is_speaking:
-            print("音声再生中です。完了までお待ちください...")
-            return None
-            
-        # スペースキーで録音開始・終了
-        audio_file_path = self.record_with_key_control()
+            Path(tmp_path).unlink(missing_ok=True)
         
-        # 録音された音声を文字起こし
-        text = self.transcribe_audio_file(audio_file_path)
-        return text
+        return None
     
-    def filter_response(self, text):
-        """応答を後処理して自然にする"""
-        text = text.replace("～だぜ！～だな！", "～だぜ！")
-        text = text.replace("～だな！～だろ？", "～だな！")
-        text = text.replace("です", "だ").replace("ます", "る")
-        text = text.replace("私は", "俺様は").replace("僕は", "俺様は")
-        chinese_pattern = re.compile(r'[你们們的是好了吗吧]+')
-        text = chinese_pattern.sub('', text)
-        return text
-    
-    def generate_response(self, input_text):
-        """応答を生成する（テンプレート優先）"""
-        if not input_text:
-            return "何か言ったか？もう一度言ってみろよ！"
+    def cleanup(self):
+        if hasattr(self, 'p'):
+            self.p.terminate()
 
-        # キャッシュチェック
-        if input_text in self.response_cache:
-            print("キャッシュから応答を取得")
-            return self.response_cache[input_text]
-        
-        # パターンマッチングでカテゴリを特定
-        category = self.config_manager.find_matching_category(input_text)
-        if category:
-            template_response = self.config_manager.get_template(category)
-            if template_response:
-                print(f"テンプレート({category})から応答を取得")
-                # 会話履歴に追加
-                self.conversation_history.append(f"ユーザー: {input_text}")
-                self.conversation_history.append(f"パンプキン: {template_response}")
-                # キャッシュに保存
-                self.response_cache[input_text] = template_response
-                return template_response
+
+class VoiceSynthesizer:
+    def __init__(self, config: VoicevoxConfig, filter_patterns: Dict, cache_dir: str, cache_size: int = 50):
+        self.config = config
+        self.filter_patterns = filter_patterns
+        self.session = requests.Session()
+        self.cache = DiskCache(cache_dir, max_entries=cache_size)
+        self.is_speaking = False
+        self.audio_completed = threading.Event()
+        self.audio_completed.set()
+        self.remove_patterns = [re.compile(p) for p in filter_patterns.get("remove", [])]
+        self.replace_patterns = {k: v for k, v in filter_patterns.get("replace", {}).items()}
+    
+    def filter_text(self, text: str) -> str:
+        if not text:
+            return text
+        for pattern in self.remove_patterns:
+            text = pattern.sub('', text)
+        for old, new in self.replace_patterns.items():
+            text = text.replace(old, new)
+        return text
+
+    def synthesize(self, text: str) -> Tuple[Optional[int], Optional[np.ndarray]]:
+        rate, audio = self.cache.get(text)
+        if rate is not None:
+            return rate, audio
         
         try:
-            # テンプレートがない場合はAIで生成
-            self.conversation_history.append(f"ユーザー: {input_text}")
-            
-            recent_history = "\n".join(self.conversation_history[-6:])
-
-            # 設定から値を取得
-            temperature = self.config_manager.get_setting("temperature", 0.7)
-            top_p = self.config_manager.get_setting("top_p", 0.95)
-            max_tokens = self.config_manager.get_setting("max_tokens", 150)
-            num_predict = self.config_manager.get_setting("num_predict", 80)
-
-            url = f"{self.ollama_url}/api/generate"
-            payload = {
-                "model": self.model_name,
-                "prompt": f"{self.character_prompt}\n\n【会話履歴】\n{recent_history}\n\nパンプキン: ",
-                "stream": False,
-                "options": {
-                    "temperature": temperature,
-                    "top_p": top_p,
-                    "max_tokens": max_tokens,
-                    "num_predict": num_predict
-                }
-            }
-            
-            response = requests.post(url, json=payload)
-            response.raise_for_status()
-            
-            result = response.json()
-            response_text = result.get("response", "応答を生成できませんでした。")
-            response_text = self.filter_response(response_text)
-            print(f"生成された回答: {response_text}")
-            
-            self.conversation_history.append(f"パンプキン: {response_text}")
-            self.response_cache[input_text] = response_text
-            
-            return response_text
-            
-        except requests.exceptions.RequestException as e:
-            print(f"Ollama APIとの通信中にエラーが発生しました: {e}")
-            return "ちっ、調子が悪いぜ！もう一度話しかけてみろよ！"
-    
-    def text_to_speech(self, text):
-        """VOICEVOXを使用してテキストを音声に変換する"""
-        if text in self.audio_cache:
-            print("キャッシュから音声を取得")
-            return self.audio_cache[text]
-            
-        try:
-            query_url = f"{self.voicevox_url}/audio_query"
-            query_params = {"text": text, "speaker": self.speaker_id}
-            query_response = requests.post(query_url, params=query_params)
+            query_url = f"{self.config.url}/audio_query"
+            query_params = {"text": text, "speaker": self.config.speaker_id}
+            query_response = self.session.post(query_url, params=query_params, timeout=10.0)
             query_response.raise_for_status()
             query_data = query_response.json()
+            query_data.update({
+                "speedScale": self.config.speed,
+                "pitchScale": self.config.pitch,
+                "intonationScale": self.config.intonation,
+                "volumeScale": self.config.volume,
+                "outputSamplingRate": 24000,
+                "outputStereo": False,
+                "prePhonemeLength": 0.1,
+                "postPhonemeLength": self.config.post_phoneme_length
+            })
             
-            query_data["speedScale"] = 1.1  
-            query_data["outputSamplingRate"] = 24000
-            query_data["outputStereo"] = False
-            
-            synthesis_url = f"{self.voicevox_url}/synthesis"
-            synthesis_params = {"speaker": self.speaker_id}
-            synthesis_response = requests.post(
+            synthesis_url = f"{self.config.url}/synthesis"
+            synthesis_params = {"speaker": self.config.speaker_id}
+            synthesis_response = self.session.post(
                 synthesis_url, 
                 params=synthesis_params,
                 json=query_data,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
+                timeout=30.0
             )
             synthesis_response.raise_for_status()
-            
             wav_data = io.BytesIO(synthesis_response.content)
             wav_data.seek(0)
-            sample_rate, audio_data = wavfile.read(wav_data)
+            rate, audio = wavfile.read(wav_data)
+            audio = audio.astype(np.float32)
+            if len(audio.shape) == 1:
+                audio = np.column_stack((audio, audio))
+            if np.max(np.abs(audio)) > 1.0:
+                audio = audio / np.max(np.abs(audio))
+            fade_length = int(rate * 0.15)
+            if len(audio) > fade_length:
+                fade_out = np.linspace(1.0, 0.0, fade_length)
+                audio[-fade_length:] *= fade_out[:, np.newaxis]
+
+            self.cache.put(text, rate, audio)
+            return rate, audio
             
-            if len(audio_data.shape) == 1:
-                audio_data = np.column_stack((audio_data, audio_data))
-            
-            self.audio_cache[text] = (sample_rate, audio_data)
-            return sample_rate, audio_data
-            
-        except requests.exceptions.RequestException as e:
-            print(f"VOICEVOX APIとの通信中にエラーが発生しました: {e}")
-            return None, None
-    
-    def play_audio(self, sample_rate, audio_data):
-        """音声データを再生する"""
-        if sample_rate is None or audio_data is None:
-            print("再生できる音声データがありません")
-            self.audio_completed.set()  # イベントを設定して完了を通知
-            return
+        except requests.RequestException as e:
+            logger.exception(f"VOICEVOX API エラー: {e}")
+            print(f"音声合成エラー: {e}")
+        except Exception as e:
+            logger.exception(f"音声合成処理エラー: {e}")
         
-        try:
-            self.is_speaking = True
-            self.audio_completed.clear()  # イベントをクリア
-            sd.play(audio_data, sample_rate)
-            sd.wait()  # 再生が終わるまで待機
-            self.is_speaking = False
-            print("----- 音声再生完了 -----")
-            self.audio_completed.set()  # イベントを設定して完了を通知
-        except Exception as e:
-            print(f"音声再生中にエラーが発生しました: {e}")
-            self.is_speaking = False
-            self.audio_completed.set()  # エラー時にもイベントを設定
+        return None, None
     
-    def process_audio_thread(self, text):
-        """音声合成と再生を行う（スレッド用）"""
+    def close(self):
         try:
-            sample_rate, audio_data = self.text_to_speech(text)
-            print("再生中...")
-            self.play_audio(sample_rate, audio_data)
+            self.session.close()
+            logger.debug("VOICEVOXセッションをクローズしました")
         except Exception as e:
-            print(f"音声処理中にエラーが発生しました: {e}")
-            self.is_speaking = False
-            self.audio_completed.set()  # エラー時にもイベントを設定
+            logger.error(f"VOICEVOXセッションクローズエラー: {e}")
+
+
+class ResponseGenerator:
+    def __init__(self, config: LLMConfig, character: CharacterConfig, history_limit: int):
+        self.config = config
+        self.character = character
+        self.session = requests.Session()
+        self.history = deque(maxlen=history_limit)
     
-    def cleanup(self):
-        """リソースを解放"""
-        if hasattr(self, 'p') and self.p:
-            self.p.terminate()
+    def generate(self, input_text: str, fallback_data: Dict = None) -> str:
+        try:
+            self.history.append({"role": "user", "text": input_text})
+
+            prefix = ""
+            suffix = ""
+            if fallback_data:
+                prefix = fallback_data.get("prefix", "")
+                suffix = fallback_data.get("suffix", "")
+
+            history_text = "\n".join([
+                f"{item['role'].capitalize()}: {item['text']}" 
+                for item in list(self.history)[:-1]
+            ])
+            recent_history = f"{history_text}\nユーザー: {input_text}"
+
+            url = f"{self.config.url}/api/generate"
+            payload = {
+                "model": self.config.model,
+                "prompt": f"{self.character.prompt}\n\n【会話履歴】\n{recent_history}\n\n{self.character.name}: {prefix}",
+                "stream": False,
+                "options": {
+                    "temperature": self.config.temperature,
+                    "top_p": self.config.top_p,
+                    "top_k": self.config.top_k,
+                    "num_predict": self.config.num_predict,
+                    "repeat_penalty": self.config.repeat_penalty
+                }
+            }
+
+            response_text = ""
+            for attempt in range(self.config.max_retries + 1):
+                try:
+                    response = self.session.post(
+                        url, 
+                        json=payload, 
+                        timeout=self.config.timeout
+                    )
+                    response.raise_for_status()
+                    result = response.json()
+                    response_text = result.get("response", "")
+                    
+                    if not response_text or len(response_text) < 10:
+                        if attempt < self.config.max_retries:
+                            logger.warning(f"応答が短すぎます。フォールバックモデルを試行します ({attempt+1}/{self.config.max_retries})")
+                            payload["model"] = self.config.fallback_model
+                            continue
+                    break
+                    
+                except Exception as e:
+                    logger.error(f"LLM API エラー (試行 {attempt+1}): {e}")
+                    if attempt < self.config.max_retries:
+                        payload["model"] = self.config.fallback_model
+                        continue
+                    else:
+                        raise
+            
+            if suffix and response_text:
+                response_text = f"{response_text} {suffix}"
+            
+            self.history.append({"role": "assistant", "text": response_text})
+            return response_text
+            
+        except requests.RequestException as e:
+            logger.exception(f"Ollama API エラー: {e}")
+            return "ちっ、接続できないぜ！サーバーの調子を確認してみろよ！"
+        except Exception as e:
+            logger.exception(f"応答生成エラー: {e}")
+            return "なんか変なことが起きたぜ！もう一度試してみろよ！"
+    
+    def close(self):
+        try:
+            self.session.close()
+            logger.debug("LLMセッションをクローズしました")
+        except Exception as e:
+            logger.error(f"LLMセッションクローズエラー: {e}")
+
+
+class PumpkinTalk:
+    def __init__(self, config_file: str = "pumpkin_config.json"):
+        self.config_loader = ConfigLoader(config_file)
+        self.character_config = self.config_loader.get_character_config()
+        self.audio_config = self.config_loader.get_audio_config()
+        self.voicevox_config = self.config_loader.get_voicevox_config()
+        self.llm_config = self.config_loader.get_llm_config()
+        self.perf_config = self.config_loader.get_performance_config()
+        self.pattern_scoring = self.config_loader.get_pattern_scoring()
+        self.response_patterns = self.config_loader.get_response_patterns()
+        self.fallback_patterns = self.config_loader.get_fallback_patterns()
+        self.filter_patterns = self.config_loader.get_filter_patterns()
+        self._stop_event = threading.Event()
+        self.matcher = PatternMatcher(
+            self.response_patterns, 
+            self.fallback_patterns, 
+            self.pattern_scoring
+        )
+        self.recorder = AudioRecorder(self.audio_config)
+        self.voice = VoiceSynthesizer(
+            self.voicevox_config, 
+            self.filter_patterns,
+            self.perf_config.disk_cache_dir,
+            cache_size=self.perf_config.cache_size
+        )
+        self.generator = ResponseGenerator(
+            self.llm_config,
+            self.character_config,
+            self.perf_config.history_limit
+        )
+        self.executor = ThreadPoolExecutor(max_workers=2)
+        self.audio_queue = queue.Queue(maxsize=4)
+        
+        Path(self.perf_config.disk_cache_dir).mkdir(parents=True, exist_ok=True)
+        logger.info(f"パンプキントーク初期化: モデル={self.llm_config.model}, スピーカー={self.voicevox_config.speaker_id}")
     
     def run(self):
-        """パンプキントークのメインループ"""
-        print("=== パンプキントーク パターンマッチング版 ===")
-        print("俺様、パンプキンの登場だぜ！何か質問があるなら言ってみろよ！")
-        print("質問するには[SPACE]キーを押してから話し、終了時も[SPACE]キーを押してください")
-        print("終了するには Ctrl+C を押してください")
-        
-        # 最初のイベントを設定
-        self.audio_completed.set()
+        print("=== AI-Pumpkin-Talk===")
+        audio_thread = threading.Thread(target=self._audio_worker, daemon=True)
+        audio_thread.start()
         
         try:
-            while True:
-                # 音声再生が完了するまで待機
-                if not self.audio_completed.is_set():
-                    print("音声再生の完了を待機中...")
-                    self.audio_completed.wait()
+            while not self._stop_event.is_set():
+                if not self.voice.audio_completed.is_set():
+                    print("音声再生が完了するのを待っています...")
+                    self.voice.audio_completed.wait()
                 
-                # 音声再生が完了した後に次の質問を受け付ける
-                input_text = self.listen_and_transcribe()
+                input_text = self.recorder.record_until_keypress()
+                if not input_text:
+                    continue
                 
-                if input_text:
-                    response_text = self.generate_response(input_text)
-                    
-                    print("音声合成中...")
-                    
-                    # 前の音声処理スレッドが終了するのを待つ
-                    if self.audio_thread and self.audio_thread.is_alive():
-                        self.audio_thread.join()
-                    
-                    # 新しいスレッドで音声処理を実行
-                    self.audio_thread = threading.Thread(target=self.process_audio_thread, args=(response_text,))
-                    self.audio_thread.daemon = True
-                    self.audio_thread.start()
+                category = self.matcher.find_matching_category(input_text)
                 
+                if category:
+                    if category.startswith("fallback:"):
+                        fallback_data = self.matcher.get_fallback_data(category)
+                        print(f"フォールバックパターンから応答を生成: {category}")
+                        response_text = self.generator.generate(input_text, fallback_data)
+                    else:
+                        template = self.config_loader.get_template(category)
+                        if template:
+                            print(f"テンプレート({category})から応答を取得")
+                            response_text = template
+                        else:
+                            print("AIで応答を生成中...")
+                            response_text = self.generator.generate(input_text)
+                else:
+                    print("AIで応答を生成中...")
+                    response_text = self.generator.generate(input_text)
+                
+                response_text = self.voice.filter_text(response_text)
+                print(f"応答: {response_text}")
+
+                self._synthesize_and_queue(response_text)
+        
         except KeyboardInterrupt:
             print("\n=== パンプキントークシステムを終了します ===")
-            if self.audio_thread and self.audio_thread.is_alive():
-                self.audio_thread.join(timeout=1)
+            self._stop_event.set()
         finally:
-            self.cleanup()
+            self._cleanup()
+    
+    def _synthesize_and_queue(self, text: str):
+        try:
+            print("音声合成中...")
+            rate, audio = self.voice.synthesize(text)
+            if rate is not None and audio is not None:
+                try:
+                    if self.audio_queue.full():
+                        try:
+                            self.audio_queue.get_nowait()
+                            logger.warning("音声キューが満杯です。古いアイテムを破棄します。")
+                        except queue.Empty:
+                            pass
+                    
+                    self.audio_queue.put((rate, audio), timeout=1.0)
+                except queue.Full:
+                    logger.error("音声キューへの追加がタイムアウトしました")
+        except Exception as e:
+            logger.exception(f"音声合成エラー: {e}")
+    
+    def _audio_worker(self):
+        while not self._stop_event.is_set():
+            try:
+                rate, audio = self.audio_queue.get(timeout=1.0)
+                self.voice.is_speaking = True
+                self.voice.audio_completed.clear()
+                
+                try:
+                    print("再生中...")
+                    sd.play(audio, int(rate))
+                    sd.wait()
+                    print("----- 音声再生完了 -----")
+                except Exception as e:
+                    logger.exception(f"音声再生エラー: {e}")
+                finally:
+                    self.voice.is_speaking = False
+                    self.voice.audio_completed.set()
+                    self.audio_queue.task_done()
+                
+            except queue.Empty:
+                continue
+            except Exception as e:
+                logger.exception(f"音声再生ワーカーエラー: {e}")
+                time.sleep(0.5)
+    
+    def _cleanup(self):
+        self.executor.shutdown(wait=True)
+        self.voice.close()
+        self.generator.close()
+        self.recorder.cleanup()
+        logger.info("すべてのリソースを解放しました")
+
 
 if __name__ == "__main__":
-    # 設定ファイルのパスを指定（デフォルトは "pumpkin_config.json"）
-    config_file = "pumpkin_config.json"
-    
     try:
-        pumpkin_talk = PumpkinTalk(config_file=config_file)
-        pumpkin_talk.run()
+        import time
+        app = PumpkinTalk()
+        app.run()
     except FileNotFoundError:
-        print(f"エラー: 設定ファイル '{config_file}' が見つかりません。")
-        print("正しい設定ファイルを用意してから再度実行してください。")
+        print("エラー: 設定ファイル 'pumpkin_config.json' が見つかりません。")
+    except json.JSONDecodeError:
+        print("エラー: 設定ファイルの形式が正しくありません。")
     except Exception as e:
         print(f"エラー: {e}")
+        import traceback
+        traceback.print_exc()
