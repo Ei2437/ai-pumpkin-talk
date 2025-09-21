@@ -1,0 +1,32 @@
+2025-09-21 20:44:11,976 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-21 20:44:12,033 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-21 20:44:38,827 - pumpkin - INFO - マッチングカテゴリ: 'introduction' (スコア: 20)
+2025-09-21 21:01:34,303 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-21 21:01:34,362 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-21 21:01:40,578 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-21 21:08:06,546 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-21 21:08:06,602 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-21 21:08:08,810 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-21 22:23:20,711 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-21 22:23:20,761 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-21 22:24:22,646 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-21 22:24:22,701 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-21 22:24:26,683 - pumpkin - INFO - マッチングカテゴリ: 'introduction' (スコア: 20)
+2025-09-21 22:24:33,765 - pumpkin - ERROR - キャッシュ保存エラー: [WinError 2] 指定されたファイルが見つかりません。: './audio_cache\\a9be1fa75f1c7a7922e5e7ff25a4416b.npz.tmp' -> './audio_cache\\a9be1fa75f1c7a7922e5e7ff25a4416b.npz'
+Traceback (most recent call last):
+  File "C:\Users\mabuc\test\temp_v2.py", line 243, in put
+    os.replace(tmp_path, path)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] 指定されたファイルが見つかりません。: './audio_cache\\a9be1fa75f1c7a7922e5e7ff25a4416b.npz.tmp' -> './audio_cache\\a9be1fa75f1c7a7922e5e7ff25a4416b.npz'
+2025-09-21 22:24:43,924 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-21 22:28:58,572 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-21 22:28:58,631 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-21 22:29:03,752 - pumpkin - INFO - マッチングカテゴリ: 'introduction' (スコア: 20)
+2025-09-21 22:29:06,991 - pumpkin - ERROR - 一時ファイルが見つかりません: C:\Users\mabuc\test\audio_cache\b1c041684aed449a9aff96dfaa37eaa5.npz.tmp
+2025-09-21 22:29:18,137 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-21 22:41:00,433 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-21 22:41:00,490 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-21 22:41:02,185 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-21 22:41:27,521 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-21 22:41:27,588 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-21 22:41:28,239 - pumpkin - INFO - すべてのリソースを解放しました
