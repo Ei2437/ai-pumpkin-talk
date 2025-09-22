@@ -142,7 +142,7 @@ class ConfigLoader:
         gen_data = llm_data.get("generation", {})
         perf_data = self.config.get("system", {}).get("performance", {})
         return LLMConfig(
-            url=llm_data.get("url", "http://localhost:11434"),
+            url=llm_data.get("url", "http:localhost:11434"),
             model=llm_data.get("model", "dsasai/llama3-elyza-jp-8b:latest"),
             fallback_model=llm_data.get("fallback_model", "dsasai/llama3-elyza-jp-8b:latest"),
             temperature=gen_data.get("temperature", 0.6),
@@ -231,7 +231,7 @@ class DiskCache:
             except Exception:
                 pass
             return None, None
-
+    
     def put(self, key: str, rate: int, audio: np.ndarray) -> None:
         try:
             self._cleanup_if_needed()
@@ -556,11 +556,9 @@ class ResponseGenerator:
                     )
                     response.raise_for_status()
                     result = response.json()
-                    
-                    # レスポンス形式も変わっているため調整
                     response_text = result.get("message", {}).get("content", "")
                     if not response_text:
-                        # 古い形式もチェック
+
                         response_text = result.get("response", "")
                     
                     if not response_text or len(response_text) < 10:
@@ -758,3 +756,39 @@ if __name__ == "__main__":
         traceback.print_exc()
 
 # 新しいモデルの案として、ELYZA-japanese-Llama-2-7b-fast-Q4_K_Mが良さそう。
+
+# 524,576行目のurlの辺りが存在しないとこ参照してそう。
+
+
+
+
+
+"""大まかな流れ"""
+
+# 97行目 class ConfigLoader:
+# ここで設定ファイルを読み込む
+# その後、各種設定を取得するメソッドが続く
+
+# 173行目 class DiskCache:
+# ここで音声キャッシュの管理を行う
+# その後、キャッシュの取得や保存、クリーンアップのメソッドが続く
+
+# 279行目 class PatternMatcher:
+# ここでパターンマッチングのロジックを実装
+# その後、マッチングカテゴリの取得やフォールバックデータの取得メソッドが続く
+
+# 337行目 class AudioRecorder:
+# ここで音声の録音を行う
+# その後、音声の録音や文字起こしのメソッドが続く
+
+# 415行目 class VoiceSynthesizer:
+# ここで音声合成を行う
+# その後、音声のフィルタリングや合成のメソッドが続く
+
+# 500行目 class ResponseGenerator:
+# ここで応答生成を行う
+# その後、応答の生成やフォールバックデータの取得メソッドが続く
+
+# 611行目 class PumpkinTalk:
+# ここでメインロジックを実装
+# その後、起動やクリーンアップのメソッドが続く

@@ -273,3 +273,27 @@ Traceback (most recent call last):
     ~~~~~~~~~~^^^^^^^^^^^^^^^^
 FileNotFoundError: [WinError 2] 指定されたファイルが見つかりません。: './audio_cache\\765e92ef71a20a44f4a61a520f4c7b4e.npz.tmp' -> './audio_cache\\765e92ef71a20a44f4a61a520f4c7b4e.npz'
 2025-09-22 16:46:07,898 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 17:09:17,902 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 17:09:17,987 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen.3:latest, スピーカー=1
+2025-09-22 17:09:29,242 - pumpkin - INFO - フォールバックマッチ: 'statement'
+2025-09-22 17:09:30,136 - pumpkin - ERROR - LLM API エラー (試行 1): 404 Client Error: Not Found for url: http://sudume.hamako-ths.ed.jp:11434/api/chat
+2025-09-22 17:09:30,143 - pumpkin - ERROR - LLM API エラー (試行 2): 404 Client Error: Not Found for url: http://sudume.hamako-ths.ed.jp:11434/api/completions
+2025-09-22 17:09:30,149 - pumpkin - ERROR - LLM API エラー (試行 3): 404 Client Error: Not Found for url: http://sudume.hamako-ths.ed.jp:11434/v1/completions
+2025-09-22 17:30:14,043 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 17:30:14,098 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
+2025-09-22 17:30:21,904 - pumpkin - INFO - マッチングカテゴリ: 'introduction' (スコア: 20)
+2025-09-22 17:31:41,053 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 17:32:03,100 - pumpkin - ERROR - LLM API エラー (試行 1): HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=20)
+2025-09-22 17:32:05,124 - pumpkin - ERROR - LLM API エラー (試行 2): 404 Client Error: Not Found for url: http://localhost:11434/api/completions
+2025-09-22 17:32:25,132 - pumpkin - ERROR - LLM API エラー (試行 3): HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=20)
+2025-09-22 17:38:46,413 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 17:38:46,467 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
+2025-09-22 17:38:58,128 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 17:38:58,184 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
+2025-09-22 17:48:33,978 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 17:48:34,029 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
+2025-09-22 17:48:38,913 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 17:48:38,966 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
+2025-09-22 17:48:44,301 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 17:48:44,302 - pumpkin - ERROR - LLM API エラー (試行 1): cannot access local variable 'url' where it is not associated with a value
+2025-09-22 17:48:44,302 - pumpkin - ERROR - LLM API エラー (試行 2): cannot access local variable 'url' where it is not associated with a value
