@@ -1,3 +1,6 @@
+
+# ver 1.0.0  9/22 22:
+
 import os
 import io
 import time
@@ -21,7 +24,6 @@ class LoadConfig:
     
     def get_character_prompt(self):
         char = self.config["character"]
-        # character.prompt が存在する場合はそれを使用、なければ従来の方法で生成
         if "prompt" in char:
             return char["prompt"]
         else:
@@ -74,14 +76,13 @@ class PumpkinTalk:
         self.character_prompt = self.config_loader.get_character_prompt()
         self.conversation_history = []
         
-        # 録音用のストリームとデータ格納用
+        # 録音用
         self.recording_stream = None
         self.audio_frames = []
         self.is_recording = False
-        self.last_key_state = False  # 前回のキー状態を記録
+        self.last_key_state = False
     
     def match_response_template(self, input_text):
-        """入力テキストにマッチする応答テンプレートを探す"""
         best_match = None
         best_priority = -1
         
@@ -101,16 +102,15 @@ class PumpkinTalk:
         return None
     
     def filter_response(self, response_text):
-        """応答テキストをフィルタリング"""
         if "response_filtering" in self.advanced_config:
             filtering = self.advanced_config["response_filtering"]
             
-            # 除去パターンの適用
+            # 除去
             if "remove_patterns" in filtering:
                 for pattern in filtering["remove_patterns"]:
                     response_text = re.sub(pattern, "", response_text)
             
-            # 置換パターンの適用
+            # 置換
             if "replace_patterns" in filtering:
                 for old, new in filtering["replace_patterns"].items():
                     response_text = response_text.replace(old, new)
@@ -118,7 +118,6 @@ class PumpkinTalk:
         return response_text.strip()
     
     def start_recording(self):
-        """録音を開始"""
         if not self.is_recording:
             print("録音開始... (Spaceキーをもう一度押して終了)")
             self.is_recording = True
@@ -127,7 +126,6 @@ class PumpkinTalk:
             self.recording_stream.start()
     
     def stop_recording(self):
-        """録音を停止し、AudioDataオブジェクトを返す"""
         if self.is_recording:
             print("録音終了...")
             self.is_recording = False
@@ -136,16 +134,16 @@ class PumpkinTalk:
             # 音声データを結合
             if self.audio_frames:
                 audio_data = np.concatenate(self.audio_frames, axis=0)
-                # speech_recognition用のAudioDataオブジェクトを作成
+                # 文字起こし用のAudioDataオブジェクトを作成
                 audio = sr.AudioData(audio_data.tobytes(), 16000, 2)
                 self.recording_stream.close()
+                # AudioDataオブジェクトを返す
                 return audio
             
             self.recording_stream.close()
         return None
     
     def listen_and_transcribe(self):
-        """Spaceキーで制御される音声認識（トグル方式）"""
         print("Spaceキーを押して録音開始...")
         
         # ノイズ調整
@@ -158,12 +156,12 @@ class PumpkinTalk:
                 
                 # キーの状態が変化したときのみ処理
                 if current_key_state != self.last_key_state:
-                    if current_key_state:  # キーが押された
+                    if current_key_state: #押された
                         if not self.is_recording:
-                            # 録音開始
+                            # 開始
                             self.start_recording()
                         else:
-                            # 録音停止
+                            # 停止
                             audio = self.stop_recording()
                             if audio:
                                 try:
@@ -177,7 +175,6 @@ class PumpkinTalk:
                                 except sr.RequestError as e:
                                     print(f"音声認識サービスでエラーが発生しました: {e}")
                                     return None
-                    # キーが離されたときは何もしない（トグル方式なので）
                     self.last_key_state = current_key_state
                 
                 # 録音中の場合は音声データを取得
@@ -186,7 +183,7 @@ class PumpkinTalk:
                     if not overflowed:
                         self.audio_frames.append(data)
                 
-                time.sleep(0.01)  # CPU使用率を下げるための短い待機
+                time.sleep(0.01) #CPU負荷軽減
                     
         except Exception as e:
             print(f"録音中にエラーが発生しました: {e}")
@@ -198,12 +195,12 @@ class PumpkinTalk:
         if not input_text:
             return "何か言ったか？もう一度言ってみろよ！"
         
-        # まずテンプレートマッチを試す
+        # まずはテンプレから探す
         template_response = self.match_response_template(input_text)
         if template_response:
             return self.filter_response(template_response)
         
-        # テンプレートマッチしない場合はAIに生成させる
+        # ない場合はOllamaで生成
         try:
             self.conversation_history.append(f"ユーザー: {input_text}")
             recent_history = "\n".join(self.conversation_history[-6:])
@@ -221,9 +218,7 @@ class PumpkinTalk:
             
             result = response.json()
             response_text = result.get("response", "応答を生成できませんでした。")
-            print(f"生成された回答: {response_text}")
             
-            # フィルタリングを適用
             filtered_response = self.filter_response(response_text)
             
             self.conversation_history.append(f"パンプキン: {filtered_response}")
@@ -234,7 +229,6 @@ class PumpkinTalk:
             return "ちっ、調子が悪いぜ！もう一度話しかけてみろよ！"
     
     def text_to_speech(self, text):
-        """VOICEVOXを使用してテキストを音声に変換する"""
         try:
             # 1. テキストから音声合成用のクエリを作成
             query_url = f"{self.voicevox_url}/audio_query"
@@ -243,7 +237,7 @@ class PumpkinTalk:
             query_response.raise_for_status()
             query_data = query_response.json()
             
-            # 2. 音声合成パラメータの調整（system設定から）
+            # 2. jsonの適用
             if "voicevox" in self.system_config:
                 voicevox_settings = self.system_config["voicevox"]
                 # 速度調整
@@ -262,7 +256,7 @@ class PumpkinTalk:
                 if "post_phoneme_length" in voicevox_settings:
                     query_data["postPhonemeLength"] = voicevox_settings["post_phoneme_length"]
             
-            # 3. 音声合成を実行
+            # 3. 音声合成
             synthesis_url = f"{self.voicevox_url}/synthesis"
             synthesis_params = {"speaker": self.speaker_id}
             synthesis_response = requests.post(
@@ -276,11 +270,11 @@ class PumpkinTalk:
             # 音声データを取得
             wav_data = io.BytesIO(synthesis_response.content)
             
-            # WAVデータを読み込む
+            # WAVデータの読み込み
             wav_data.seek(0)
             sample_rate, audio_data = wavfile.read(wav_data)
             
-            # モノラルの場合はステレオに変換
+            # モノラルならステレオに
             if len(audio_data.shape) == 1:
                 audio_data = np.column_stack((audio_data, audio_data))
             
@@ -291,38 +285,36 @@ class PumpkinTalk:
             return None, None
     
     def play_audio(self, sample_rate, audio_data):
-        """音声データを再生する"""
         if sample_rate is None or audio_data is None:
             print("再生できる音声データがありません")
             return
         
         try:
-            # 音声の再生
             sd.play(audio_data, sample_rate)
-            sd.wait()  # 再生が終わるまで待機
+            sd.wait()
         except Exception as e:
             print(f"音声再生中にエラーが発生しました: {e}")
     
     def run(self):
-        """パンプキントークのメインループ"""
         print("=== パンプキントークシステム起動 ===")
         print("俺様、パンプキンの登場だぜ!Spaceキーを押して話しかけてみろよ!")
         print("終了するには Ctrl+C を押してください")
         
         try:
             while True:
-                # 1. 音声の文字起こし
+                # 文字起こし
                 input_text = self.listen_and_transcribe()
                 
                 if input_text:
-                    # 2. 応答の生成
+                    # 応答の生成
                     response_text = self.generate_response(input_text)
                     
-                    # 3. 音声合成
+                    # 音声合成
                     print("音声合成中...")
                     sample_rate, audio_data = self.text_to_speech(response_text)
                     
-                    # 4. 音声再生
+                    # 音声再生
+                    print("読み上げテキスト:", response_text)
                     print("再生中...")
                     self.play_audio(sample_rate, audio_data)
                 
@@ -335,3 +327,8 @@ class PumpkinTalk:
 if __name__ == "__main__":
     pumpkin_talk = PumpkinTalk("pumpkin.json")
     pumpkin_talk.run()
+
+# コードの解説はREADME.mdを見てください。
+
+# --- 更新内容 ---
+# ver 1.0.0  -  prototype.pyのプロンプト形式を一新し、README.mdに記載した形式でpumpkin.jsonに統合。
