@@ -756,3 +756,5 @@ if __name__ == "__main__":
         print(f"エラー: {e}")
         import traceback
         traceback.print_exc()
+
+# 新しいモデルの案として、ELYZA-japanese-Llama-2-7b-fast-Q4_K_Mが良さそう。

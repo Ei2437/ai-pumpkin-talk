@@ -248,3 +248,28 @@ FileNotFoundError: [WinError 2] 指定されたファイルが見つかりませ
 2025-09-22 11:55:38,444 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
 2025-09-22 11:55:41,831 - pumpkin - INFO - フォールバックマッチ: 'statement'
 2025-09-22 11:56:20,897 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 16:16:59,580 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 16:16:59,629 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
+2025-09-22 16:17:37,895 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 16:17:37,959 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
+2025-09-22 16:17:59,272 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 16:18:21,317 - pumpkin - ERROR - LLM API エラー (試行 1): HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=20)
+2025-09-22 16:18:23,377 - pumpkin - ERROR - LLM API エラー (試行 2): 404 Client Error: Not Found for url: http://localhost:11434/api/completions
+2025-09-22 16:18:43,390 - pumpkin - ERROR - LLM API エラー (試行 3): HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=20)
+2025-09-22 16:19:24,141 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 16:19:24,190 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
+2025-09-22 16:19:29,652 - pumpkin - INFO - マッチングカテゴリ: 'introduction' (スコア: 10)
+2025-09-22 16:19:36,236 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 16:19:36,282 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
+2025-09-22 16:19:40,056 - pumpkin - INFO - マッチングカテゴリ: 'introduction' (スコア: 20)
+2025-09-22 16:28:51,913 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 16:28:51,971 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
+2025-09-22 16:28:59,394 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 16:29:21,440 - pumpkin - ERROR - LLM API エラー (試行 1): HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=20)
+2025-09-22 16:29:35,575 - pumpkin - ERROR - キャッシュ保存エラー: [WinError 2] 指定されたファイルが見つかりません。: './audio_cache\\765e92ef71a20a44f4a61a520f4c7b4e.npz.tmp' -> './audio_cache\\765e92ef71a20a44f4a61a520f4c7b4e.npz'
+Traceback (most recent call last):
+  File "C:\Users\mabuc\test\temp_v2.py", line 243, in put
+    os.replace(tmp_path, path)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] 指定されたファイルが見つかりません。: './audio_cache\\765e92ef71a20a44f4a61a520f4c7b4e.npz.tmp' -> './audio_cache\\765e92ef71a20a44f4a61a520f4c7b4e.npz'
+2025-09-22 16:46:07,898 - pumpkin - INFO - すべてのリソースを解放しました
