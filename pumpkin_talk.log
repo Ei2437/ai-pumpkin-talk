@@ -30,3 +30,221 @@ FileNotFoundError: [WinError 2] 指定されたファイルが見つかりませ
 2025-09-21 22:41:27,521 - pumpkin - INFO - 設定ファイルを読み込みました
 2025-09-21 22:41:27,588 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
 2025-09-21 22:41:28,239 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 07:58:11,119 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 07:58:11,148 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 07:58:15,298 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 08:03:38,439 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 08:03:38,481 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 08:04:53,075 - pumpkin - INFO - マッチングカテゴリ: 'introduction' (スコア: 20)
+2025-09-22 08:05:29,379 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 08:05:31,461 - pumpkin - ERROR - LLM API エラー (試行 1): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:05:31,465 - pumpkin - ERROR - LLM API エラー (試行 2): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:05:31,468 - pumpkin - ERROR - LLM API エラー (試行 3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:05:31,468 - pumpkin - ERROR - Ollama API エラー: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+Traceback (most recent call last):
+  File "C:\Users\mabuc\test\main.py", line 545, in generate
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\mabuc\test\venv\Lib\site-packages\requests\models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:05:38,012 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 08:06:51,177 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 08:06:51,228 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 08:06:54,963 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 08:06:57,026 - pumpkin - ERROR - LLM API エラー (試行 1): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:06:57,030 - pumpkin - ERROR - LLM API エラー (試行 2): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:06:57,035 - pumpkin - ERROR - LLM API エラー (試行 3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:06:57,036 - pumpkin - ERROR - Ollama API エラー: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+Traceback (most recent call last):
+  File "C:\Users\mabuc\test\main.py", line 545, in generate
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\mabuc\test\venv\Lib\site-packages\requests\models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:06:58,668 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 08:08:53,307 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 08:08:53,352 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 08:09:12,539 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 08:10:10,752 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 08:10:10,796 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 08:10:16,598 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 08:10:18,668 - pumpkin - ERROR - LLM API エラー (試行 1): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:10:18,672 - pumpkin - ERROR - LLM API エラー (試行 2): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:10:18,675 - pumpkin - ERROR - LLM API エラー (試行 3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:10:18,676 - pumpkin - ERROR - Ollama API エラー: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+Traceback (most recent call last):
+  File "C:\Users\mabuc\test\main.py", line 545, in generate
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\mabuc\test\venv\Lib\site-packages\requests\models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:10:21,728 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 08:25:49,046 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 08:25:49,097 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 08:25:53,209 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 08:25:55,282 - pumpkin - ERROR - LLM API エラー (試行 1): 404 Client Error: Not Found for url: http://localhost:11434/api/chat
+2025-09-22 08:25:55,284 - pumpkin - ERROR - LLM API エラー (試行 2): 404 Client Error: Not Found for url: http://localhost:11434/api/completions
+2025-09-22 08:25:55,293 - pumpkin - ERROR - LLM API エラー (試行 3): 404 Client Error: Not Found for url: http://localhost:11434/v1/completions
+2025-09-22 08:31:13,242 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 08:31:13,286 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 08:31:16,923 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 08:31:18,969 - pumpkin - ERROR - LLM API エラー (試行 1): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:31:18,973 - pumpkin - ERROR - LLM API エラー (試行 2): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:31:18,976 - pumpkin - ERROR - LLM API エラー (試行 3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:31:18,985 - pumpkin - ERROR - Ollama API エラー: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+Traceback (most recent call last):
+  File "C:\Users\mabuc\test\temp_v2.py", line 547, in generate
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\mabuc\test\venv\Lib\site-packages\requests\models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:31:21,541 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 08:31:44,745 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 08:31:44,791 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 08:31:49,917 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 08:31:51,957 - pumpkin - ERROR - LLM API エラー (試行 1): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:31:51,960 - pumpkin - ERROR - LLM API エラー (試行 2): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:31:51,963 - pumpkin - ERROR - LLM API エラー (試行 3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:31:51,963 - pumpkin - ERROR - Ollama API エラー: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:41:56,545 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 08:41:56,584 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 08:42:13,920 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 08:47:24,359 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 08:47:24,405 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 08:47:44,395 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 08:47:44,396 - pumpkin - INFO - APIエンドポイントを試行中: http://localhost:11434/api/chat (試行 1/4)
+2025-09-22 08:47:46,433 - pumpkin - ERROR - LLM API エラー (エンドポイント http://localhost:11434/api/chat): 404 Client Error: Not Found for url: http://localhost:11434/api/chat
+2025-09-22 08:47:46,434 - pumpkin - INFO - APIエンドポイントを試行中: http://localhost:11434/api/generate (試行 2/4)
+2025-09-22 08:47:46,437 - pumpkin - ERROR - LLM API エラー (エンドポイント http://localhost:11434/api/generate): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:47:46,437 - pumpkin - INFO - APIエンドポイントを試行中: http://localhost:11434/api/completions (試行 3/4)
+2025-09-22 08:47:46,439 - pumpkin - ERROR - LLM API エラー (エンドポイント http://localhost:11434/api/completions): 404 Client Error: Not Found for url: http://localhost:11434/api/completions
+2025-09-22 08:47:46,439 - pumpkin - INFO - APIエンドポイントを試行中: http://localhost:11434/v1/completions (試行 4/4)
+2025-09-22 08:47:46,442 - pumpkin - ERROR - LLM API エラー (エンドポイント http://localhost:11434/v1/completions): 404 Client Error: Not Found for url: http://localhost:11434/v1/completions
+2025-09-22 08:47:46,442 - pumpkin - WARNING - すべてのエンドポイントが失敗しました。フォールバックモデルを試行: gemma2:2b-instruct-jp
+2025-09-22 08:47:46,442 - pumpkin - INFO - フォールバックモデルでAPIエンドポイントを試行中: http://localhost:11434/api/chat (試行 1/4)
+2025-09-22 08:47:46,446 - pumpkin - ERROR - フォールバックモデル LLM API エラー (エンドポイント http://localhost:11434/api/chat): 404 Client Error: Not Found for url: http://localhost:11434/api/chat
+2025-09-22 08:47:46,448 - pumpkin - INFO - フォールバックモデルでAPIエンドポイントを試行中: http://localhost:11434/api/generate (試行 2/4)
+2025-09-22 08:47:46,452 - pumpkin - ERROR - フォールバックモデル LLM API エラー (エンドポイント http://localhost:11434/api/generate): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 08:47:46,452 - pumpkin - INFO - フォールバックモデルでAPIエンドポイントを試行中: http://localhost:11434/api/completions (試行 3/4)
+2025-09-22 08:47:46,455 - pumpkin - ERROR - フォールバックモデル LLM API エラー (エンドポイント http://localhost:11434/api/completions): 404 Client Error: Not Found for url: http://localhost:11434/api/completions
+2025-09-22 08:47:46,456 - pumpkin - INFO - フォールバックモデルでAPIエンドポイントを試行中: http://localhost:11434/v1/completions (試行 4/4)
+2025-09-22 08:47:46,461 - pumpkin - ERROR - フォールバックモデル LLM API エラー (エンドポイント http://localhost:11434/v1/completions): 404 Client Error: Not Found for url: http://localhost:11434/v1/completions
+2025-09-22 08:47:46,461 - pumpkin - ERROR - すべてのAPIリクエストが失敗しました
+2025-09-22 08:47:55,197 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 10:42:56,264 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 10:42:56,357 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 10:43:08,901 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 10:43:08,946 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 10:43:12,524 - pumpkin - INFO - マッチングカテゴリ: 'introduction' (スコア: 20)
+2025-09-22 10:43:17,666 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 10:47:26,707 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 10:47:26,748 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 10:47:31,058 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 10:47:33,104 - pumpkin - ERROR - LLM API エラー (試行 1): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 10:47:33,107 - pumpkin - ERROR - LLM API エラー (試行 2): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 10:47:33,110 - pumpkin - ERROR - LLM API エラー (試行 3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 10:47:33,110 - pumpkin - ERROR - Ollama API エラー: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+Traceback (most recent call last):
+  File "C:\Users\mabuc\test\temp_v2.py", line 547, in generate
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\mabuc\test\venv\Lib\site-packages\requests\models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 10:47:35,762 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 10:49:35,729 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 10:49:35,770 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 10:49:45,017 - pumpkin - INFO - マッチングカテゴリ: 'introduction' (スコア: 20)
+2025-09-22 10:49:51,054 - pumpkin - ERROR - キャッシュ保存エラー: [WinError 2] 指定されたファイルが見つかりません。: './audio_cache\\b1c041684aed449a9aff96dfaa37eaa5.npz.tmp' -> './audio_cache\\b1c041684aed449a9aff96dfaa37eaa5.npz'
+Traceback (most recent call last):
+  File "C:\Users\mabuc\test\temp_v2.py", line 243, in put
+    os.replace(tmp_path, path)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] 指定されたファイルが見つかりません。: './audio_cache\\b1c041684aed449a9aff96dfaa37eaa5.npz.tmp' -> './audio_cache\\b1c041684aed449a9aff96dfaa37eaa5.npz'
+2025-09-22 10:50:04,225 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 10:51:32,104 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 10:51:32,151 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 10:51:40,523 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 11:09:06,000 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 11:09:06,045 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 11:09:08,213 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 11:42:25,481 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 11:42:25,526 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 11:42:29,949 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 11:42:32,057 - pumpkin - ERROR - LLM API エラー (試行 1): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 11:42:32,061 - pumpkin - ERROR - LLM API エラー (試行 2): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 11:42:32,065 - pumpkin - ERROR - LLM API エラー (試行 3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 11:42:32,065 - pumpkin - ERROR - Ollama API エラー: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+Traceback (most recent call last):
+  File "C:\Users\mabuc\test\temp_v2.py", line 547, in generate
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\mabuc\test\venv\Lib\site-packages\requests\models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 11:42:35,751 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 11:44:52,976 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 11:44:53,017 - pumpkin - INFO - パンプキントーク初期化: モデル=qwen2.5:1.5b, スピーカー=1
+2025-09-22 11:44:57,851 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 11:44:59,895 - pumpkin - ERROR - LLM API エラー (試行 1): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 11:44:59,899 - pumpkin - ERROR - LLM API エラー (試行 2): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 11:44:59,902 - pumpkin - ERROR - LLM API エラー (試行 3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 11:44:59,902 - pumpkin - ERROR - Ollama API エラー: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+Traceback (most recent call last):
+  File "C:\Users\mabuc\test\temp_v2.py", line 547, in generate
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\mabuc\test\venv\Lib\site-packages\requests\models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2025-09-22 11:45:03,956 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 11:46:19,222 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 11:46:19,260 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
+2025-09-22 11:46:22,813 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 11:46:44,858 - pumpkin - ERROR - LLM API エラー (試行 1): HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=20)
+2025-09-22 11:47:00,591 - pumpkin - ERROR - キャッシュ保存エラー: [WinError 2] 指定されたファイルが見つかりません。: './audio_cache\\ded5fa923e1762bb8e72f5c51375d497.npz.tmp' -> './audio_cache\\ded5fa923e1762bb8e72f5c51375d497.npz'
+Traceback (most recent call last):
+  File "C:\Users\mabuc\test\temp_v2.py", line 243, in put
+    os.replace(tmp_path, path)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] 指定されたファイルが見つかりません。: './audio_cache\\ded5fa923e1762bb8e72f5c51375d497.npz.tmp' -> './audio_cache\\ded5fa923e1762bb8e72f5c51375d497.npz'
+2025-09-22 11:47:08,159 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 11:48:58,799 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 11:48:58,839 - pumpkin - INFO - パンプキントーク初期化: モデル=gpt-oss:latest, スピーカー=1
+2025-09-22 11:49:03,190 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 11:49:05,650 - pumpkin - WARNING - 応答が短すぎます。フォールバックモデルを試行します (1/2)
+2025-09-22 11:49:07,928 - pumpkin - WARNING - 応答が短すぎます。フォールバックモデルを試行します (2/2)
+2025-09-22 11:49:27,459 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 11:49:29,725 - pumpkin - WARNING - 応答が短すぎます。フォールバックモデルを試行します (1/2)
+2025-09-22 11:49:32,072 - pumpkin - WARNING - 応答が短すぎます。フォールバックモデルを試行します (2/2)
+2025-09-22 11:49:35,792 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 11:50:15,151 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 11:50:15,190 - pumpkin - INFO - パンプキントーク初期化: モデル=gpt-oss:latest, スピーカー=1
+2025-09-22 11:50:18,952 - pumpkin - INFO - フォールバックマッチ: 'question'
+2025-09-22 11:50:21,248 - pumpkin - WARNING - 応答が短すぎます。フォールバックモデルを試行します (1/2)
+2025-09-22 11:50:40,065 - pumpkin - ERROR - キャッシュ保存エラー: [WinError 2] 指定されたファイルが見つかりません。: './audio_cache\\5136e71a8d70ac4fa3025221a0f415e1.npz.tmp' -> './audio_cache\\5136e71a8d70ac4fa3025221a0f415e1.npz'
+Traceback (most recent call last):
+  File "C:\Users\mabuc\test\temp_v2.py", line 243, in put
+    os.replace(tmp_path, path)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] 指定されたファイルが見つかりません。: './audio_cache\\5136e71a8d70ac4fa3025221a0f415e1.npz.tmp' -> './audio_cache\\5136e71a8d70ac4fa3025221a0f415e1.npz'
+2025-09-22 11:51:02,913 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 11:52:26,740 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 11:52:26,799 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
+2025-09-22 11:52:30,868 - pumpkin - INFO - フォールバックマッチ: 'statement'
+2025-09-22 11:52:52,902 - pumpkin - ERROR - LLM API エラー (試行 1): HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=20)
+2025-09-22 11:53:07,063 - pumpkin - ERROR - キャッシュ保存エラー: [WinError 2] 指定されたファイルが見つかりません。: './audio_cache\\a771ae18a6422f704d7b2a95b5915417.npz.tmp' -> './audio_cache\\a771ae18a6422f704d7b2a95b5915417.npz'
+Traceback (most recent call last):
+  File "C:\Users\mabuc\test\temp_v2.py", line 243, in put
+    os.replace(tmp_path, path)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] 指定されたファイルが見つかりません。: './audio_cache\\a771ae18a6422f704d7b2a95b5915417.npz.tmp' -> './audio_cache\\a771ae18a6422f704d7b2a95b5915417.npz'
+2025-09-22 11:54:47,774 - pumpkin - INFO - すべてのリソースを解放しました
+2025-09-22 11:55:38,405 - pumpkin - INFO - 設定ファイルを読み込みました
+2025-09-22 11:55:38,444 - pumpkin - INFO - パンプキントーク初期化: モデル=dsasai/llama3-elyza-jp-8b:latest, スピーカー=1
+2025-09-22 11:55:41,831 - pumpkin - INFO - フォールバックマッチ: 'statement'
+2025-09-22 11:56:20,897 - pumpkin - INFO - フォールバックマッチ: 'question'

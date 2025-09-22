@@ -9,7 +9,7 @@ import hashlib
 import tempfile
 import threading
 import logging
-from typing import Dict, List, Optional, Tuple, Any, Union
+from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
@@ -84,6 +84,9 @@ class PerformanceConfig:
 
 @dataclass
 class PatternScoring:
+    exact_match: int
+    partial_match: int
+    negative_match: int
     threshold: int
 
 
@@ -143,8 +146,8 @@ class ConfigLoader:
         perf_data = self.config.get("system", {}).get("performance", {})
         return LLMConfig(
             url=llm_data.get("url", "http://localhost:11434"),
-            model=llm_data.get("model", "dsasai/llama3-elyza-jp-8b:latest"),
-            fallback_model=llm_data.get("fallback_model", "dsasai/llama3-elyza-jp-8b:latest"),
+            model=llm_data.get("model", "qwen2.5:1.5b"),
+            fallback_model=llm_data.get("fallback_model", "gemma2:2b-instruct-jp"),
             temperature=gen_data.get("temperature", 0.6),
             top_p=gen_data.get("top_p", 0.9),
             top_k=gen_data.get("top_k", 40),
@@ -166,6 +169,9 @@ class ConfigLoader:
     def get_pattern_scoring(self) -> PatternScoring:
         scoring_data = self.config.get("advanced", {}).get("pattern_scoring", {})
         return PatternScoring(
+            exact_match=scoring_data.get("exact_match", 3),
+            partial_match=scoring_data.get("partial_match", 1),
+            negative_match=scoring_data.get("negative_match", -2),
             threshold=scoring_data.get("threshold", 1)
         )
     
@@ -205,82 +211,57 @@ class ConfigLoader:
 
 class DiskCache:
     def __init__(self, cache_dir: str, max_entries: int = 100):
-        self.cache_dir = str(Path(cache_dir).resolve())
+        self.cache_dir = cache_dir
         self.max_entries = max_entries
-        self._lock = threading.Lock()
-        Path(self.cache_dir).mkdir(parents=True, exist_ok=True)
+        os.makedirs(cache_dir, exist_ok=True)
         self._cleanup()
     
     def get(self, key: str) -> Tuple[Optional[int], Optional[np.ndarray]]:
         path = self._get_path(key)
-        if not os.path.exists(path):
-            return None, None
-        
-        try:
-            with self._lock:
-                with np.load(path, allow_pickle=False) as data:
-                    rate = int(data['rate'].item() if hasattr(data['rate'], 'item') else data['rate'])
-                    audio = data['audio'].copy()
+        if os.path.exists(path):
+            try:
+                data = np.load(path)
                 os.utime(path, None)
-            logger.debug(f"キャッシュヒット: {hashlib.md5(key.encode()).hexdigest()}")
-            return rate, audio
-        except Exception as e:
-            logger.exception(f"キャッシュ読み込みエラー: {e}")
-            try:
-                os.unlink(path)
-            except Exception:
-                pass
-            return None, None
-
-    def put(self, key: str, rate: int, audio: np.ndarray) -> None:
-        try:
-            self._cleanup_if_needed()
-            path = self._get_path(key)
-            
-            try:
-                cache_dir = os.path.dirname(path)
-                with self._lock:
-                    os.makedirs(cache_dir, exist_ok=True)
-                    np.savez_compressed(path, rate=np.array(rate), audio=audio)
-                    logger.debug(f"キャッシュ保存完了: {hashlib.md5(key.encode()).hexdigest()}")
+                logger.debug(f"キャッシュヒット: {key[:20]}...")
+                return data['rate'], data['audio']
             except Exception as e:
-                logger.exception(f"キャッシュ保存エラー（直接保存）: {e}")
+                logger.debug(f"キャッシュ読み込みエラー: {e}")
+                os.unlink(path)
+        return None, None
+    
+    def put(self, key: str, rate: int, audio: np.ndarray) -> None:
+        self._cleanup()
+        path = self._get_path(key)
+        try:
+            np.savez(path, rate=rate, audio=audio)
+            logger.debug(f"キャッシュ保存: {key[:20]}...")
         except Exception as e:
-            logger.exception(f"キャッシュシステムエラー: {e}")
+            logger.debug(f"キャッシュ保存エラー: {e}")
     
     def _get_path(self, key: str) -> str:
         h = hashlib.md5(key.encode()).hexdigest()
-        return str(Path(self.cache_dir) / f"{h}.npz")
-    
-    def _cleanup_if_needed(self) -> None:
-        try:
-            cache_files = [f for f in os.listdir(self.cache_dir) if f.endswith('.npz')]
-            if len(cache_files) > self.max_entries + 10:
-                self._cleanup()
-        except Exception as e:
-            logger.error(f"キャッシュチェックエラー: {e}")
+        return os.path.join(self.cache_dir, f"{h}.npz")
     
     def _cleanup(self) -> None:
         try:
-            with self._lock:
-                cache_path = Path(self.cache_dir)
-                files = [(os.path.getatime(str(f)), str(f)) 
-                        for f in cache_path.glob("*.npz")]
-                
-                if len(files) > self.max_entries:
-                    files.sort()
-                    for _, f in files[:len(files) - self.max_entries]:
-                        os.unlink(f)
-                    logger.info(f"{len(files) - self.max_entries}個の古いキャッシュを削除しました")
+            files = [(os.path.getatime(f), f) for f in 
+                    [os.path.join(self.cache_dir, x) for x in os.listdir(self.cache_dir)]
+                    if f.endswith('.npz')]
+            
+            if len(files) > self.max_entries:
+                files.sort()
+                for _, f in files[:len(files) - self.max_entries]:
+                    os.unlink(f)
+                    logger.debug(f"古いキャッシュを削除: {os.path.basename(f)}")
         except Exception as e:
-            logger.error(f"キャッシュクリーンアップエラー: {e}")
+            logger.debug(f"キャッシュクリーンアップエラー: {e}")
 
 
 class PatternMatcher:
     def __init__(self, response_patterns: Dict, fallback_patterns: Dict, scoring: PatternScoring):
         self.response_patterns = response_patterns
         self.fallback_patterns = fallback_patterns
-        self.threshold = scoring.threshold
+        self.scoring = scoring
         self.compiled_patterns = {}
         self.category_priorities = {}
 
@@ -290,7 +271,6 @@ class PatternMatcher:
                     re.compile(p, re.I) for p in data["patterns"]
                 ]
                 self.category_priorities[category] = data.get("priority", 5)
-        
         self.compiled_fallbacks = {}
         for category, data in fallback_patterns.items():
             if "patterns" in data:
@@ -301,30 +281,25 @@ class PatternMatcher:
     def find_matching_category(self, query: str) -> Optional[str]:
         if not query:
             return None
-        
         scores = {}
         for category, patterns in self.compiled_patterns.items():
             match_count = 0
             for pattern in patterns:
                 if pattern.search(query):
                     match_count += 1
-            
             if match_count > 0:
                 priority = self.category_priorities.get(category, 5)
                 scores[category] = match_count * priority
-        
         if scores:
             best_category = max(scores.items(), key=lambda x: x[1])
-            if best_category[1] >= self.threshold:
+            if best_category[1] >= self.scoring.threshold:
                 logger.info(f"マッチングカテゴリ: '{best_category[0]}' (スコア: {best_category[1]})")
                 return best_category[0]
-
         for category, patterns in self.compiled_fallbacks.items():
             for pattern in patterns:
                 if pattern.search(query):
                     logger.info(f"フォールバックマッチ: '{category}'")
                     return f"fallback:{category}"
-        
         return None
     
     def get_fallback_data(self, category: str) -> Dict:
@@ -381,7 +356,7 @@ class AudioRecorder:
                 data = stream.read(self.config.chunk_size, exception_on_overflow=False)
                 frames.append(data)
         except Exception as e:
-            logger.exception(f"録音エラー: {e}")
+            logger.error(f"録音エラー: {e}")
         finally:
             keyboard.unhook_all()
             stream.stop_stream()
@@ -389,7 +364,6 @@ class AudioRecorder:
             for frame in frames:
                 wave_file.writeframes(frame)
             wave_file.close()
-        
         try:
             with sr.AudioFile(tmp_path) as source:
                 audio = self.recognizer.record(source)
@@ -401,10 +375,9 @@ class AudioRecorder:
         except sr.RequestError as e:
             print(f"音声認識サービスエラー: {e}")
         except Exception as e:
-            logger.exception(f"文字起こしエラー: {e}")
+            logger.error(f"文字起こしエラー: {e}")
         finally:
             Path(tmp_path).unlink(missing_ok=True)
-        
         return None
     
     def cleanup(self):
@@ -413,11 +386,11 @@ class AudioRecorder:
 
 
 class VoiceSynthesizer:
-    def __init__(self, config: VoicevoxConfig, filter_patterns: Dict, cache_dir: str, cache_size: int = 50):
+    def __init__(self, config: VoicevoxConfig, filter_patterns: Dict, cache_dir: str):
         self.config = config
         self.filter_patterns = filter_patterns
         self.session = requests.Session()
-        self.cache = DiskCache(cache_dir, max_entries=cache_size)
+        self.cache = DiskCache(cache_dir)
         self.is_speaking = False
         self.audio_completed = threading.Event()
         self.audio_completed.set()
@@ -432,7 +405,7 @@ class VoiceSynthesizer:
         for old, new in self.replace_patterns.items():
             text = text.replace(old, new)
         return text
-
+    
     def synthesize(self, text: str) -> Tuple[Optional[int], Optional[np.ndarray]]:
         rate, audio = self.cache.get(text)
         if rate is not None:
@@ -454,7 +427,6 @@ class VoiceSynthesizer:
                 "prePhonemeLength": 0.1,
                 "postPhonemeLength": self.config.post_phoneme_length
             })
-            
             synthesis_url = f"{self.config.url}/synthesis"
             synthesis_params = {"speaker": self.config.speaker_id}
             synthesis_response = self.session.post(
@@ -468,33 +440,44 @@ class VoiceSynthesizer:
             wav_data = io.BytesIO(synthesis_response.content)
             wav_data.seek(0)
             rate, audio = wavfile.read(wav_data)
-            audio = audio.astype(np.float32)
             if len(audio.shape) == 1:
                 audio = np.column_stack((audio, audio))
-            if np.max(np.abs(audio)) > 1.0:
-                audio = audio / np.max(np.abs(audio))
             fade_length = int(rate * 0.15)
             if len(audio) > fade_length:
                 fade_out = np.linspace(1.0, 0.0, fade_length)
-                audio[-fade_length:] *= fade_out[:, np.newaxis]
-
+                audio[-fade_length:] = audio[-fade_length:] * fade_out[:, np.newaxis]
             self.cache.put(text, rate, audio)
             return rate, audio
-            
         except requests.RequestException as e:
-            logger.exception(f"VOICEVOX API エラー: {e}")
+            logger.error(f"VOICEVOX API エラー: {e}")
             print(f"音声合成エラー: {e}")
         except Exception as e:
-            logger.exception(f"音声合成処理エラー: {e}")
-        
+            logger.error(f"音声合成処理エラー: {e}")
         return None, None
     
-    def close(self):
+    def play(self, rate: Optional[int], audio: Optional[np.ndarray]) -> None:
+        if rate is None or audio is None:
+            self.audio_completed.set()
+            return
+        
         try:
-            self.session.close()
-            logger.debug("VOICEVOXセッションをクローズしました")
+            self.is_speaking = True
+            self.audio_completed.clear()
+            def playback_finished():
+                self.is_speaking = False
+                print("----- 音声再生完了 -----")
+                self.audio_completed.set()
+
+            def monitor_playback():
+                sd.play(audio, rate)
+                sd.wait()
+                playback_finished()
+            threading.Thread(target=monitor_playback, daemon=True).start()
+            
         except Exception as e:
-            logger.error(f"VOICEVOXセッションクローズエラー: {e}")
+            logger.error(f"音声再生エラー: {e}")
+            self.is_speaking = False
+            self.audio_completed.set()
 
 
 class ResponseGenerator:
@@ -506,36 +489,18 @@ class ResponseGenerator:
     
     def generate(self, input_text: str, fallback_data: Dict = None) -> str:
         try:
-            self.history.append({"role": "user", "text": input_text})
-
+            self.history.append(f"ユーザー: {input_text}")
             prefix = ""
             suffix = ""
             if fallback_data:
                 prefix = fallback_data.get("prefix", "")
                 suffix = fallback_data.get("suffix", "")
+            recent_history = "\n".join(list(self.history)[-self.history.maxlen:])
 
-            history_text = "\n".join([
-                f"{item['role'].capitalize()}: {item['text']}" 
-                for item in list(self.history)[:-1]
-            ])
-            recent_history = f"{history_text}\nユーザー: {input_text}"
-
-            # 最新のOllama APIエンドポイントに変更
-            url = f"{self.config.url}/api/chat"
-            
-            # ペイロードをチャット形式に変更
+            url = f"{self.config.url}/api/generate"
             payload = {
                 "model": self.config.model,
-                "messages": [
-                    {
-                        "role": "system", 
-                        "content": f"{self.character.prompt}"
-                    },
-                    {
-                        "role": "user", 
-                        "content": f"【会話履歴】\n{recent_history}\n\n{self.character.name}: {prefix}"
-                    }
-                ],
+                "prompt": f"{self.character.prompt}\n\n【会話履歴】\n{recent_history}\n\n{self.character.name}: {prefix}",
                 "stream": False,
                 "options": {
                     "temperature": self.config.temperature,
@@ -556,58 +521,31 @@ class ResponseGenerator:
                     )
                     response.raise_for_status()
                     result = response.json()
-                    
-                    # レスポンス形式も変わっているため調整
-                    response_text = result.get("message", {}).get("content", "")
-                    if not response_text:
-                        # 古い形式もチェック
-                        response_text = result.get("response", "")
-                    
+                    response_text = result.get("response", "")
                     if not response_text or len(response_text) < 10:
                         if attempt < self.config.max_retries:
                             logger.warning(f"応答が短すぎます。フォールバックモデルを試行します ({attempt+1}/{self.config.max_retries})")
                             payload["model"] = self.config.fallback_model
                             continue
                     break
-                    
                 except Exception as e:
                     logger.error(f"LLM API エラー (試行 {attempt+1}): {e}")
-                    
-                    # 別のエンドポイントを試す
-                    if attempt == 0:
-                        url = f"{self.config.url}/api/completions"
-                        payload = {
-                            "model": self.config.model,
-                            "prompt": f"{self.character.prompt}\n\n【会話履歴】\n{recent_history}\n\n{self.character.name}: {prefix}",
-                            "stream": False,
-                            "options": payload["options"]
-                        }
-                    elif attempt == 1:
-                        url = f"{self.config.url}/v1/completions"
-                        payload = {
-                            "model": self.config.model,
-                            "prompt": f"{self.character.prompt}\n\n【会話履歴】\n{recent_history}\n\n{self.character.name}: {prefix}",
-                            "max_tokens": self.config.num_predict,
-                            "temperature": self.config.temperature,
-                            "top_p": self.config.top_p,
-                            "stream": False
-                        }
-                    else:
+                    if attempt < self.config.max_retries:
                         payload["model"] = self.config.fallback_model
-                    continue
-            
+                        continue
+                    else:
+                        raise
             if suffix and response_text:
                 response_text = f"{response_text} {suffix}"
-            
-            self.history.append({"role": "assistant", "text": response_text})
+            self.history.append(f"{self.character.name}: {response_text}")
             return response_text
             
         except requests.RequestException as e:
-            logger.exception(f"Ollama API エラー: {e}")
-            return "ちっ、接続できないぜ！サーバーの調子を確認してみろよ！"
+            logger.error(f"Ollama API エラー: {e}")
+            return "Ollamaに接続できません。"
         except Exception as e:
-            logger.exception(f"応答生成エラー: {e}")
-            return "なんか変なことが起きたぜ！もう一度試してみろよ！"
+            logger.error(f"応答生成エラー: {e}")
+            return "回答が生成できません。"
 
 
 class PumpkinTalk:
@@ -622,7 +560,6 @@ class PumpkinTalk:
         self.response_patterns = self.config_loader.get_response_patterns()
         self.fallback_patterns = self.config_loader.get_fallback_patterns()
         self.filter_patterns = self.config_loader.get_filter_patterns()
-        self._stop_event = threading.Event()
         self.matcher = PatternMatcher(
             self.response_patterns, 
             self.fallback_patterns, 
@@ -632,8 +569,7 @@ class PumpkinTalk:
         self.voice = VoiceSynthesizer(
             self.voicevox_config, 
             self.filter_patterns,
-            self.perf_config.disk_cache_dir,
-            cache_size=self.perf_config.cache_size
+            self.perf_config.disk_cache_dir
         )
         self.generator = ResponseGenerator(
             self.llm_config,
@@ -641,28 +577,25 @@ class PumpkinTalk:
             self.perf_config.history_limit
         )
         self.executor = ThreadPoolExecutor(max_workers=2)
-        self.audio_queue = queue.Queue(maxsize=4)
-        
-        Path(self.perf_config.disk_cache_dir).mkdir(parents=True, exist_ok=True)
+        self.audio_queue = queue.Queue()
+        os.makedirs(self.perf_config.disk_cache_dir, exist_ok=True)
         logger.info(f"パンプキントーク初期化: モデル={self.llm_config.model}, スピーカー={self.voicevox_config.speaker_id}")
     
     def run(self):
-        print("=== AI-Pumpkin-Talk===")
+        print("=== パンプキントーク v2.0.0 ===")
+        print("俺様、パンプキンの登場だぜ！何か質問があるなら言ってみろよ！")
+        print("質問するには[SPACE]キーを押してから話し、終了時も[SPACE]キーを押してください")
+        print("終了するには Ctrl+C を押してください")
         audio_thread = threading.Thread(target=self._audio_worker, daemon=True)
         audio_thread.start()
-        
         try:
-            while not self._stop_event.is_set():
+            while True:
                 if not self.voice.audio_completed.is_set():
-                    print("音声再生が完了するのを待っています...")
                     self.voice.audio_completed.wait()
-                
                 input_text = self.recorder.record_until_keypress()
                 if not input_text:
                     continue
-                
                 category = self.matcher.find_matching_category(input_text)
-                
                 if category:
                     if category.startswith("fallback:"):
                         fallback_data = self.matcher.get_fallback_data(category)
@@ -679,73 +612,35 @@ class PumpkinTalk:
                 else:
                     print("AIで応答を生成中...")
                     response_text = self.generator.generate(input_text)
-                
                 response_text = self.voice.filter_text(response_text)
                 print(f"応答: {response_text}")
-
-                self._synthesize_and_queue(response_text)
-        
+                self.executor.submit(self._synthesize_and_queue, response_text)
         except KeyboardInterrupt:
             print("\n=== パンプキントークシステムを終了します ===")
-            self._stop_event.set()
         finally:
-            self._cleanup()
+            self.executor.shutdown(wait=False)
+            self.recorder.cleanup()
     
     def _synthesize_and_queue(self, text: str):
-        try:
-            print("音声合成中...")
-            rate, audio = self.voice.synthesize(text)
-            if rate is not None and audio is not None:
-                try:
-                    if self.audio_queue.full():
-                        try:
-                            self.audio_queue.get_nowait()
-                            logger.warning("音声キューが満杯です。古いアイテムを破棄します。")
-                        except queue.Empty:
-                            pass
-                    
-                    self.audio_queue.put((rate, audio), timeout=1.0)
-                except queue.Full:
-                    logger.error("音声キューへの追加がタイムアウトしました")
-        except Exception as e:
-            logger.exception(f"音声合成エラー: {e}")
+        print("音声合成中...")
+        rate, audio = self.voice.synthesize(text)
+        if rate is not None and audio is not None:
+            self.audio_queue.put((rate, audio))
     
     def _audio_worker(self):
-        while not self._stop_event.is_set():
+        while True:
             try:
-                rate, audio = self.audio_queue.get(timeout=1.0)
-                self.voice.is_speaking = True
-                self.voice.audio_completed.clear()
-                
-                try:
-                    print("再生中...")
-                    sd.play(audio, int(rate))
-                    sd.wait()
-                    print("----- 音声再生完了 -----")
-                except Exception as e:
-                    logger.exception(f"音声再生エラー: {e}")
-                finally:
-                    self.voice.is_speaking = False
-                    self.voice.audio_completed.set()
-                    self.audio_queue.task_done()
-                
+                rate, audio = self.audio_queue.get(timeout=1)
+                print("再生中...")
+                self.voice.play(rate, audio)
             except queue.Empty:
-                continue
+                pass
             except Exception as e:
-                logger.exception(f"音声再生ワーカーエラー: {e}")
-                time.sleep(0.5)
-    
-    def _cleanup(self):
-        self.executor.shutdown(wait=True)
-        self.voice.close()
-        self.generator.close()
-        self.recorder.cleanup()
-        logger.info("すべてのリソースを解放しました")
+                logger.error(f"音声再生ワーカーエラー: {e}")
 
 
 if __name__ == "__main__":
     try:
-        import time
         app = PumpkinTalk()
         app.run()
     except FileNotFoundError:

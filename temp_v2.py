@@ -205,10 +205,10 @@ class ConfigLoader:
 
 class DiskCache:
     def __init__(self, cache_dir: str, max_entries: int = 100):
-        self.cache_dir = str(Path(cache_dir).resolve())
+        self.cache_dir = cache_dir
         self.max_entries = max_entries
         self._lock = threading.Lock()
-        Path(self.cache_dir).mkdir(parents=True, exist_ok=True)
+        os.makedirs(cache_dir, exist_ok=True)
         self._cleanup()
     
     def get(self, key: str) -> Tuple[Optional[int], Optional[np.ndarray]]:
@@ -231,26 +231,27 @@ class DiskCache:
             except Exception:
                 pass
             return None, None
-
+    
     def put(self, key: str, rate: int, audio: np.ndarray) -> None:
+        self._cleanup_if_needed()
+        path = self._get_path(key)
+        tmp_path = path + ".tmp"
+        
         try:
-            self._cleanup_if_needed()
-            path = self._get_path(key)
-            
-            try:
-                cache_dir = os.path.dirname(path)
-                with self._lock:
-                    os.makedirs(cache_dir, exist_ok=True)
-                    np.savez_compressed(path, rate=np.array(rate), audio=audio)
-                    logger.debug(f"キャッシュ保存完了: {hashlib.md5(key.encode()).hexdigest()}")
-            except Exception as e:
-                logger.exception(f"キャッシュ保存エラー（直接保存）: {e}")
+            with self._lock:
+                np.savez_compressed(tmp_path, rate=np.array(rate), audio=audio)
+                os.replace(tmp_path, path)
+            logger.debug(f"キャッシュ保存: {hashlib.md5(key.encode()).hexdigest()}")
         except Exception as e:
-            logger.exception(f"キャッシュシステムエラー: {e}")
+            logger.exception(f"キャッシュ保存エラー: {e}")
+            try:
+                os.unlink(tmp_path)
+            except Exception:
+                pass
     
     def _get_path(self, key: str) -> str:
         h = hashlib.md5(key.encode()).hexdigest()
-        return str(Path(self.cache_dir) / f"{h}.npz")
+        return os.path.join(self.cache_dir, f"{h}.npz")
     
     def _cleanup_if_needed(self) -> None:
         try:
@@ -263,9 +264,9 @@ class DiskCache:
     def _cleanup(self) -> None:
         try:
             with self._lock:
-                cache_path = Path(self.cache_dir)
-                files = [(os.path.getatime(str(f)), str(f)) 
-                        for f in cache_path.glob("*.npz")]
+                files = [(os.path.getatime(os.path.join(self.cache_dir, f)), 
+                        os.path.join(self.cache_dir, f)) 
+                        for f in os.listdir(self.cache_dir) if f.endswith('.npz')]
                 
                 if len(files) > self.max_entries:
                     files.sort()
@@ -473,6 +474,7 @@ class VoiceSynthesizer:
                 audio = np.column_stack((audio, audio))
             if np.max(np.abs(audio)) > 1.0:
                 audio = audio / np.max(np.abs(audio))
+            # フェードアウト
             fade_length = int(rate * 0.15)
             if len(audio) > fade_length:
                 fade_out = np.linspace(1.0, 0.0, fade_length)
@@ -520,22 +522,10 @@ class ResponseGenerator:
             ])
             recent_history = f"{history_text}\nユーザー: {input_text}"
 
-            # 最新のOllama APIエンドポイントに変更
-            url = f"{self.config.url}/api/chat"
-            
-            # ペイロードをチャット形式に変更
+            url = f"{self.config.url}/api/generate"
             payload = {
                 "model": self.config.model,
-                "messages": [
-                    {
-                        "role": "system", 
-                        "content": f"{self.character.prompt}"
-                    },
-                    {
-                        "role": "user", 
-                        "content": f"【会話履歴】\n{recent_history}\n\n{self.character.name}: {prefix}"
-                    }
-                ],
+                "prompt": f"{self.character.prompt}\n\n【会話履歴】\n{recent_history}\n\n{self.character.name}: {prefix}",
                 "stream": False,
                 "options": {
                     "temperature": self.config.temperature,
@@ -556,12 +546,7 @@ class ResponseGenerator:
                     )
                     response.raise_for_status()
                     result = response.json()
-                    
-                    # レスポンス形式も変わっているため調整
-                    response_text = result.get("message", {}).get("content", "")
-                    if not response_text:
-                        # 古い形式もチェック
-                        response_text = result.get("response", "")
+                    response_text = result.get("response", "")
                     
                     if not response_text or len(response_text) < 10:
                         if attempt < self.config.max_retries:
@@ -572,29 +557,11 @@ class ResponseGenerator:
                     
                 except Exception as e:
                     logger.error(f"LLM API エラー (試行 {attempt+1}): {e}")
-                    
-                    # 別のエンドポイントを試す
-                    if attempt == 0:
-                        url = f"{self.config.url}/api/completions"
-                        payload = {
-                            "model": self.config.model,
-                            "prompt": f"{self.character.prompt}\n\n【会話履歴】\n{recent_history}\n\n{self.character.name}: {prefix}",
-                            "stream": False,
-                            "options": payload["options"]
-                        }
-                    elif attempt == 1:
-                        url = f"{self.config.url}/v1/completions"
-                        payload = {
-                            "model": self.config.model,
-                            "prompt": f"{self.character.prompt}\n\n【会話履歴】\n{recent_history}\n\n{self.character.name}: {prefix}",
-                            "max_tokens": self.config.num_predict,
-                            "temperature": self.config.temperature,
-                            "top_p": self.config.top_p,
-                            "stream": False
-                        }
-                    else:
+                    if attempt < self.config.max_retries:
                         payload["model"] = self.config.fallback_model
-                    continue
+                        continue
+                    else:
+                        raise
             
             if suffix and response_text:
                 response_text = f"{response_text} {suffix}"
@@ -608,6 +575,14 @@ class ResponseGenerator:
         except Exception as e:
             logger.exception(f"応答生成エラー: {e}")
             return "なんか変なことが起きたぜ！もう一度試してみろよ！"
+    
+    def close(self):
+        """リソース解放"""
+        try:
+            self.session.close()
+            logger.debug("LLMセッションをクローズしました")
+        except Exception as e:
+            logger.error(f"LLMセッションクローズエラー: {e}")
 
 
 class PumpkinTalk:
@@ -643,11 +618,14 @@ class PumpkinTalk:
         self.executor = ThreadPoolExecutor(max_workers=2)
         self.audio_queue = queue.Queue(maxsize=4)
         
-        Path(self.perf_config.disk_cache_dir).mkdir(parents=True, exist_ok=True)
+        os.makedirs(self.perf_config.disk_cache_dir, exist_ok=True)
         logger.info(f"パンプキントーク初期化: モデル={self.llm_config.model}, スピーカー={self.voicevox_config.speaker_id}")
     
     def run(self):
-        print("=== AI-Pumpkin-Talk===")
+        print("=== パンプキントーク v2.0.0 最適化版 ===")
+        print("俺様、パンプキンの登場だぜ！何か質問があるなら言ってみろよ！")
+        print("質問するには[SPACE]キーを押してから話し、終了時も[SPACE]キーを押してください")
+        print("終了するには Ctrl+C を押してください")
         audio_thread = threading.Thread(target=self._audio_worker, daemon=True)
         audio_thread.start()
         

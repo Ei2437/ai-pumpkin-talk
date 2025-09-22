@@ -103,8 +103,8 @@
     
     "llm": {
       "url": "http://localhost:11434",
-      "model": "qwen2.5:1.5b",
-      "fallback_model": "gemma2:2b-instruct-jp",
+      "model": "dsasai/llama3-elyza-jp-8b:latest",
+      "fallback_model": "dsasai/llama3-elyza-jp-8b:latest",
       "generation": {
         "temperature": 0.6,
         "top_p": 0.9,
