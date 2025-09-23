@@ -1,3 +1,25 @@
+/* メモ */
+/* 親要素には flex と指定するといい。そうすると、子要素をきれいに並べやすくなる。 */
+
+/* CSS変数 */
+:root {
+    /* 文字の色 */
+    --fontColor: #FFFFFF;
+    /* 背景の色 */
+    --backgroundColor: #000000;
+    /* オブジェクトカラー */
+    --objectColor: #222222;
+    /* オブジェクトインナーカラー */
+    --objectInnerColor: #D4D4D4;
+
+    /* 角の丸み標準値 */
+    --radius: 24px;
+    /* 円を作るときの角の丸み */
+    --radiusCircle: 50%;
+    /* ボタン群の高さ */
+    --buttonHeight: 45px;
+}
+
 /* 全ての要素に対して、現在適用されているCSSを一度無効化する。 */
 * {
     margin: 0;
@@ -15,12 +37,126 @@ body {
     font-size: 32px;
     /* 行間 */
     line-height: 1.5;
-    /* 文字色 */
-    color: #000;
-    /* 背景色 */
-    background-color: #FFF;
+    /* 文字色（標準は黒） */
+    color: var(--fontColor);
+    /* 背景色 （標準は白）*/
+    background-color: var(--backgroundColor);
     /* 文字の太さ */
     font-weight: 400;
     /* 文字と文字の間の間隔 */
     letter-spacing: 0.03em;
+}
+
+/* 固定ヘッダー（上） */
+.fixed-header {
+    display: flex;
+
+    /* background */
+    background-color: var(--objectColor);
+    
+    /* size */
+    width: 100%;
+    height: 60px;
+}
+
+/* 動的ヘッダー（上） */
+.dynamic-header {
+    display: flex;
+    
+    /* Dynamic-Header は位置を固定（常に同じ位置に表示される。） */
+    position: fixed;
+
+    /* background */
+    background-color: var(--backgroundColor);
+
+    left: 50%;
+    top: 5%;
+    transform: translate( -50%, -5% );
+
+    /* size */
+    width: 94%;
+    height: 60px;
+
+    /* 角の丸み */
+    border-radius: var(--radius);
+}
+
+/* フッター */
+.footer {
+    position: absolute;
+    
+    /* background */
+    background-color: var(--backgroundColor);
+    
+    width: 100%;
+    height: 20%;
+}
+
+/* メインコンテナ */
+.content-center {
+    justify-self: center;
+    margin-left: 15%;
+    margin-right: 15%;
+}
+
+/* メインコンテナ */
+.content-left {
+    justify-self: left;
+    margin-left: 15%;
+    margin-right: 15%;
+}
+
+/* サブタイトル（テキストのCSS） */
+.subTitle {
+    justify-self: left;
+    font-size: 45px;
+    font-weight: 600;
+}
+
+/* サブタイトル（テキストのCSS） */
+.subTitle-center {
+    justify-self: center;
+    text-align: center;
+    font-size: 45px;
+    font-weight: 600;
+}
+
+/* 説明文（テキストのCSS）*/
+.explain-center {
+    justify-self: center;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 400;
+    margin-top: 5%;
+    color: var(--objectInnerColor);
+}
+
+/* ボタン群（外側） */
+.button-field {
+    display: flex;
+
+    position: relative;
+    background-color: var(--objectColor);
+    height: var(--buttonHeight);
+    
+    /* 角の丸み */
+    border-radius: var(--radius);
+
+    /* 均等配置 */
+    justify-content: space-between; /* 両端に均等配置するスタイル（x軸方面） */
+    align-items: center;            /* 中央に揃える（y軸方面）*/
+    padding: 0 20px;
+}
+
+/* ボタン群（内側） */
+.button-in {
+    background-color: var(--objectInnerColor);
+
+    /* カーソルをクリックモードに切り替える */
+    cursor: pointer;
+
+    /* 円を作る */
+    border-radius: var(--radiusCircle);
+    width: 9px;
+    height: 9px;
 }

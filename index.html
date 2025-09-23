@@ -3,34 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <title>情報処理部</title>
+    
+    <!-- CSS 情報の読み込み -->
     <link rel="stylesheet" href="./style.css">
+    <!-- アイコンの設定 -->
+    <link rel="icon" href="./icon.png" type="image/x-icon">
 </head>
 <body>
 
-    <!-- 1. 固定ヘッダー（上） -->
+    <!-- 1=1. 固定ヘッダー（上） -->
     <!-- 部活動名 + メニュー（各項目の場所まで一気に飛べるショートカット） -->
-    
+    <div class="fixed-header">
+        <!-- 左に情報処理部のロゴ？ -->
+        <!-- 右にメニュー項目 -->
+    </div>
+
+    <!-- 1-2. 動的ヘッダー（上） -->
+    <!-- 構成は固定ヘッダーと同じ、ただし初期状態では非表示 -->
+    <div class="dynamic-header" style="visibility: hidden;">
+        dynamic-header
+    </div>
+
     <!-- 2. ヒーローセクション（ロード時に見る最初の画面） -->
     <!-- 大きな写真やキャッチコピーなどと一緒に -->
-
+    <div class="content-center">
+        hero section
+    </div>
     <!-- 3. 活動紹介セクション（Apple風のカード並びに） -->
+    <div class="content-left">
+        <p class="subTitle">まずは、活動内容から。</p>
+    </div>
     <!-- 3 ~ 5 枚のカードで様子を見れる -->
+    <div></div>
 
-    <!-- 4. メンバー紹介セクション（重要人物だけでOK） -->
+    <!-- 4-1. メンバー紹介セクション（重要人物だけでOK） -->
+    <div class="content-left">
+        <p class="subTitle">メンバー</p>
+    </div>
 
+    <!-- 4-2. メンバーの大半がプログラミングを高校から始めたということをアピール -->
+    <div class="content-center">
+        <p class="subTitle-center">
+            未経験者でも大歓迎！
+        </p>
+        <p class="explain-center">
+            安心してください。情報処理部は歴史も深く、プロフェッショナルにだってなれます。<br>
+        </p>
+    </div>
     <!-- 5. スケジュールセクション -->
     <!-- 1年間の流れ（Apple風のカード並びに） -->
+    <div class="content-left">
+        <p class="subTitle">一年間のスケジュールはこちらから。</p>
+    </div>
 
-    <!-- 6. 入部案内 -->
-
-    <!-- 7. ギャラリーセクション -->
+    <!-- 6. ギャラリーセクション -->
     <!-- scrollとともにだんだん拡大していって、最終的にカード並びにする -->
+    <div class="content-left">
+        <p class="subTitle">アットホームな環境、<br>
+        ギャラリーをお見せします。</p>
+    </div>
+
+    <!-- 7. 入部案内 -->
+    <div class="content-left">
+        <p class="subTitle">
+            アドミッション・ポリシー
+        </p>
+    </div>
+    <div class="content-center">
+        <p class="subTitle-center">
+            私たちと共に、<br>
+            世界を目指しませんか。
+        </p>
+        <p class="explain-center">
+            私たち情報処理部は「世界」を目指しています。<br>
+            メンバー一同が、日々、本気で取り組んでいます。<br>
+            そんな私たちは、やる気のある新1年生を歓迎いたします。<br>
+        </p>
+    </div>
 
     <!-- 8. 注意書き欄（あれば） -->
+    <div class="warning">
+        注意書き欄
+    </div>
 
-    <!-- 9. フッター（下） -->
+    <!-- 9. 固定フッター（下） -->
     <!-- 部活動名・連絡先・学校名 -->
-    
+    <div class="footer">
+        フッター
+    </div>
+
     <!-- Mainスクリプト -->
     <script src="./main.js"></script>
     <!-- アニメーションに関するスクリプトファイル -->
