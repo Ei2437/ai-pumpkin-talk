@@ -1,10 +1,16 @@
 python -m venv venv
 
-Ubuntu : source venv/bin/activate
-Windows: venv\Scripts\activate
+venv\Scripts\activate　　これを必ず実行！！！！！
+
+python.exe -m pip install --upgrade pip
 
 pip install SpeechRecognition pyaudio requests numpy sounddevice scipy keyboard
 
 python main.py
 
 deactivate
+
+
+補足
+浜工Wi-fi環境下でpip関連を実行する場合は、以下のオプションをつけてください。
+--proxy http://proxy.hamako-ths.ed.jp:8080

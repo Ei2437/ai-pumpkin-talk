@@ -1,5 +1,5 @@
 
-# ver 1.0.0  9/22 22:
+# ver 1.0  9/22 23:18
 
 import os
 import io
@@ -119,7 +119,7 @@ class PumpkinTalk:
     
     def start_recording(self):
         if not self.is_recording:
-            print("録音開始... (Spaceキーをもう一度押して終了)")
+            print("録音開始...")
             self.is_recording = True
             self.audio_frames = []
             self.recording_stream = sd.InputStream(samplerate=16000, channels=1, dtype=np.int16)
@@ -144,8 +144,6 @@ class PumpkinTalk:
         return None
     
     def listen_and_transcribe(self):
-        print("Spaceキーを押して録音開始...")
-        
         # ノイズ調整
         with sr.Microphone() as source:
             self.recognizer.adjust_for_ambient_noise(source, duration=1)
@@ -296,10 +294,8 @@ class PumpkinTalk:
             print(f"音声再生中にエラーが発生しました: {e}")
     
     def run(self):
-        print("=== パンプキントークシステム起動 ===")
-        print("俺様、パンプキンの登場だぜ!Spaceキーを押して話しかけてみろよ!")
-        print("終了するには Ctrl+C を押してください")
-        
+        print("=== activate ===")
+        print("Spaceキーを押して録音開始...")
         try:
             while True:
                 # 文字起こし
@@ -308,17 +304,16 @@ class PumpkinTalk:
                 if input_text:
                     # 応答の生成
                     response_text = self.generate_response(input_text)
-                    
+                    print("回答:", response_text)
                     # 音声合成
                     print("音声合成中...")
                     sample_rate, audio_data = self.text_to_speech(response_text)
                     
                     # 音声再生
-                    print("読み上げテキスト:", response_text)
                     print("再生中...")
                     self.play_audio(sample_rate, audio_data)
                 
-                print("\nSpaceキーを押して次の質問をどうぞ...")
+                print("\nNext...")
                 time.sleep(0.1)
                 
         except KeyboardInterrupt:
@@ -331,4 +326,4 @@ if __name__ == "__main__":
 # コードの解説はREADME.mdを見てください。
 
 # --- 更新内容 ---
-# ver 1.0.0  -  prototype.pyのプロンプト形式を一新し、README.mdに記載した形式でpumpkin.jsonに統合。
+# ver 1.0  -  prototype.pyのプロンプト形式を一新し、README.mdに記載した形式でpumpkin.jsonに統合。

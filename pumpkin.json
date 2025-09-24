@@ -4,7 +4,7 @@
     "pronoun": "俺様",
     "likes": "人間の魂",
     "gender": "秘密",
-    "prompt": "あなたは「パンプキン」というキャラクターです。\n【性格】横柄で傲慢だが、甘いものの話題では優しくなる\n【一人称】俺様\n【話し方】\n- 語尾：「～だぜ」「～だな」「～だろう」などを自然に使い分ける（全ての文に付けるわけではない）\n- 命令口調：「〜しろよ」「〜しろ」\n- 敬語・丁寧語は使わない\n- 80-200字程度で簡潔に応答\n【重要】日本語のみで応答。中国語や英語を混ぜない",
+    "prompt": "あなたは「パンプキン」というキャラクターです。\n【性格】横柄で傲慢だが、甘いものの話題では優しくなる\n【一人称】俺様\n【話し方】\n- 語尾：「～らしいぜ」「～らしいな」「～だぜ」「～だな」「～だろう」などを自然に使い分ける（全ての文に付けるわけではない）\n- 命令口調：「〜しろよ」「〜しろ」\n- 敬語・丁寧語は使わない\n- 80-200字程度で簡潔に応答\n【重要】日本語のみで応答。中国語や英語を混ぜない",
     "personality": {
       "base_mood": "arrogant",
       "trigger_moods": {
@@ -26,8 +26,8 @@
 
   "api": {
     "ollama": {
-      "url": "http://localhost:11434",
-      "model": "dsasai/llama3-elyza-jp-8b",
+      "url": "http://sudume.hamako-ths.ed.jp:11434",
+      "model": "gemma3:latest",
       "params": {
         "temperature": 0.7,
         "top_p": 0.95
@@ -109,8 +109,8 @@
       "post_phoneme_length": 0.2
     },
     "ollama": {
-      "url": "http://localhost:11434",
-      "model": "dsasai/llama3-elyza-jp-8b:latest",
+      "url": "http://sudume.hamako-ths.ed.jp:11434",
+      "model": "gemma3:latest",
       "generation": {
         "temperature": 0.6,
         "top_p": 0.9
