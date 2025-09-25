@@ -83,12 +83,12 @@ class PumpkinTalk:
         # キーボード入力の設定
         self.listener = keyboard.Listener(on_press=self.on_key_press)
         self.listener.start()
-        self.space_pressed = False
+        self.Q_pressed = False
     
     def on_key_press(self, key):
         try:
-            if key.char == ' ':
-                self.space_pressed = True
+            if key.char == 'q':
+                self.Q_pressed = True
         except AttributeError:
             # 特殊キー（Ctrl, Altなど）は無視
             pass
@@ -159,12 +159,12 @@ class PumpkinTalk:
         with sr.Microphone() as source:
             self.recognizer.adjust_for_ambient_noise(source, duration=1)
         
-        print("録音を開始するにはSpaceキーを押してください...")
+        print("録音を開始するにはQキーを押してください...")
         
         try:
             while True:
-                if self.space_pressed:
-                    self.space_pressed = False  # フラグリセット
+                if self.Q_pressed:
+                    self.Q_pressed = False  # フラグリセット
                     if not self.is_recording:
                         # 開始
                         self.start_recording()
@@ -309,7 +309,7 @@ class PumpkinTalk:
     
     def run(self):
         print("=== activate ===")
-        print("Spaceキーを押して録音開始...")
+        print("Qキーを押して録音開始...")
         try:
             while True:
                 # 文字起こし
@@ -355,5 +355,5 @@ if __name__ == "__main__":
 # --- 更新内容 ---
 # ver 1.0  -  prototype.pyのプロンプト形式を一新し、README.mdに記載した形式でpumpkin.jsonに統合。
 # ver 1.1  -  Ollamaを sudume の gemma3:latest に変更。
-# ver 1.2  -  Ubuntu対応版（keyboard → pynput、root権限不要）
+# ver 1.2  -  Ubuntu対応版(仮)
 # ver 1.3  -  pynput分岐を削除
