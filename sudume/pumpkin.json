@@ -34,7 +34,7 @@
       }
     },
     "voicevox": {
-      "url": "http://sudume.hamako-ths.ed.jp:50021",
+      "url": "http://localhost:50021",
       "speaker_id": 4
     }
   },
@@ -100,7 +100,7 @@
 
   "system": {
     "voicevox": {
-      "url": "http://sudume.hamako-ths.ed.jp:50021",
+      "url": "http://localhost:50021",
       "speaker_id": 1,
       "speed": 1.1,
       "pitch": 0.0,
