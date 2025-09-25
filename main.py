@@ -1,5 +1,5 @@
 
-# ver 1.0  9/22 23:18
+# ver 1.1  9/22 23:18
 
 import os
 import io
@@ -324,6 +324,7 @@ if __name__ == "__main__":
     pumpkin_talk.run()
 
 # コードの解説はREADME.mdを見てください。
-
+# sudume の Ollama を使用する際は gemma3:latest 一択。
 # --- 更新内容 ---
 # ver 1.0  -  prototype.pyのプロンプト形式を一新し、README.mdに記載した形式でpumpkin.jsonに統合。
+# ver 1.1  -  Ollamaを sudume の gemma3:latest に変更。
