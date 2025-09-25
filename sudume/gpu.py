@@ -343,6 +343,15 @@ if __name__ == "__main__":
 
 # コードの解説はREADME.mdを見てください。
 # sudume の Ollama を使用する際は gemma3:latest 一択。
+
+# 今文字起こしに使用している Google Web Speech API を使用する際、「SpeechRecognition」というモジュールを必要とする。
+# そして、そのモジュールの動作に、内部的に「pyaudio」を使用しているため、pyaudio が必須。
+# pyaudioを入れるためにはビルドするための関連モジュールやヘッダーファイルが欲しいため、portaudio19-devが必須。
+# また、音声の入出力に使用する「sounddevice」には portaudio19-dev が必須。
+# sudo apt install portaudio19-dev
+# pip install pyaudio
+
+
 # --- 更新内容 ---
 # ver 1.0  -  prototype.pyのプロンプト形式を一新し、README.mdに記載した形式でpumpkin.jsonに統合。
 # ver 1.1  -  Ollamaを sudume の gemma3:latest に変更。
