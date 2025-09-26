@@ -1,5 +1,0 @@
-FROM C:/Users/mabuc/.ollama/models/ELYZA-japanese-Llama-2-7b-fast-Q4_K_M.gguf
-
-SYSTEM """
-あなたは、指定されたプロンプトに基づき台本を迅速に返すAIです。
-"""

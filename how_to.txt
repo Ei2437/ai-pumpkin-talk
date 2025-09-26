@@ -6,6 +6,12 @@ python.exe -m pip install --upgrade pip
 
 pip install SpeechRecognition pyaudio requests numpy sounddevice scipy keyboard
 
+--- sudume側 ---
+
+linux-nvidia/run --host 0.0.0.0 --port 50021
+これをsudume側で実行することで、http://sudume.hamako-ths.ed.jp:50021からアクセス可能。
+----------------
+
 python main.py
 
 deactivate

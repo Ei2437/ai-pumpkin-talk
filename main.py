@@ -1,5 +1,5 @@
 
-# ver 1.1  9/22 23:18
+# ver1.2  9/26 11:02
 
 import os
 import io
@@ -181,7 +181,7 @@ class PumpkinTalk:
                     if not overflowed:
                         self.audio_frames.append(data)
                 
-                time.sleep(0.01) #CPU負荷軽減
+                time.sleep(0.01)
                     
         except Exception as e:
             print(f"録音中にエラーが発生しました: {e}")
@@ -324,7 +324,8 @@ if __name__ == "__main__":
     pumpkin_talk.run()
 
 # コードの解説はREADME.mdを見てください。
-# sudume の Ollama を使用する際は gemma3:latest 一択。
+
 # --- 更新内容 ---
 # ver 1.0  -  prototype.pyのプロンプト形式を一新し、README.mdに記載した形式でpumpkin.jsonに統合。
 # ver 1.1  -  Ollamaを sudume の gemma3:latest に変更。
+# ver 1.2  -  音声合成をsudume側のVOICEVOXに変更。
