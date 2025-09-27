@@ -7,15 +7,22 @@
     <!-- CSS 情報の読み込み -->
     <link rel="stylesheet" href="./style.css">
     <!-- アイコンの設定 -->
-    <link rel="icon" href="./icon.png" type="image/x-icon">
+    <link rel="icon" href="./Joho-Shoribu.png" type="image/x-icon">
 </head>
 <body>
 
     <!-- 1=1. 固定ヘッダー（上） -->
     <!-- 部活動名 + メニュー（各項目の場所まで一気に飛べるショートカット） -->
     <div class="fixed-header">
-        <!-- 左に情報処理部のロゴ？ -->
-        <!-- 右にメニュー項目 -->
+        <div class="header-menu">
+            <img src="./Joho-Shoribu.png" id="header-logo">
+            <a class="header-menu-item">Activities</a>
+            <a class="header-menu-item">Member</a>
+            <a class="header-menu-item">Schedule</a>
+            <a class="header-menu-item">Gallery</a>
+            <a class="header-menu-item">Addmission-Policy</a>
+            <a class="header-menu-item">PCK解説ポスター</a>
+        </div>
     </div>
 
     <!-- 1-2. 動的ヘッダー（上） -->
@@ -24,44 +31,243 @@
         dynamic-header
     </div>
 
+    <!----------------------------------------------------------->
+
     <!-- 2. ヒーローセクション（ロード時に見る最初の画面） -->
     <!-- 大きな写真やキャッチコピーなどと一緒に -->
-    <div class="content-center">
-        hero section
+    <div class="content-center" style="height: 80vh;">
+        <img src="./Joho-Shoribu.png">
     </div>
+    
+    <h1 class="line-indent">
+        <!-- セクションの区切れ -->
+    </h1>
+
+    <!----------------------------------------------------------->
+    
     <!-- 3. 活動紹介セクション（Apple風のカード並びに） -->
     <div class="content-left">
         <p class="subTitle">まずは、活動内容から。</p>
     </div>
+
     <!-- 3 ~ 5 枚のカードで様子を見れる -->
-    <div></div>
+    <ul class="card-section">
+        <li class="card-line">
+            <ul>
+                <li class="card-contain">
+                    <p class="card-highlights">競技プログラミング</p>
+                    <p class="card-explain"></p>
+                    <div class="img-contain">
+                        <img src="./pictures/kyopro.jpg" class="card-section-img">
+                    </div>
+                </li>
+            </ul>
+        </li>
+        <li class="card-line">
+            <ul>
+                <li class="card-contain">
+                    <p class="card-highlights">アプリ開発</p>
+                    <p class="card-explain"></p>
+                    <div class="img-contain">
+                        <img src="./pictures/app.jpg" class="card-section-img">
+                    </div>
+                </li>
+            </ul>
+        </li>
+        <li class="card-line">
+            <ul>
+                <li class="card-contain">
+                    <p class="card-highlights">授業</p>
+                    <p class="card-explain"></p>
+                    <div class="img-contain">
+                        <img src="./pictures/class.jpg" class="card-section-img">
+                    </div>
+                </li>
+            </ul>
+        </li>
+        <li class="card-line">
+            <ul>
+                <li class="card-contain">
+                    <p class="card-highlights">大会実績</p>
+                    <p class="card-explain"></p>
+                    <div class="img-contain">
+                    </div>
+                </li>
+            </ul>
+        </li>
+    </ul>
+    <div class="content-center">
+        <!-- width にボタンの横幅を設定 -->
+        <!-- 要素1つにつき 40px -->
+        <div class="button-field" style="width: 160px;">
+            <div class="button-in"></div>
+            <div class="button-in"></div>
+            <div class="button-in"></div>
+            <div class="button-in"></div>
+            <!-- ほしいだけ上のやつを増やす！ -->
+        </div>
+    </div>
+
+    
+    <h1 class="line-indent">
+        <!-- セクションの区切れ -->
+    </h1>
+
+    <!----------------------------------------------------------->
 
     <!-- 4-1. メンバー紹介セクション（重要人物だけでOK） -->
     <div class="content-left">
         <p class="subTitle">メンバー</p>
     </div>
 
+    <h1 class="line-indent-small">
+        <!-- ボタンとギャラリーの間 -->
+    </h1>
+
+    <ul class="card-section">
+        <li class="card-line">
+            <ul>
+                <li class="card-contain">
+                    <p class="card-highlights">部員情報</p>
+                    <p class="card-explain"></p>
+                    <div class="img-contain">
+                    </div>
+                </li>
+            </ul>
+        </li>
+        <li class="card-line">
+            <ul>
+                <li class="card-contain">
+                    <p class="card-highlights">競技プログラミング班・リーダー</p>
+                    <p class="card-explain"></p>
+                    <div class="img-contain">
+                    </div>
+                </li>
+            </ul>
+        </li>
+        <li class="card-line">
+            <ul>
+                <li class="card-contain">
+                    <p class="card-highlights">アプリ班・リーダー</p>
+                    <p class="card-explain"></p>
+                    <div class="img-contain">
+                    </div>
+                </li>
+            </ul>
+        </li>
+    </ul>
+    <div class="content-center">
+        <!-- width にボタンの横幅を設定 -->
+        <div class="button-field" style="width: 120px;">
+            <div class="button-in"></div>
+            <div class="button-in"></div>
+            <div class="button-in"></div>
+            <!-- ほしいだけ上のやつを増やす！ -->
+        </div>
+    </div>
+
+    <h1 class="line-indent">
+        <!-- セクションの区切れ -->
+    </h1>
+
+    <!----------------------------------------------------------->
+
     <!-- 4-2. メンバーの大半がプログラミングを高校から始めたということをアピール -->
     <div class="content-center">
-        <p class="subTitle-center">
-            未経験者でも大歓迎！
-        </p>
-        <p class="explain-center">
-            安心してください。情報処理部は歴史も深く、プロフェッショナルにだってなれます。<br>
-        </p>
     </div>
+
+    <h1 class="line-indent">
+        <!-- セクションの区切れ -->
+    </h1>
+
+    <div class="content-center">
+        <ul>
+            <li class="card-contain">
+                <p class="subTitle">部員の声</p>
+                <p class="card-explain"></p>
+                <div class="img-contain">
+                    <img src="./pictures/interview.jpg" class="card-section-img">
+                </div>
+            </li>
+        </ul>
+    </div>
+    
+    <h1 class="line-indent">
+        <!-- セクションの区切れ -->
+    </h1>
+    <!----------------------------------------------------------->
+
     <!-- 5. スケジュールセクション -->
     <!-- 1年間の流れ（Apple風のカード並びに） -->
     <div class="content-left">
         <p class="subTitle">一年間のスケジュールはこちらから。</p>
     </div>
 
+    <h1 class="line-indent">
+        <!-- セクションの区切れ -->
+    </h1>
+
+    <!----------------------------------------------------------->
+
     <!-- 6. ギャラリーセクション -->
     <!-- scrollとともにだんだん拡大していって、最終的にカード並びにする -->
     <div class="content-left">
-        <p class="subTitle">アットホームな環境、<br>
-        ギャラリーをお見せします。</p>
+        <p class="subTitle">ギャラリー</p>
+    </div>    
+
+    <h1 class="line-indent-small">
+        <!-- セクションの区切れ -->
+    </h1>
+
+    <p class="highlights">
+        アットホームな環境、<br>
+        活動の様子をお見せします。
+    </p>
+    
+    <ul class="card-section">
+        <li class="card-line">
+            <ul>
+                <li class="card-contain">
+                    <div class="img-contain">
+                        <img src="./pictures/g1.jpg" class="card-section-img-big">
+                    </div>
+                </li>
+            </ul>
+        </li>
+        <li class="card-line">
+            <ul>
+                <li class="card-contain">
+                    <div class="img-contain">
+                        <img src="./pictures/g2.jpg" class="card-section-img-big">
+                    </div>
+                </li>
+            </ul>
+        </li>
+        <li class="card-line">
+            <ul>
+                <li class="card-contain">
+                    <div class="img-contain">
+                        <img src="./pictures/g3.jpg" class="card-section-img-big">
+                    </div>
+                </li>
+            </ul>
+        </li>
+    </ul>
+    <div class="content-center">
+        <!-- width にボタンの横幅を設定 -->
+        <div class="button-field" style="width: 120px;">
+            <div class="button-in"></div>
+            <div class="button-in"></div>
+            <div class="button-in"></div>
+            <!-- ほしいだけ上のやつを増やす！ -->
+        </div>
     </div>
+
+    <h1 class="line-indent">
+        <!-- セクションの区切れ -->
+    </h1>
+
+    <!----------------------------------------------------------->
 
     <!-- 7. 入部案内 -->
     <div class="content-left">
@@ -69,28 +275,48 @@
             アドミッション・ポリシー
         </p>
     </div>
+
+    <h1 class="line-indent-small">
+        <!-- セクションの区切れ -->
+    </h1>
+
+    <!----------------------------------------------------------->
+
     <div class="content-center">
-        <p class="subTitle-center">
+        <p class="highlights">
             私たちと共に、<br>
-            世界を目指しませんか。
+            「世界」を目指しませんか。
         </p>
         <p class="explain-center">
-            私たち情報処理部は「世界」を目指しています。<br>
-            メンバー一同が、日々、本気で取り組んでいます。<br>
-            そんな私たちは、やる気のある新1年生を歓迎いたします。<br>
         </p>
     </div>
+    
+    <h1 class="line-indent">
+        <!-- セクションの区切れ -->
+    </h1>
+
+    <!----------------------------------------------------------->
 
     <!-- 8. 注意書き欄（あれば） -->
     <div class="warning">
-        注意書き欄
+        <p class="warning-message">このサイトに掲示されている個人情報の共有は固く禁じます。</p>
     </div>
+    
+    <h1 class="line-indent-too-small">
+        <!-- セクションの区切れ -->
+    </h1>
+
+    <!----------------------------------------------------------->
 
     <!-- 9. 固定フッター（下） -->
-    <!-- 部活動名・連絡先・学校名 -->
     <div class="footer">
-        フッター
+        <div class="footer-menu">
+            <a class="footer-menu-item">Copylight © 2025 静岡県立浜松工業高等学校-情報処理部. All rights reserved.</a>
+            <a class="footer-menu-item">日本 / Japan</a>
+        </div>
     </div>
+
+    <!----------------------------------------------------------->
 
     <!-- Mainスクリプト -->
     <script src="./main.js"></script>

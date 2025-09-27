@@ -18,6 +18,12 @@
     --radiusCircle: 50%;
     /* ボタン群の高さ */
     --buttonHeight: 45px;
+    /* 行間インデント */
+    --lineIndent: 100px;
+    /* 行間インデント小 */
+    --lineIndentSmall: 50px;
+    /* 行間インデント極小 */
+    --lineIndentTooSmall: 24px;
 }
 
 /* 全ての要素に対して、現在適用されているCSSを一度無効化する。 */
@@ -45,6 +51,13 @@ body {
     font-weight: 400;
     /* 文字と文字の間の間隔 */
     letter-spacing: 0.03em;
+    /* x軸方面のオーバーフロー */
+    /* overflow-x: hidden; */
+}
+
+/* リストのタイプを全て none にする。（標準設定） */
+li {
+    list-style-type: none;
 }
 
 /* 固定ヘッダー（上） */
@@ -53,7 +66,7 @@ body {
 
     /* background */
     background-color: var(--objectColor);
-    
+
     /* size */
     width: 100%;
     height: 60px;
@@ -81,29 +94,98 @@ body {
     border-radius: var(--radius);
 }
 
+/* ヘッダーメニュー */
+.header-menu {
+
+    /* position */
+    display: flex;
+
+    /* size */
+    width: 100%;
+    height: 100%;
+
+    /* items position */
+    justify-content: center; /* 真ん中に揃えるスタイル（x軸方面） */
+    align-items: center;     /* 中央に揃える（y軸方面）*/
+}
+
+/* ヘッダーアイテム */
+.header-menu-item {
+
+    /* カーソルをクリックモードに切り替える */
+    cursor: pointer;
+
+    /* font */
+    font-size: 16px;
+    color: var(--objectInnerColor);
+
+    /* space */
+    margin-left: 2%;
+    margin-right: 2%;
+}
+
 /* フッター */
 .footer {
-    position: absolute;
-    
+    position: relative;
+
     /* background */
-    background-color: var(--backgroundColor);
+    background-color: var(--objectColor);
     
     width: 100%;
-    height: 20%;
+    height: 60px;
+}
+
+/* フッターメニュー */
+.footer-menu {
+
+    /* position */
+    display: flex;
+
+    /* size */
+    width: 100%;
+    height: 100%;
+
+    /* items position */
+    justify-content: space-between; /* 両端に均等配置するスタイル（x軸方面） */
+    align-items: center;     /* 中央に揃える（y軸方面）*/
+}
+
+/* フッターアイテム */
+.footer-menu-item {
+
+    /* font */
+    font-size: 12px;
+    color: var(--objectInnerColor);
+
+    margin-left: 6%;
+    margin-right: 6%;
+}
+
+/* 注意書き欄 */
+.warning {
+
+    /* font */
+    font-size: 12px;
+    color: var(--objectInnerColor);
+
+    /* position */
+    margin-left: 10%;
+    margin-right: 10%;
+
 }
 
 /* メインコンテナ */
 .content-center {
     justify-self: center;
-    margin-left: 15%;
-    margin-right: 15%;
+    margin-left: 10%;
+    margin-right: 10%;
 }
 
 /* メインコンテナ */
 .content-left {
     justify-self: left;
-    margin-left: 15%;
-    margin-right: 15%;
+    margin-left: 10%;
+    margin-right: 10%;
 }
 
 /* サブタイトル（テキストのCSS） */
@@ -121,6 +203,17 @@ body {
     font-weight: 600;
 }
 
+/* ハイライト文字 */
+.highlights {
+    /* font */
+    font-size: 36px;
+    font-weight: 500;
+    color: var(--objectInnerColor);
+
+    justify-self: center;
+    text-align: center;
+}
+
 /* 説明文（テキストのCSS）*/
 .explain-center {
     justify-self: center;
@@ -129,6 +222,89 @@ body {
     font-weight: 400;
     margin-top: 5%;
     color: var(--objectInnerColor);
+}
+
+/* カードセクション */
+.card-section {
+    display: flex;
+
+    width: auto;
+    min-width: 100%;
+
+    margin-top: 25px;
+    margin-left: 10%;
+
+    justify-content: left; /*左端に揃える（x軸方面） */
+    align-items: center;     /* 中央に揃える（y軸方面）*/
+}
+
+/* カードコンテナ */
+.card-line {
+    margin-bottom: 5vh;
+}
+
+/* カードコンテナ */
+.card-contain {
+    width: 80vw;
+    height: auto;
+}
+
+/* カードのタイトル */
+.card-highlights {
+    /* font */
+    font-size: 36px;
+    font-weight: 500;
+    color: var(--objectInnerColor);
+
+    justify-self: center;
+    text-align: center;
+
+    width: 600px;
+    height: auto;
+}
+
+/* カードの説明 */
+.card-explain {
+    justify-self: center;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 400;
+    margin-top: 5%;
+    color: var(--objectInnerColor);
+
+    width: 600px;
+}
+
+/* カードセクションの写真の大きさ指定 */
+.card-section-img {
+    margin-top: 25px;
+
+    width: 60%;
+}
+
+/* カードセクションの写真の大きさ指定（大） */
+.card-section-img-big {
+    margin-top: 25px;
+
+    width: 75%;
+}
+
+/* 行間・スペース */
+.line-indent {
+    height: var(--lineIndent);
+    width: 100%;
+}
+
+/* 行間・スペース（小）*/
+.line-indent-small {
+    height: var(--lineIndentSmall);
+    width: 100%;
+}
+
+/* 行間・スペース（極小）*/
+.line-indent-too-small {
+    height: var(--lineIndentTooSmall);
+    width: 100%;
 }
 
 /* ボタン群（外側） */
@@ -159,4 +335,28 @@ body {
     border-radius: var(--radiusCircle);
     width: 9px;
     height: 9px;
+}
+
+/* ヘッダーのロゴ */
+#header-logo {
+    width: 40px;
+    height: 40px;
+
+    /* click */
+    cursor: pointer;
+
+    /* space */
+    margin-left: 2%;
+    margin-right: 2%;
+}
+
+/* 画像コンテナ */
+.img-contain {
+    width: 100%;
+    height: auto;
+
+    display: flex;
+
+    justify-content: center; /* 中央に揃える（x軸方面） */
+    align-items: center;            /* 中央に揃える（y軸方面）*/
 }

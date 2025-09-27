@@ -3,12 +3,10 @@
 
 // 操作関数
 
-// 要素の表示・非表示を切り替える関数
-// 引数 1. element : HTMLの要素（ ID名だけ ）
-// 引数 2. show : 表示の場合は 1, 非表示の場合は 0
+// 特定の座標まで滑らかに移動する。
+// 引数 1. y : y座標
 // 戻り値なし
-function switchDisplay ( element, show ) {
-    
+function move ( y ) {
     return;
 }
 
