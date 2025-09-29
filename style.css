@@ -60,6 +60,15 @@ li {
     list-style-type: none;
 }
 
+/* strongは文字を大きく */
+strong {
+    letter-spacing: 0.05em;
+    font-size: 27.5px;
+
+    margin-left:  0.2em;
+    margin-right: 0.2em;
+}
+
 /* 固定ヘッダー（上） */
 .fixed-header {
     display: flex;
@@ -270,6 +279,24 @@ li {
     font-size: 24px;
     font-weight: 400;
     margin-top: 5%;
+    margin-left: 5%;
+    margin-right: 5%;
+    color: var(--objectInnerColor);
+
+    width: 90%;
+}
+
+/* カードの説明（右寄せ） */
+.card-explain-right {
+    justify-self: center;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 400;
+    margin-top: 5%;
+    margin-left: 5%;
+
+    line-height: 1.75;
+
     color: var(--objectInnerColor);
 
     width: 600px;
@@ -280,13 +307,19 @@ li {
     margin-top: 25px;
 
     width: 60%;
+
+    /* 角の丸み */
+    border-radius: 24px;
 }
 
-/* カードセクションの写真の大きさ指定（大） */
-.card-section-img-big {
+/* カードセクションの写真の大きさ指定 (小) */
+.card-section-img-small {
     margin-top: 25px;
+    
+    width: 40%;;
 
-    width: 75%;
+    /* 角の丸み */
+    border-radius: 24px;
 }
 
 /* 行間・スペース */
@@ -337,6 +370,57 @@ li {
     height: 9px;
 }
 
+/* 画像コンテナ */
+.img-contain {
+    width: 100%;
+    height: auto;
+
+    display: flex;
+
+    justify-content: center; /* 中央に揃える（x軸方面） */
+    align-items: center;            /* 中央に揃える（y軸方面）*/
+}
+
+/* 画像コンテナ */
+.img-contain-left {
+    width: 100%;
+    height: auto;
+
+    display: flex;
+
+    justify-content: left; /* 中央に揃える（x軸方面） */
+    align-items: center;            /* 中央に揃える（y軸方面）*/
+}
+
+/* ディテール */
+.detail-design {
+    margin-left: 10%;
+    margin-right: 10%;
+    margin-bottom: 3%;
+}
+
+/* ディテールの題名 */
+.detail-summary {
+    font-size: 40px;
+    font-weight: 500;
+    color: var(--objectInnerColor);
+}
+
+/* ディテールの説明文 */
+.detail-explain {
+    text-align: left;
+    font-size: 24px;
+    font-weight: 400;
+    margin-top: 3%;
+    color: var(--objectInnerColor);
+
+    line-height: 1.9;
+
+    width: 100%;
+}
+
+/* ID */
+
 /* ヘッダーのロゴ */
 #header-logo {
     width: 40px;
@@ -348,15 +432,4 @@ li {
     /* space */
     margin-left: 2%;
     margin-right: 2%;
-}
-
-/* 画像コンテナ */
-.img-contain {
-    width: 100%;
-    height: auto;
-
-    display: flex;
-
-    justify-content: center; /* 中央に揃える（x軸方面） */
-    align-items: center;            /* 中央に揃える（y軸方面）*/
 }

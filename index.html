@@ -21,7 +21,6 @@
             <a class="header-menu-item">Schedule</a>
             <a class="header-menu-item">Gallery</a>
             <a class="header-menu-item">Addmission-Policy</a>
-            <a class="header-menu-item">PCK解説ポスター</a>
         </div>
     </div>
 
@@ -35,7 +34,7 @@
 
     <!-- 2. ヒーローセクション（ロード時に見る最初の画面） -->
     <!-- 大きな写真やキャッチコピーなどと一緒に -->
-    <div class="content-center" style="height: 80vh;">
+    <div class="content-center">
         <img src="./Joho-Shoribu.png">
     </div>
     
@@ -50,13 +49,18 @@
         <p class="subTitle">まずは、活動内容から。</p>
     </div>
 
+    <h1 class="line-indent-too-small">
+    </h1>
+
     <!-- 3 ~ 5 枚のカードで様子を見れる -->
     <ul class="card-section">
         <li class="card-line">
             <ul>
                 <li class="card-contain">
                     <p class="card-highlights">競技プログラミング</p>
-                    <p class="card-explain"></p>
+                    <p class="card-explain">
+                        <strong>制限時間内に、コンピュータに問題を解かせる命令を作り、正しく・高速に・うまく解けるか</strong>を競います。
+                    </p>
                     <div class="img-contain">
                         <img src="./pictures/kyopro.jpg" class="card-section-img">
                     </div>
@@ -67,7 +71,9 @@
             <ul>
                 <li class="card-contain">
                     <p class="card-highlights">アプリ開発</p>
-                    <p class="card-explain"></p>
+                    <p class="card-explain">
+                        主に<strong>Androidで動くアプリケーションの概要を設計し、 Java や Kotlin といった言語で開発</strong>します。
+                    </p>
                     <div class="img-contain">
                         <img src="./pictures/app.jpg" class="card-section-img">
                     </div>
@@ -78,7 +84,9 @@
             <ul>
                 <li class="card-contain">
                     <p class="card-highlights">授業</p>
-                    <p class="card-explain"></p>
+                    <p class="card-explain">
+                        入部後は、2年生による<strong>C/C++と競技プログラミングに関する授業</strong>を受けます。
+                    </p>
                     <div class="img-contain">
                         <img src="./pictures/class.jpg" class="card-section-img">
                     </div>
@@ -139,8 +147,18 @@
             <ul>
                 <li class="card-contain">
                     <p class="card-highlights">競技プログラミング班・リーダー</p>
-                    <p class="card-explain"></p>
-                    <div class="img-contain">
+
+                    <!-- 区切れ -->
+                    <h1 class="line-indent-too-small">
+                    </h1>
+
+                    <div class="img-contain-left">
+                        <img src="./pictures/rsmorita.jpg" class="card-section-img-small">
+                        <p class="card-explain-right">
+                            <b>情報技術科2年 森田隆生 </b><br><br>
+                            <strong>未知に挑むことを恐れず、分からないことを受け入れ、仲間とともに切磋琢磨する日々</strong>を送っています。<br>
+                            <strong>目指すは世界</strong>、いつかその切符を手にするため、挑戦と成長を止めずに進み続けます。
+                        </p>
                     </div>
                 </li>
             </ul>
@@ -148,9 +166,39 @@
         <li class="card-line">
             <ul>
                 <li class="card-contain">
-                    <p class="card-highlights">アプリ班・リーダー</p>
-                    <p class="card-explain"></p>
-                    <div class="img-contain">
+                    <p class="card-highlights">アプリ開発班・リーダー</p>
+
+                    <!-- 区切れ -->
+                    <h1 class="line-indent-too-small">
+                    </h1>
+
+                    <div class="img-contain-left">
+                        <img src="./pictures/gettan.jpg" class="card-section-img-small">
+                        <p class="card-explain-right">
+                            <b>情報技術科2年 弓桁陽太</b><br><br>
+                            <strong>自由な発想を持ち寄り、互いの意見を尊重しながら、チームで楽しく創作活動</strong>に取り組んでいます。<br>
+                            <strong>新しいアプリケーションの可能性を切り拓く</strong>べく、日々挑戦を重ねています。
+                        </p>
+                    </div>
+                </li>
+            </ul>
+        </li>
+        <li class="card-line">
+            <ul>
+                <li class="card-contain">
+                    <p class="card-highlights">情報処理部員の声</p>
+
+                    <!-- 区切れ -->
+                    <h1 class="line-indent-too-small">
+                    </h1>
+
+                    <div class="img-contain-left">
+                        <img src="./pictures/interview.jpg" class="card-section-img-small">
+                        <p class="card-explain-right">
+                            <b>情報技術科1年 牧野照和</b><br><br>
+                            <strong>最高の環境</strong>と<strong>仲間</strong>に支えられ、<strong>競技プログラミングに挑戦できる今を誇りに思います</strong>。<br>
+                            <strong>ここでしか得られない経験が、日々の成長を実感</strong>させてくれます。
+                        </p>
                     </div>
                 </li>
             </ul>
@@ -158,7 +206,8 @@
     </ul>
     <div class="content-center">
         <!-- width にボタンの横幅を設定 -->
-        <div class="button-field" style="width: 120px;">
+        <div class="button-field" style="width: 160px;">
+            <div class="button-in"></div>
             <div class="button-in"></div>
             <div class="button-in"></div>
             <div class="button-in"></div>
@@ -174,27 +223,13 @@
 
     <!-- 4-2. メンバーの大半がプログラミングを高校から始めたということをアピール -->
     <div class="content-center">
+        部員の○○%は、プログラミング未経験者！
     </div>
 
     <h1 class="line-indent">
         <!-- セクションの区切れ -->
     </h1>
 
-    <div class="content-center">
-        <ul>
-            <li class="card-contain">
-                <p class="subTitle">部員の声</p>
-                <p class="card-explain"></p>
-                <div class="img-contain">
-                    <img src="./pictures/interview.jpg" class="card-section-img">
-                </div>
-            </li>
-        </ul>
-    </div>
-    
-    <h1 class="line-indent">
-        <!-- セクションの区切れ -->
-    </h1>
     <!----------------------------------------------------------->
 
     <!-- 5. スケジュールセクション -->
@@ -229,7 +264,7 @@
             <ul>
                 <li class="card-contain">
                     <div class="img-contain">
-                        <img src="./pictures/g1.jpg" class="card-section-img-big">
+                        <img src="./pictures/g1.jpg" class="card-section-img">
                     </div>
                 </li>
             </ul>
@@ -238,7 +273,7 @@
             <ul>
                 <li class="card-contain">
                     <div class="img-contain">
-                        <img src="./pictures/g2.jpg" class="card-section-img-big">
+                        <img src="./pictures/g2.jpg" class="card-section-img">
                     </div>
                 </li>
             </ul>
@@ -247,7 +282,7 @@
             <ul>
                 <li class="card-contain">
                     <div class="img-contain">
-                        <img src="./pictures/g3.jpg" class="card-section-img-big">
+                        <img src="./pictures/g3.jpg" class="card-section-img">
                     </div>
                 </li>
             </ul>
@@ -276,7 +311,7 @@
         </p>
     </div>
 
-    <h1 class="line-indent-small">
+    <h1 class="line-indent">
         <!-- セクションの区切れ -->
     </h1>
 
@@ -285,10 +320,50 @@
     <div class="content-center">
         <p class="highlights">
             私たちと共に、<br>
-            「世界」を目指しませんか。
+            「<b>世界</b>」を目指しませんか。
         </p>
-        <p class="explain-center">
-        </p>
+        
+        <h1 class="line-indent">
+            <!-- セクションの区切れ -->
+        </h1>
+    </div>
+
+    <div class-="content-left">
+        <details class="detail-design">
+            <summary class="detail-summary">1. 主体的に学び、挑戦する意思を持つ者。</summary>
+            <p class="detail-explain">
+                <strong>プログラミング未経験者でも構いません</strong>。自ら進んで学び、ものづくりに取り組む姿勢を重視します。<br>
+                <strong>入部してくる多くの人は未経験者です</strong>。そのため、入部後は<strong>C/C++を中心とした基礎学習から始まり、2年生による丁寧な指導のもと、着実な成長を支援</strong>します。<br>
+            </p>
+        </details>
+        <details class="detail-design">
+            <summary class="detail-summary">2. 仲間と切磋琢磨し、協働できる者。</summary>
+            <p class="detail-explain">
+                部内のコンテストや成果発表会「努力の跡」などを通じて、<strong>互いを刺激し合い、高め合う文化</strong>を大切にしています。<br>
+                <strong>技術的な疑問や課題に対して、積極的に他者と協働し解決する姿勢</strong>を持つ者を、我々は歓迎します。<br>
+            </p>
+        </details>
+        <details class="detail-design">
+            <summary class="detail-summary">3. 技術力とともに、表現力や発信力を磨きたい者。</summary>
+            <p class="detail-explain">
+                成果発表会「努力の跡」では、各自が作成した作品の完成度だけでなく、<strong>ユーザー視点に立ったUIの設計・プレゼンテーション力</strong>も重視されます。<br>
+                技術力だけでなく、<strong>表現する能力</strong>や<strong>他者に伝える力</strong>も身に着けることができます。<br>
+            </p>
+        </details>
+        <details class="detail-design">
+            <summary class="detail-summary">4. 外部のコンテストや大会に積極的に挑戦する者。</summary>
+            <p class="detail-explain">
+                <strong>JOI（日本情報オリンピック）、パソコン甲子園、Supercomputing Contest </strong>などの、<strong>全国規模の大会への参加を推奨</strong>しています。<br>
+                特に、JOIは「世界」へ行くための切符でもあります。これらの大会に<strong>本気で取り組みたい者</strong>を歓迎します。<br>
+            </p>
+        </details>
+        <details class="detail-design">
+            <summary class="detail-summary">5. 継続的な努力を楽しみ、成果に昇華できる者。</summary>
+            <p class="detail-explain">
+                プログラミングの世界は、<strong>挫折する人が多い世界</strong>です。そのため、日々の「<strong>ちょっとした積み重ね</strong>」が非常に重要です。<br>
+                <strong>困難に直面しても歩みを止めず、粘り強く挑戦し続ける姿勢</strong>を持つ者を、我々は歓迎します。<br>
+            </p>
+        </details>
     </div>
     
     <h1 class="line-indent">
