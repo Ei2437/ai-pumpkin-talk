@@ -329,3 +329,13 @@ if __name__ == "__main__":
 # ver 1.0  -  prototype.pyのプロンプト形式を一新し、README.mdに記載した形式でpumpkin.jsonに統合。
 # ver 1.1  -  Ollamaを sudume の gemma3:latest に変更。
 # ver 1.2  -  音声合成をsudume側のVOICEVOXに変更。
+#このままだと、手動でやるのは面倒。そこで、
+#     "分類名": {
+#      "patterns": ["キーワード"],
+#      "responses": [
+#        "応答1"
+#        "応答2"
+#      ],
+#      "priority": 指定した優先度
+#    }
+#この形式で、jsonを生成するプログラムを書いてほしい。
