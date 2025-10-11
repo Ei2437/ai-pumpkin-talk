@@ -8,6 +8,7 @@ import requests
 import numpy as np
 import sounddevice as sd
 from scipy.io import wavfile
+from flask import Flask, request, jsonify
 
 class LoadConfig:
     def __init__(self, config_path="pumpkin.json"):
@@ -19,8 +20,15 @@ class LoadConfig:
     def get_character_prompt(self):
         char = self.config["character"]
         if "prompt" in char:
-            return char["prompt"]
+            # knowledge を結合して prompt を生成
+            knowledge_dict = self.config.get("knowledge", {})
+            knowledge_str = ""
+            for category, items in knowledge_dict.items():
+                knowledge_str += f"\n【{category}】\n" + "\n".join(items) + "\n"
+            
+            return char["prompt"].format(knowledge=knowledge_str)
         else:
+            # 旧形式（knowledge が prompt 内にない場合）
             prompt_template = self.config["ai_prompt"]["base_prompt"]
             forbidden_words = "\n".join([f"- {word}" for word in char["speech_style"]["forbidden_words"]])
             endings = "」「".join(char["speech_style"]["sentence_endings"])
@@ -33,7 +41,8 @@ class LoadConfig:
                 personality=char.get("personality", {}).get("description", "横柄で傲慢。いつもはとげとげしているが、甘いものの話題になると急に優しくなる"),
                 tone=char["speech_style"]["tone"],
                 endings=endings,
-                forbidden_words=forbidden_words
+                forbidden_words=forbidden_words,
+                knowledge=""
             )
     
     def get_ollama_config(self):
@@ -41,9 +50,6 @@ class LoadConfig:
     
     def get_voicevox_config(self):
         return self.config["api"]["voicevox"]
-    
-    def get_response_templates(self):
-        return self.config.get("response_templates", {})
     
     def get_system_config(self):
         return self.config.get("system", {})
@@ -56,7 +62,6 @@ class PumpkinTalk:
         self.config_loader = LoadConfig(config_path)
         self.ollama_config = self.config_loader.get_ollama_config()
         self.voicevox_config = self.config_loader.get_voicevox_config()
-        self.response_templates = self.config_loader.get_response_templates()
         self.system_config = self.config_loader.get_system_config()
         self.advanced_config = self.config_loader.get_advanced_config()
         
@@ -67,25 +72,6 @@ class PumpkinTalk:
         
         self.character_prompt = self.config_loader.get_character_prompt()
         self.conversation_history = []
-
-    def match_response_template(self, input_text):
-        best_match = None
-        best_priority = -1
-        
-        for template_name, template in self.response_templates.items():
-            for pattern in template["patterns"]:
-                if re.search(pattern, input_text, re.IGNORECASE):
-                    priority = template.get("priority", 0)
-                    if priority > best_priority:
-                        best_priority = priority
-                        best_match = template
-                    break
-        
-        if best_match:
-            responses = best_match["responses"]
-            return random.choice(responses)
-        
-        return None
 
     def filter_response(self, response_text):
         if "response_filtering" in self.advanced_config:
@@ -104,10 +90,6 @@ class PumpkinTalk:
     def generate_response(self, input_text):
         if not input_text:
             return "何か言ったか？もう一度言ってみろよ！"
-        
-        template_response = self.match_response_template(input_text)
-        if template_response:
-            return self.filter_response(template_response)
         
         try:
             self.conversation_history.append(f"ユーザー: {input_text}")
@@ -207,10 +189,21 @@ class PumpkinTalk:
 def main():
     pumpkin_talk = PumpkinTalk("pumpkin.json")
     
-    # サーバーからテキストを受け取る処理を実装
+    app = Flask(__name__)
 
-    print("待機中...")
-    pumpkin_talk.process_input_text(input_text)
+    @app.route('/receive_text', methods=['POST'])
+    def receive_text():
+        data = request.get_json()
+        input_text = data.get("text", "")
+        if input_text:
+            print(f"受信したテキスト: {input_text}")
+            pumpkin_talk.process_input_text(input_text)
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "error", "message": "No text provided"}), 400
+
+    print("サーバーを起動します...")
+    app.run(host='0.0.0.0', port=5000, debug=False)
 
 if __name__ == "__main__":
     main()
