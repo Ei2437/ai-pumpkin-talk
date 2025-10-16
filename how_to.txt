@@ -1,6 +1,7 @@
 python -m venv venv
 
-venv\Scripts\activate　　これを必ず実行！！！！！
+Win :    venv\Scripts\activate
+Ubuntu : source venv/bin/activate
 
 python.exe -m pip install --upgrade pip
 
