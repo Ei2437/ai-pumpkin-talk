@@ -43,12 +43,16 @@ def transcribe_audio(audio):
         return None
 
 def send_text_to_server(text):
-    url = "http://localhost:5000/receive_text"  # pc1.py のアドレス
+    url = "http://sudume.hamako-ths.ed.jp:5000/receive_text"  # pc1.py のアドレス
     payload = {"text": text}
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
         print("サーバーにテキストを送信しました")
+    except requests.exceptions.ConnectionError:
+        print("サーバーに接続できません。pc1.py が起動しているか確認してください。")
+    except requests.exceptions.Timeout:
+        print("サーバーへのリクエストがタイムアウトしました。")
     except requests.exceptions.RequestException as e:
         print(f"サーバー送信でエラーが発生しました: {e}")
 
