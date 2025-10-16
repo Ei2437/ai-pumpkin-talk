@@ -4,7 +4,13 @@ venv\Scripts\activate　　これを必ず実行！！！！！
 
 python.exe -m pip install --upgrade pip
 
-pip install SpeechRecognition pyaudio requests numpy sounddevice scipy keyboard flask
+sudo apt update
+
+PC1 : sudo apt install -y portaudio19-dev alsa-utils
+      pip install numpy scipy requests flask sounddevice pyaudio
+
+PC2 : sudo apt install -y portaudio19-dev
+      pip install numpy sounddevice SpeechRecognition scipy requests keyboard
 
 --- sudume側 ---
 
@@ -12,8 +18,7 @@ linux-nvidia/run --host 0.0.0.0 --port 50021
 これをsudume側で実行することで、http://sudume.hamako-ths.ed.jp:50021からアクセス可能。
 ----------------
 
-python main.py
-
+--- 仮想環境の終了 ---
 deactivate
 
 
