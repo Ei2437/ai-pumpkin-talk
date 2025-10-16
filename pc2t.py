@@ -43,7 +43,7 @@ def transcribe_audio(audio):
         return None
 
 def send_text_to_server(text):
-    url = "http://localhost:5000/receive_text"  # pc1.py のアドレス
+    url = "http://sudume.hamako-ths.ed.jp:5000/receive_text"  # pc1.py のアドレス
     payload = {"text": text}
     try:
         response = requests.post(url, json=payload)
