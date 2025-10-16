@@ -48,7 +48,7 @@ def send_text_to_server(text):
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
-        print("サーバーにテキストを送信しました")
+        print("サーバーで処理が完了しました。")
     except requests.exceptions.ConnectionError:
         print("サーバーに接続できません。pc1.py が起動しているか確認してください。")
     except requests.exceptions.Timeout:
