@@ -43,20 +43,17 @@ def transcribe_audio(audio):
         return None
 
 def send_text_to_server(text):
-    # サーバーのURLを指定
-    #url = "http://sudume.hamako-ths.ed.jp/"
-    #payload = {"text": text}
-    #try:
-    #    response = requests.post(url, json=payload)
-    #    response.raise_for_status()
-    #    print("サーバーにテキストを送信しました")
-    #except requests.exceptions.RequestException as e:
-    #    print(f"サーバー送信でエラーが発生しました: {e}")
-        print("仮")
+    url = "http://localhost:5000/receive_text"  # pc1.py のアドレス
+    payload = {"text": text}
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        print("サーバーにテキストを送信しました")
+    except requests.exceptions.RequestException as e:
+        print(f"サーバー送信でエラーが発生しました: {e}")
 
 def main():
     print("Spaceキーを押して録音開始...")
-    recognizer = sr.Recognizer()
     is_recording = False
     last_key_state = False
     audio_frames = []
