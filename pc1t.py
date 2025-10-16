@@ -1,16 +1,13 @@
-# ver1.5  10/10 20:00
+# ver1.7  10/10 22:00
 
 import os
-import io
 import time
 import json
-import re
-import random
 import requests
 import numpy as np
-import sounddevice as sd
 from scipy.io import wavfile
 from flask import Flask, request, jsonify
+import subprocess
 
 class LoadConfig:
     def __init__(self, config_path="pumpkin.json"):
@@ -59,7 +56,6 @@ class LoadConfig:
     def get_advanced_config(self):
         return self.config.get("advanced", {})
 
-
 class PumpkinTalk:
     def __init__(self, config_path="pumpkin.json"):
         self.config_loader = LoadConfig(config_path)
@@ -78,20 +74,6 @@ class PumpkinTalk:
         
         # 一時WAVファイル名
         self.temp_wav_file = "output.wav"
-
-    def filter_response(self, response_text):
-        if "response_filtering" in self.advanced_config:
-            filtering = self.advanced_config["response_filtering"]
-            
-            if "remove_patterns" in filtering:
-                for pattern in filtering["remove_patterns"]:
-                    response_text = re.sub(pattern, "", response_text)
-            
-            if "replace_patterns" in filtering:
-                for old, new in filtering["replace_patterns"].items():
-                    response_text = response_text.replace(old, new)
-        
-        return response_text.strip()
 
     def generate_response(self, input_text):
         if not input_text:
@@ -115,10 +97,12 @@ class PumpkinTalk:
             result = response.json()
             response_text = result.get("response", "応答を生成できませんでした。")
             
-            filtered_response = self.filter_response(response_text)
+            # advanced 設定が存在する場合のみフィルタリングを実行
+            if self.advanced_config:
+                response_text = self.filter_response(response_text)
             
-            self.conversation_history.append(f"パンプキン: {filtered_response}")
-            return filtered_response
+            self.conversation_history.append(f"パンプキン: {response_text}")
+            return response_text
             
         except requests.exceptions.RequestException as e:
             print(f"Ollama APIとの通信中にエラーが発生しました: {e}")
@@ -164,17 +148,19 @@ class PumpkinTalk:
             synthesis_response.raise_for_status()
             
             # 4. 音声データを取得
-            wav_data = io.BytesIO(synthesis_response.content)
-            wav_data.seek(0)
-            sample_rate, audio_data = wavfile.read(wav_data)
+            wav_data = synthesis_response.content
             
-            # 5. モノラルならステレオに
+            # 5. WAVファイルに書き出し (上書き)
+            with open(self.temp_wav_file, "wb") as f:
+                f.write(wav_data)
+            print(f"音声ファイルを '{self.temp_wav_file}' に書き出しました")
+            
+            # 6. wavfile.read でサンプリングレートとデータを取得 (確認用)
+            sample_rate, audio_data = wavfile.read(self.temp_wav_file)
+            
+            # 7. モノラルならステレオに
             if len(audio_data.shape) == 1:
                 audio_data = np.column_stack((audio_data, audio_data))
-            
-            # 6. WAVファイルに書き出し
-            wavfile.write(self.temp_wav_file, sample_rate, audio_data)
-            print(f"音声ファイルを '{self.temp_wav_file}' に書き出しました")
             
             return sample_rate, audio_data
             
@@ -182,17 +168,27 @@ class PumpkinTalk:
             print(f"VOICEVOX APIとの通信中にエラーが発生しました: {e}")
             return None, None
 
-    def play_audio(self):
+    def play_audio_with_aplay(self):
+        """aplay を使用して音声ファイルを再生"""
         if not os.path.exists(self.temp_wav_file):
             print("再生できる音声ファイルがありません")
             return
         
+        # ファイルサイズを確認
+        if os.path.getsize(self.temp_wav_file) == 0:
+            print("警告: 音声ファイルが空です")
+            return
+
         try:
-            print(f"'{self.temp_wav_file}' を再生中...")
-            sample_rate, audio_data = wavfile.read(self.temp_wav_file)
-            sd.play(audio_data, sample_rate)
-            sd.wait()
-            print("再生完了")
+            print(f"'{self.temp_wav_file}' を aplay で再生中...")
+            # -q オプションで再生のみ (メッセージを抑制)
+            result = subprocess.run(["aplay", "-q", self.temp_wav_file])
+            if result.returncode == 0:
+                print("再生完了")
+            else:
+                print(f"aplay でエラーが発生しました (終了コード: {result.returncode})")
+        except FileNotFoundError:
+            print("aplay が見つかりません。'sudo apt install alsa-utils' でインストールしてください。")
         except Exception as e:
             print(f"音声再生中にエラーが発生しました: {e}")
 
@@ -205,12 +201,30 @@ class PumpkinTalk:
         print("音声合成中...")
         sample_rate, audio_data = self.text_to_speech(response_text)
         
-        # 音声再生 (ファイルから)
+        # 音声再生 (aplay を使用)
         if sample_rate is not None and audio_data is not None:
             print("再生中...")
-            self.play_audio()
+            self.play_audio_with_aplay()
         else:
             print("音声合成に失敗しました")
+
+    def filter_response(self, response_text):
+        """応答テキストをフィルタリング (advanced 設定が存在する場合のみ呼び出される)"""
+        if "response_filtering" in self.advanced_config:
+            filtering = self.advanced_config["response_filtering"]
+            
+            # 除去
+            if "remove_patterns" in filtering:
+                import re
+                for pattern in filtering["remove_patterns"]:
+                    response_text = re.sub(pattern, "", response_text)
+            
+            # 置換
+            if "replace_patterns" in filtering:
+                for old, new in filtering["replace_patterns"].items():
+                    response_text = response_text.replace(old, new)
+        
+        return response_text.strip()
 
 def main():
     pumpkin_talk = PumpkinTalk("pumpkin.json")
