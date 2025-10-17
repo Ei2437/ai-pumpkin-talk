@@ -1,4 +1,4 @@
-# ver1.7  10/10 22:00
+# ver1.9  10/10 23:30
 
 import os
 import time
@@ -18,31 +18,13 @@ class LoadConfig:
     
     def get_character_prompt(self):
         char = self.config["character"]
-        if "prompt" in char:
-            # knowledge を結合して prompt を生成
-            knowledge_dict = self.config.get("knowledge", {})
-            knowledge_str = ""
-            for category, items in knowledge_dict.items():
-                knowledge_str += f"\n【{category}】\n" + "\n".join(items) + "\n"
-            
-            return char["prompt"].format(knowledge=knowledge_str)
-        else:
-            # 旧形式（knowledge が prompt 内にない場合）
-            prompt_template = self.config["ai_prompt"]["base_prompt"]
-            forbidden_words = "\n".join([f"- {word}" for word in char["speech_style"]["forbidden_words"]])
-            endings = "」「".join(char["speech_style"]["sentence_endings"])
-            
-            return prompt_template.format(
-                name=char["name"],
-                pronoun=char["pronoun"],
-                likes=char["likes"],
-                gender=char["gender"],
-                personality=char.get("personality", {}).get("description", "横柄で傲慢。いつもはとげとげしているが、甘いものの話題になると急に優しくなる"),
-                tone=char["speech_style"]["tone"],
-                endings=endings,
-                forbidden_words=forbidden_words,
-                knowledge=""
-            )
+        # 常に character.prompt を使用
+        knowledge_dict = self.config.get("knowledge", {})
+        knowledge_str = ""
+        for category, items in knowledge_dict.items():
+            knowledge_str += f"\n【{category}】\n" + "\n".join(items) + "\n"
+        
+        return char["prompt"].format(knowledge=knowledge_str)
     
     def get_ollama_config(self):
         return self.config["api"]["ollama"]
@@ -210,6 +192,7 @@ class PumpkinTalk:
 
     def filter_response(self, response_text):
         """応答テキストをフィルタリング (advanced 設定が存在する場合のみ呼び出される)"""
+        # advanced 設定が存在する場合のみフィルタリングを実行
         if "response_filtering" in self.advanced_config:
             filtering = self.advanced_config["response_filtering"]
             
