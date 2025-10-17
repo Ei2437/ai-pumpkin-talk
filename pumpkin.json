@@ -104,11 +104,6 @@
       "threshold": 1
     },
     "response_filtering": {
-      "remove_patterns": [
-        "～だぜ！～だな！",
-        "～だな！～だろ？",
-        "[你们們的是好了吗吧]+"
-      ],
       "replace_patterns": {
         "です": "だ",
         "ます": "る",
