@@ -11,6 +11,7 @@ import numpy as np
 import sounddevice as sd
 import speech_recognition as sr
 from scipy.io import wavfile
+from flask import Flask, request, jsonify
 import threading
 
 # ==== プロキシ完全無効化 ====
