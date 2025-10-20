@@ -72,7 +72,7 @@ class PumpkinTalk:
         self.temp_wav_file = "output.wav"
 
         # === 映像アプリとの連携 ===
-        self.video_app_url = "http://localhost:5001" # video_app.py のFlaskサーバーURL
+        self.video_app_url = "http://sudume.hamako-ths.ed.jp:5001" # video_app.py のFlaskサーバーURL
 
     def generate_response(self, input_text):
         if not input_text:
