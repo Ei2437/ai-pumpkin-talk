@@ -78,6 +78,7 @@
     }
   },
   "system": {
+    "video_server_url": "http://localhost:5001",
     "voicevox": {
       "url": "http://sudume.hamako-ths.ed.jp:50021",
       "speaker_id": 1,
