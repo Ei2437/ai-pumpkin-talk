@@ -18,7 +18,6 @@ class LoadConfig:
     
     def get_character_prompt(self):
         char = self.config["character"]
-        # 常に character.prompt を使用
         knowledge_dict = self.config.get("knowledge", {})
         knowledge_str = ""
         for category, items in knowledge_dict.items():
@@ -54,7 +53,7 @@ class PumpkinTalk:
         self.character_prompt = self.config_loader.get_character_prompt()
         self.conversation_history = []
         
-        # 一時WAVファイル名 
+        # WAVファイル名
         self.temp_wav_file = "output.wav"
 
     def generate_response(self, input_text):
@@ -79,7 +78,6 @@ class PumpkinTalk:
             result = response.json()
             response_text = result.get("response", "応答を生成できませんでした。")
             
-            # advanced 設定が存在する場合のみフィルタリングを実行
             if self.advanced_config:
                 response_text = self.filter_response(response_text)
             
@@ -137,7 +135,7 @@ class PumpkinTalk:
                 f.write(wav_data)
             print(f"音声ファイルを '{self.temp_wav_file}' に書き出しました")
             
-            # 6. wavfile.read でサンプリングレートとデータを取得 (確認用)
+            # 6. サンプリングレートとデータを取得
             sample_rate, audio_data = wavfile.read(self.temp_wav_file)
             
             # 7. モノラルならステレオに
@@ -156,14 +154,12 @@ class PumpkinTalk:
             print("再生できる音声ファイルがありません")
             return
         
-        # ファイルサイズを確認
         if os.path.getsize(self.temp_wav_file) == 0:
             print("警告: 音声ファイルが空です")
             return
 
         try:
             print(f"'{self.temp_wav_file}' を aplay で再生中...")
-            # -q オプションで再生のみ (メッセージを抑制)
             result = subprocess.run(["aplay", "-q", self.temp_wav_file])
             if result.returncode == 0:
                 print("再生完了")
@@ -183,7 +179,7 @@ class PumpkinTalk:
         print("音声合成中...")
         sample_rate, audio_data = self.text_to_speech(response_text)
         
-        # 音声再生 (aplay を使用)
+        # 音声再生
         if sample_rate is not None and audio_data is not None:
             print("再生中...")
             self.play_audio_with_aplay()
@@ -191,8 +187,7 @@ class PumpkinTalk:
             print("音声合成に失敗しました")
 
     def filter_response(self, response_text):
-        """応答テキストをフィルタリング (advanced 設定が存在する場合のみ呼び出される)"""
-        # advanced 設定が存在する場合のみフィルタリングを実行
+        # フィルタリング
         if "response_filtering" in self.advanced_config:
             filtering = self.advanced_config["response_filtering"]
             
