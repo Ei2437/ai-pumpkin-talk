@@ -43,7 +43,7 @@ class PumpkinTalk:
         self.config_loader = LoadConfig(config_path)
         self.ollama_config = self.config_loader.get_ollama_config()
         self.voicevox_config = self.config_loader.get_voicevox_config()
-        self.system_config = self.config_loader.get_system_config()
+        self.system_config = self. config_loader.get_system_config()
         self.advanced_config = self.config_loader.get_advanced_config()
         
         self.ollama_url = self.ollama_config["url"]
@@ -54,7 +54,7 @@ class PumpkinTalk:
         self.character_prompt = self.config_loader.get_character_prompt()
         self.conversation_history = []
         
-        # 一時WAVファイル名
+        # 一時WAVファイル名 
         self.temp_wav_file = "output.wav"
 
     def generate_response(self, input_text):
@@ -230,3 +230,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # AIのプロンプトに、「パンプキンが喋るものだから、パンプキンの立場での発言の台本を作る」ように指示。
