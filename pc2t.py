@@ -94,15 +94,19 @@ def main():
                     if not is_recording:
                         # 録音開始
                         recording_stream, audio_frames = start_recording()
-                    else:
+                        is_recording = True # 状態を更新
+                else: # current_key_state が False (キーが離された)
+                    if is_recording:
                         # 録音停止
                         audio = stop_recording(recording_stream, audio_frames)
                         if audio:
                             text = transcribe_audio(audio)
                             if text:
                                 send_text_to_server(text)
-                        is_recording = False
-                last_key_state = current_key_state
+                        is_recording = False # 状態を更新
+                        audio_frames = [] # フレームをクリア
+                        recording_stream = None
+                last_key_state = current_key_state # 状態を更新
 
             if is_recording:
                 data, overflowed = recording_stream.read(1024)
@@ -112,6 +116,8 @@ def main():
             time.sleep(0.01)
     except KeyboardInterrupt:
         print("\n終了")
+        if is_recording:
+            stop_recording(recording_stream, audio_frames)
     finally:
         # リスナーを解除
         keyboard.unhook_all()
