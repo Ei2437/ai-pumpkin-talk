@@ -54,9 +54,6 @@ class AlphaVideo:
             self.frames.append(rgba)
         self.total = len(self.frames)
         self.current_frame = 0
-        self.start_frame = 0
-        self.move_start_time = 0
-        self.target_frame = 0
 
     def get_frame(self, idx=None):
         if idx is None:
@@ -75,28 +72,18 @@ def draw_video_fullscreen(screen, video: AlphaVideo):
     frame = video.get_frame()
     draw_video(screen, frame, 0, 0)
 
-# ==== Aキーランダム再生（トグル対応） ====
+# ==== Aキーループ再生（トグル対応） ====
 def handle_a_key_video(vid: AlphaVideo, t, seed=0):
     dx, dy = float_motion(t, seed=seed, amp_y=22, amp_x=12, base_speed=0.0009)
-    duration = 300  # アニメーション時間(ms)
 
     if a_key_active:  # トグルがONの場合
-        if vid.move_start_time == 0:
-            vid.move_start_time = t
-            vid.start_frame = vid.current_frame
-            vid.target_frame = random.randint(0, vid.total-1)
-
-        progress = min((t - vid.move_start_time)/duration, 1.0)
-        ease = ease_in_out_sine(progress)
-        vid.current_frame = int(vid.start_frame + (vid.target_frame - vid.start_frame)*ease)
-
-        if progress >= 1.0:
-            vid.move_start_time = 0
+        # フレームを進める
+        vid.current_frame += 1
+        # 最後まで行ったら最初に戻る（ループ）
+        if vid.current_frame >= vid.total:
+            vid.current_frame = 0
     else:  # トグルがOFFの場合
         vid.current_frame = 0
-        vid.start_frame = 0
-        vid.move_start_time = 0
-        vid.target_frame = 0
 
     return vid.get_frame(), dx, dy
 
