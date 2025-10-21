@@ -11,13 +11,13 @@ from flask import Flask, request, jsonify # Flask追加
 # ==== 設定 ====
 # ---- 動画 ----
 BG_VIDEO_PATH = "background.mp4"
-VIDEO_MAIN = "Pumpkin_Center.mp.mp4"
-VIDEO_FULL2 = "Pumkin_Center2Left.mp.mp4"
-VIDEO_FULL4 = "Pumkin_Left2Center.mp.mp4"
-VIDEO_FULL3 = "Pumpkin_Left.mp.mp4"
-VIDEO_FULL5 = "Pumkin_Center2Right.mp.mp4"
-VIDEO_FULL6 = "Pumkin_Right.mp.mp4"
-VIDEO_FULL7 = "Pumkin_Right2Center.mp.mp4"
+VIDEO_MAIN = "Pumpkin_Center.mp4"
+VIDEO_FULL2 = "Pumkin_Center2Left.mp4"
+VIDEO_FULL4 = "Pumkin_Left2Center.mp4"
+VIDEO_FULL3 = "Pumpkin_Left.mp4"
+VIDEO_FULL5 = "Pumkin_Center2Right.mp4"
+VIDEO_FULL6 = "Pumkin_Right.mp4"
+VIDEO_FULL7 = "Pumkin_Right2Center.mp4"
 
 #---- クロマキー処理の範囲 ----
 LOWER_GREEN = np.array([20, 80, 80])
