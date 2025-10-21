@@ -7,10 +7,7 @@ import numpy as np
 import sounddevice as sd
 import speech_recognition as sr
 from scipy.io import wavfile
-import keyboard # keyboard ライブラリをインポート
-
-# 映像サーバーURLを追加 (temp.py が動いているPCのIPアドレスに変更してください)
-VIDEO_SERVER_URL = "http://sudume.hamako-ths.ed.jp:5001" # 例: "http://192.168.x.x:5001"
+import keyboard # keyboard ライブラリ追加
 
 def start_recording():
     print("録音開始...")
@@ -60,40 +57,32 @@ def send_text_to_server(text):
     except requests.exceptions.RequestException as e:
         print(f"サーバー送信でエラーが発生しました: {e}")
 
-def send_video_signal(signal):
-    """映像サーバーにシグナルを送信"""
-    url = f"{VIDEO_SERVER_URL}/{signal}"
+def send_key_to_temp(key):
+    """temp.pyのFlaskサーバーにキー入力を送信"""
+    url = "http://sudume.hamako-ths.ed.jp:5001/key_event" # temp.py のアドレス
+    payload = {"key": key}
     try:
-        response = requests.post(url)
+        response = requests.post(url, json=payload)
         response.raise_for_status()
-        print(f"Video signal '{signal}' sent successfully.")
+        print(f"Key '{key}' sent successfully to temp.py server.")
     except requests.exceptions.RequestException as e:
-        print(f"Failed to send video signal '{signal}': {e}")
+        print(f"Failed to send key '{key}' to temp.py server: {e}")
 
 def on_key_event(event):
     """keyboard ライブラリのイベントリスナー"""
     if event.event_type == keyboard.KEY_DOWN: # キーが押されたとき
-        if event.name == 'left':
-            send_video_signal('move_left')
-            print(f"Sent LEFT key signal from pc2")
-        elif event.name == 'right':
-            send_video_signal('move_right')
-            print(f"Sent RIGHT key signal from pc2")
-        # Aキーの送信も可能ですが、temp.py に処理がないためコメントアウト
-        # elif event.name == 'a':
-        #     # temp.py に /key_a などのエンドポイントがあれば、それを呼び出す
-        #     # send_video_signal('key_a')
-        #     pass
+        if event.name in ['left', 'right', 'a']:
+            send_key_to_temp(event.name)
 
 def main():
     print("Spaceキーを押して録音開始...")
-    print("Left/Rightキーも検知します。")
+    print("Left/Right/Aキーも検知します。")
     is_recording = False
     last_key_state = False
     audio_frames = []
     recording_stream = None
 
-    # keyboard ライブラリのイベントリスナーを登録
+    # キーイベントリスナーを登録
     keyboard.hook(on_key_event)
 
     try:
@@ -105,14 +94,6 @@ def main():
                     if not is_recording:
                         # 録音開始
                         recording_stream, audio_frames = start_recording()
-                        # 録音開始時に映像サーバーにシグナル送信（方向をランダムに選ぶ）
-                        import random
-                        if random.choice([True, False]):
-                            send_video_signal("move_left")
-                            print("Sent signal: move_left (random)")
-                        else:
-                            send_video_signal("move_right")
-                            print("Sent signal: move_right (random)")
                     else:
                         # 録音停止
                         audio = stop_recording(recording_stream, audio_frames)

@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import math
 import random
-from flask import Flask, request, jsonify # Flaskを追加
+from flask import Flask, request, jsonify # Flask追加
 
 # ==== 設定 ====
 # ---- 動画 ----
@@ -91,89 +91,33 @@ def draw_video_fullscreen(screen, frame, size, lower, upper):
     surf = surf.convert_alpha()
     screen.blit(surf, (0, 0))
 
-# ==== グローバル変数（映像状態管理）====
-current_state = "normal"  # 初期状態
-audio_start_direction = None  # 音声再生開始時の方向 ("left" or "right")
-
 # Flaskアプリケーションの初期化
 app = Flask(__name__)
 
-@app.route('/move_left', methods=['POST'])
-def move_left():
-    global current_state, audio_start_direction
-    print("Signal received: move_left")
-    # ぱんぷきんが真ん中にいた時の処理（ぱんぷきんが左へ移動する） -> full2
-    if current_state == "normal":
-        cap_full2.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        current_state = "full2"
-        audio_start_direction = "left"
-    # ぱんぷきんが左にいた時の処理（ぱんぷきんが真ん中へ移動する） -> full4
-    elif current_state == "full3":
-        cap_full4.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        current_state = "full4"
-        audio_start_direction = "left"
-    # その他の状態 (full5, full6, full7) では、full2 (Center2Left) に遷移
-    # ただし、full5 (Center2Right) から left に行くのは不自然なので、full3 (Left) に直接遷移するのも考えられる
-    # ここでは、リクエストの意図に沿って、full2 (Center2Left) に遷移する例を示します
-    # または、リクエストのタイミングで、現在の状態に関係なく full2 に遷移する
-    # 今回は、元のロジックに近づけるため、full2 に遷移する
+@app.route('/key_event', methods=['POST'])
+def receive_key_event():
+    data = request.get_json()
+    key_name = data.get("key")
+
+    if key_name == 'left':
+        pygame.event.post(pygame.event.Event(KEYDOWN, key=K_LEFT))
+        print("LEFT key event posted to pygame queue")
+    elif key_name == 'right':
+        pygame.event.post(pygame.event.Event(KEYDOWN, key=K_RIGHT))
+        print("RIGHT key event posted to pygame queue")
+    elif key_name == 'a':
+        # Aキーのイベントは、pygame.key.get_pressed() で処理されるため、
+        # 特にイベントキューに追加する必要はありません。
+        # ただし、何か特別な処理をさせたい場合はここに書けます。
+        print("A key event received (no pygame event posted)")
     else:
-        cap_full2.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        current_state = "full2"
-        audio_start_direction = "left"
+        print(f"Unknown key received: {key_name}")
+        return jsonify({"status": "error", "message": "Unknown key"}), 400
+
     return jsonify({"status": "success"})
 
-@app.route('/move_right', methods=['POST'])
-def move_right():
-    global current_state, audio_start_direction
-    print("Signal received: move_right")
-    # ぱんぷきんが真ん中にいた時の処理（ぱんぷきんが右へ移動する） -> full5
-    if current_state == "normal":
-        cap_full5.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        current_state = "full5"
-        audio_start_direction = "right"
-    # ぱんぷきんが右にいたの処理（ぱんぷきんが真ん中へ移動する） -> full7
-    elif current_state == "full6":
-        cap_full7.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        current_state = "full7"
-        audio_start_direction = "right"
-    # その他の状態 (full2, full3, full4) では、full5 (Center2Right) に遷移
-    # 今回は、元のロジックに近づけるため、full5 に遷移する
-    else:
-        cap_full5.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        current_state = "full5"
-        audio_start_direction = "right"
-    return jsonify({"status": "success"})
-
-@app.route('/audio_start', methods=['POST'])
-def audio_start():
-    global current_state, audio_start_direction
-    print("Signal received: audio_start")
-    # audio_start_direction に基づいて state を変更
-    if audio_start_direction == "left":
-        current_state = "full3" # full3 (Left) に移行
-        cap_full3.set(cv2.CAP_PROP_POS_FRAMES, 0) # ループ再生のため最初から
-    elif audio_start_direction == "right":
-        current_state = "full6" # full6 (Right) に移行
-        cap_full6.set(cv2.CAP_PROP_POS_FRAMES, 0) # ループ再生のため最初から
-    return jsonify({"status": "success"})
-
-@app.route('/audio_end', methods=['POST'])
-def audio_end():
-    global current_state, audio_start_direction
-    print("Signal received: audio_end")
-    # audio_start_direction に基づいて state を変更
-    if audio_start_direction == "left":
-        current_state = "full7" # full7 (Left2Center) に移行
-        cap_full7.set(cv2.CAP_PROP_POS_FRAMES, 0) # アニメーションのため最初から
-    elif audio_start_direction == "right":
-        current_state = "full4" # full4 (Right2Center) に移行
-        cap_full4.set(cv2.CAP_PROP_POS_FRAMES, 0) # アニメーションのため最初から
-    return jsonify({"status": "success"})
-
-# ==== メインループ ====
-def main_loop():
-    global current_state, audio_start_direction
+# ==== メイン ====
+def main():
     pygame.init()
     screen = pygame.display.set_mode((w, h))
     pygame.display.set_caption("AI_pumpkin_talk")
@@ -208,12 +152,18 @@ def main_loop():
     total_f3 = int(cap_full3.get(cv2.CAP_PROP_FRAME_COUNT))
     total_f6 = int(cap_full6.get(cv2.CAP_PROP_FRAME_COUNT))
     #初期化
-    # state = "normal" -> current_state に変更
+    state = "normal"
     dx_main = dy_main = dx_f3 = dy_f3 = dx_f6 = dy_f6 = 0
     current_main = current_f3 = current_f6 = 0.0
     move_start_time_main = move_start_time_f3 = move_start_time_f6 = 0
     start_frame_main = start_frame_f3 = start_frame_f6 = 0.0
     return_to_first_third_main = return_to_first_third_f3 = return_to_first_third_f6 = False
+
+    # Flaskサーバーを別スレッドで起動
+    import threading
+    server_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False))
+    server_thread.daemon = True
+    server_thread.start()
 
     while True:
         t = pygame.time.get_ticks()
@@ -227,31 +177,26 @@ def main_loop():
                     cap.release()
                 pygame.quit()
                 sys.exit()
-            #左矢印キーが押された時の処理 (元のロジックをcurrent_stateに適用)
+            #左矢印キーが押された時の処理
             elif event.type == KEYDOWN and event.key == K_LEFT:
                 #ぱんぷきんが真ん中にいた時の処理（ぱんぷきんが左へ移動する）
-                if current_state == "normal":
+                if state == "normal":
                     cap_full2.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                    current_state = "full2"
-                    audio_start_direction = "left"
+                    state = "full2"
                 #ぱんぷきんが左にいた時の処理（ぱんぷきんが真ん中へ移動する）
-                elif current_state == "full3":
+                elif state == "full3":
                     cap_full4.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                    current_state = "full4"
-                    audio_start_direction = "left"
-            #右矢印キーが押された時の処理 (元のロジックをcurrent_stateに適用)
+                    state = "full4"
+            #右矢印キーが押された時の処理
             elif event.type == KEYDOWN and event.key == K_RIGHT:
                 #ぱんぷきんが真ん中にいた時の処理（ぱんぷきんが右へ移動する）
-                if current_state == "normal":
+                if state == "normal":
                     cap_full5.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                    current_state = "full5"
-                    audio_start_direction = "right"
+                    state = "full5"
                 #ぱんぷきんが右にいたの処理（ぱんぷきんが真ん中へ移動する）
-                elif current_state == "full6":
+                elif state == "full6":
                     cap_full7.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                    current_state = "full7"
-                    audio_start_direction = "right"
-
+                    state = "full7"
         # ==== 背景動画を0.1倍速で更新 ====
         if bg_frame_counter % BG_SPEED_SKIP == 0:
             ret_bg_new, frame_bg_new = cap_bg.read()
@@ -302,47 +247,44 @@ def main_loop():
             return dx, dy, current, start_frame, move_start_time, return_to_first_third
 
         # === 各状態描画 ===
-        # state を current_state に変更
-        if current_state == "normal":
+        if state == "normal":
             dx_main, dy_main, current_main, start_frame_main, move_start_time_main, return_to_first_third_main = \
                 handle_a_key(cap_main, total_main, current_main, start_frame_main, move_start_time_main, return_to_first_third_main, seed=1)
             draw_video(screen, cap_main, (w, h), dx_main, dy_main, LOWER_GREEN, UPPER_GREEN, current_main)
-        elif current_state == "full3":
+        elif state == "full3":
             dx_f3, dy_f3, current_f3, start_frame_f3, move_start_time_f3, return_to_first_third_f3 = \
                 handle_a_key(cap_full3, total_f3, current_f3, start_frame_f3, move_start_time_f3, return_to_first_third_f3, seed=3)
             draw_video(screen, cap_full3, (w, h), dx_f3, dy_f3, LOWER_GREEN, UPPER_GREEN, current_f3)
-        elif current_state == "full6":
+        elif state == "full6":
             dx_f6, dy_f6, current_f6, start_frame_f6, move_start_time_f6, return_to_first_third_f6 = \
                 handle_a_key(cap_full6, total_f6, current_f6, start_frame_f6, move_start_time_f6, return_to_first_third_f6, seed=5)
             draw_video(screen, cap_full6, (w, h), dx_f6, dy_f6, LOWER_GREEN, UPPER_GREEN, current_f6)
-        elif current_state == "full2":
+        elif state == "full2":
             ret, frame = cap_full2.read()
             if not ret:
                 cap_full3.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                current_state = "full3"
-                audio_start_direction = "left" # 遷移後も方向を維持
+                state = "full3"
             else:
                 draw_video_fullscreen(screen, frame, (w, h), LOWER_GREEN, UPPER_GREEN)
-        elif current_state == "full4":
+        elif state == "full4":
             ret, frame = cap_full4.read()
             if not ret:
                 current_main = 0
-                current_state = "normal"
+                state = "normal"
             else:
                 draw_video_fullscreen(screen, frame, (w, h), LOWER_GREEN, UPPER_GREEN)
-        elif current_state == "full5":
+        elif state == "full5":
             ret, frame = cap_full5.read()
             if not ret:
                 cap_full6.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                current_state = "full6"
-                audio_start_direction = "right" # 遷移後も方向を維持
+                state = "full6"
             else:
                 draw_video_fullscreen(screen, frame, (w, h), LOWER_GREEN, UPPER_GREEN)
-        elif current_state == "full7":
+        elif state == "full7":
             ret, frame = cap_full7.read()
             if not ret:
                 current_main = 0
-                current_state = "normal"
+                state = "normal"
             else:
                 draw_video_fullscreen(screen, frame, (w, h), LOWER_GREEN, UPPER_GREEN)
 
@@ -350,12 +292,4 @@ def main_loop():
         clock.tick(60)
 
 if __name__ == "__main__":
-    # Flaskサーバーをバックグラウンドで実行しつつ、pygameループを実行
-    import threading
-    # Flaskを別スレッドで起動
-    server_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False))
-    server_thread.daemon = True
-    server_thread.start()
-
-    # pygameループをメインスレッドで実行
-    main_loop()
+    main()
