@@ -1,3 +1,4 @@
+# temp.py
 # -*- coding: utf-8 -*-
 import pygame
 from pygame.locals import *
@@ -12,12 +13,12 @@ from flask import Flask, request, jsonify # Flaskを追加
 # ---- 動画 ----
 BG_VIDEO_PATH = "background.mp4"
 VIDEO_MAIN = "Pumpkin_Center.mp4"
-VIDEO_FULL2 = "Pumkin_Center2Left.mp4"
-VIDEO_FULL4 = "Pumkin_Left2Center.mp4"
-VIDEO_FULL3 = "Pumpkin_Left.mp4"
-VIDEO_FULL5 = "Pumkin_Center2Right.mp4"
-VIDEO_FULL6 = "Pumkin_Right.mp4"
-VIDEO_FULL7 = "Pumkin_Right2Center.mp4"
+VIDEO_FULL2 = "Pumkin_Center2Left.mp.mp4"
+VIDEO_FULL4 = "Pumkin_Left2Center.mp.mp4"
+VIDEO_FULL3 = "Pumpkin_Left.mp.mp4"
+VIDEO_FULL5 = "Pumkin_Center2Right.mp.mp4"
+VIDEO_FULL6 = "Pumkin_Right.mp.mp4"
+VIDEO_FULL7 = "Pumkin_Right2Center.mp.mp4"
 
 #---- クロマキー処理の範囲 ----
 LOWER_GREEN = np.array([20, 80, 80])
@@ -91,51 +92,56 @@ def draw_video_fullscreen(screen, frame, size, lower, upper):
     surf = surf.convert_alpha()
     screen.blit(surf, (0, 0))
 
-# ==== グローバル変数（映像状態管理）====
-current_state = "normal"  # 初期状態
-is_playing_audio = False  # 音声再生中かどうか (未使用、状態遷移で管理)
-audio_start_direction = None  # 音声再生開始時の方向 ("left" or "right")
-
 # Flaskアプリケーションの初期化
 app = Flask(__name__)
 
-@app.route('/signal', methods=['POST'])
-def receive_signal():
-    global current_state, is_playing_audio, audio_start_direction
-    data = request.get_json()
-    signal = data.get("signal")
-
-    if signal == "record_start_left":
-        print("Signal received: record_start_left")
-        current_state = "full2"  # Center2Left
-        audio_start_direction = "left"
-    elif signal == "record_start_right":
-        print("Signal received: record_start_right")
-        current_state = "full5"  # Center2Right
-        audio_start_direction = "right"
-    elif signal == "audio_start":
-        print("Signal received: audio_start")
-        is_playing_audio = True
-        if audio_start_direction == "left":
-            current_state = "full3"  # Pumpkin_Left
-        elif audio_start_direction == "right":
-            current_state = "full6"  # Pumpkin_Right
-    elif signal == "audio_end":
-        print("Signal received: audio_end")
-        is_playing_audio = False
-        if audio_start_direction == "left":
-            current_state = "full7"  # Left2Center
-        elif audio_start_direction == "right":
-            current_state = "full4"  # Right2Center
-    else:
-        print(f"Unknown signal: {signal}")
-        return jsonify({"status": "error", "message": "Unknown signal"}), 400
-
+@app.route('/move_left', methods=['POST'])
+def move_left():
+    # PygameのイベントキューにLEFTキー押下イベントを追加
+    pygame.event.post(pygame.event.Event(KEYDOWN, key=K_LEFT))
+    print("Sent LEFT key event to pygame queue")
     return jsonify({"status": "success"})
 
-# ==== メインループ ====
-def main_loop():
-    global current_state
+@app.route('/move_right', methods=['POST'])
+def move_right():
+    # PygameのイベントキューにRIGHTキー押下イベントを追加
+    pygame.event.post(pygame.event.Event(KEYDOWN, key=K_RIGHT))
+    print("Sent RIGHT key event to pygame queue")
+    return jsonify({"status": "success"})
+
+@app.route('/audio_start', methods=['POST'])
+def audio_start():
+    global is_playing_audio, audio_start_direction, state
+    print("Signal received: audio_start")
+    is_playing_audio = True
+    # audio_start_direction に基づいて state を変更
+    if audio_start_direction == "left":
+        state = "full3" # full3 (Left) に移行
+        cap_full3.set(cv2.CAP_PROP_POS_FRAMES, 0) # ループ再生のため最初から
+    elif audio_start_direction == "right":
+        state = "full6" # full6 (Right) に移行
+        cap_full6.set(cv2.CAP_PROP_POS_FRAMES, 0) # ループ再生のため最初から
+    return jsonify({"status": "success"})
+
+@app.route('/audio_end', methods=['POST'])
+def audio_end():
+    global is_playing_audio, audio_start_direction, state
+    print("Signal received: audio_end")
+    is_playing_audio = False
+    # audio_start_direction に基づいて state を変更
+    if audio_start_direction == "left":
+        state = "full7" # full7 (Left2Center) に移行
+        cap_full7.set(cv2.CAP_PROP_POS_FRAMES, 0) # アニメーションのため最初から
+    elif audio_start_direction == "right":
+        state = "full4" # full4 (Right2Center) に移行
+        cap_full4.set(cv2.CAP_PROP_POS_FRAMES, 0) # アニメーションのため最初から
+    return jsonify({"status": "success"})
+
+# ==== メイン ====
+def main():
+    global state, audio_start_direction # audio_start_direction をグローバル変数として宣言
+    audio_start_direction = None # 音声再生開始時の方向を記録
+
     pygame.init()
     screen = pygame.display.set_mode((w, h))
     pygame.display.set_caption("AI_pumpkin_talk")
@@ -170,12 +176,18 @@ def main_loop():
     total_f3 = int(cap_full3.get(cv2.CAP_PROP_FRAME_COUNT))
     total_f6 = int(cap_full6.get(cv2.CAP_PROP_FRAME_COUNT))
     #初期化
-    # state = "normal" -> current_state に変更
+    state = "normal"
     dx_main = dy_main = dx_f3 = dy_f3 = dx_f6 = dy_f6 = 0
     current_main = current_f3 = current_f6 = 0.0
     move_start_time_main = move_start_time_f3 = move_start_time_f6 = 0
     start_frame_main = start_frame_f3 = start_frame_f6 = 0.0
     return_to_first_third_main = return_to_first_third_f3 = return_to_first_third_f6 = False
+
+    # Flaskサーバーをバックグラウンドで実行しつつ、pygameループを実行
+    import threading
+    server_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False))
+    server_thread.daemon = True
+    server_thread.start()
 
     while True:
         t = pygame.time.get_ticks()
@@ -189,6 +201,30 @@ def main_loop():
                     cap.release()
                 pygame.quit()
                 sys.exit()
+            #左矢印キーが押された時の処理
+            elif event.type == KEYDOWN and event.key == K_LEFT:
+                #ぱんぷきんが真ん中にいた時の処理（ぱんぷきんが左へ移動する）
+                if state == "normal":
+                    cap_full2.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    state = "full2"
+                    audio_start_direction = "left" # 方向を記録
+                #ぱんぷきんが左にいた時の処理（ぱんぷきんが真ん中へ移動する）
+                elif state == "full3":
+                    cap_full4.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    state = "full4"
+                    audio_start_direction = "left" # 方向を記録
+            #右矢印キーが押された時の処理
+            elif event.type == KEYDOWN and event.key == K_RIGHT:
+                #ぱんぷきんが真ん中にいた時の処理（ぱんぷきんが右へ移動する）
+                if state == "normal":
+                    cap_full5.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    state = "full5"
+                    audio_start_direction = "right" # 方向を記録
+                #ぱんぷきんが右にいたの処理（ぱんぷきんが真ん中へ移動する）
+                elif state == "full6":
+                    cap_full7.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    state = "full7"
+                    audio_start_direction = "right" # 方向を記録
 
         # ==== 背景動画を0.1倍速で更新 ====
         if bg_frame_counter % BG_SPEED_SKIP == 0:
@@ -240,45 +276,46 @@ def main_loop():
             return dx, dy, current, start_frame, move_start_time, return_to_first_third
 
         # === 各状態描画 ===
-        # state を current_state に変更
-        if current_state == "normal":
+        if state == "normal":
             dx_main, dy_main, current_main, start_frame_main, move_start_time_main, return_to_first_third_main = \
                 handle_a_key(cap_main, total_main, current_main, start_frame_main, move_start_time_main, return_to_first_third_main, seed=1)
             draw_video(screen, cap_main, (w, h), dx_main, dy_main, LOWER_GREEN, UPPER_GREEN, current_main)
-        elif current_state == "full3":
+        elif state == "full3":
             dx_f3, dy_f3, current_f3, start_frame_f3, move_start_time_f3, return_to_first_third_f3 = \
                 handle_a_key(cap_full3, total_f3, current_f3, start_frame_f3, move_start_time_f3, return_to_first_third_f3, seed=3)
             draw_video(screen, cap_full3, (w, h), dx_f3, dy_f3, LOWER_GREEN, UPPER_GREEN, current_f3)
-        elif current_state == "full6":
+        elif state == "full6":
             dx_f6, dy_f6, current_f6, start_frame_f6, move_start_time_f6, return_to_first_third_f6 = \
                 handle_a_key(cap_full6, total_f6, current_f6, start_frame_f6, move_start_time_f6, return_to_first_third_f6, seed=5)
             draw_video(screen, cap_full6, (w, h), dx_f6, dy_f6, LOWER_GREEN, UPPER_GREEN, current_f6)
-        elif current_state == "full2":
+        elif state == "full2":
             ret, frame = cap_full2.read()
             if not ret:
                 cap_full3.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                current_state = "full3"
+                state = "full3"
+                audio_start_direction = "left" # 遷移後も方向を維持
             else:
                 draw_video_fullscreen(screen, frame, (w, h), LOWER_GREEN, UPPER_GREEN)
-        elif current_state == "full4":
+        elif state == "full4":
             ret, frame = cap_full4.read()
             if not ret:
                 current_main = 0
-                current_state = "normal"
+                state = "normal"
             else:
                 draw_video_fullscreen(screen, frame, (w, h), LOWER_GREEN, UPPER_GREEN)
-        elif current_state == "full5":
+        elif state == "full5":
             ret, frame = cap_full5.read()
             if not ret:
                 cap_full6.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                current_state = "full6"
+                state = "full6"
+                audio_start_direction = "right" # 遷移後も方向を維持
             else:
                 draw_video_fullscreen(screen, frame, (w, h), LOWER_GREEN, UPPER_GREEN)
-        elif current_state == "full7":
+        elif state == "full7":
             ret, frame = cap_full7.read()
             if not ret:
                 current_main = 0
-                current_state = "normal"
+                state = "normal"
             else:
                 draw_video_fullscreen(screen, frame, (w, h), LOWER_GREEN, UPPER_GREEN)
 
@@ -286,12 +323,4 @@ def main_loop():
         clock.tick(60)
 
 if __name__ == "__main__":
-    # Flaskサーバーをバックグラウンドで実行しつつ、pygameループを実行
-    import threading
-    # Flaskを別スレッドで起動
-    server_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False))
-    server_thread.daemon = True
-    server_thread.start()
-
-    # pygameループをメインスレッドで実行
-    main_loop()
+    main()

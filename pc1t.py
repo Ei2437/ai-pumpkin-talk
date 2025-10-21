@@ -1,5 +1,6 @@
+# pc1.py
 # ver1.9  10/10 23:30
-# ver2.0  10/21 00:00 (映像同期追加)
+# ver2.0  10/21 00:00 (映像同期追加 - キーボードイベント送信方式)
 
 import os
 import time
@@ -58,14 +59,13 @@ class PumpkinTalk:
         self.temp_wav_file = "output.wav"
         
         # 映像サーバーURL
-        self.video_server_url = self.system_config.get("video_server_url", "http://sudume.hamako-ths.ed.jp:5001")
+        self.video_server_url = self.system_config.get("video_server_url", "http://localhost:5001")
 
     def send_video_signal(self, signal):
         """映像サーバーにシグナルを送信"""
-        url = f"{self.video_server_url}/signal"
-        payload = {"signal": signal}
+        url = f"{self.video_server_url}/{signal}"
         try:
-            response = requests.post(url, json=payload)
+            response = requests.post(url)
             response.raise_for_status()
             print(f"Video signal '{signal}' sent successfully.")
         except requests.exceptions.RequestException as e:
@@ -186,15 +186,6 @@ class PumpkinTalk:
             print(f"音声再生中にエラーが発生しました: {e}")
 
     def process_input_text(self, input_text):
-        # 音声入力開始時のシグナル（方向をランダムに決定）
-        import random
-        if random.choice([True, False]):
-            self.send_video_signal("record_start_left")
-            print("Sent signal: record_start_left (random)")
-        else:
-            self.send_video_signal("record_start_right")
-            print("Sent signal: record_start_right (random)")
-
         # 応答の生成
         response_text = self.generate_response(input_text)
         print("回答:", response_text)
