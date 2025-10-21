@@ -11,7 +11,7 @@ from flask import Flask, request, jsonify # Flask追加
 
 # ==== 設定 ====
 w, h = 1920, 1020
-BG_VIDEO_PATH = "BG.mp4"
+BG_VIDEO_PATH = "background.mp4"
 
 VIDEO_MAIN = "Pumpkin-Center.mov"
 VIDEO_FULL2 = "Pumpkin-Center2Left.mov"
