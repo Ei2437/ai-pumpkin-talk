@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# pc1.py + temp.py 統合版
+# AI処理（Ollama + VOICEVOX）と映像表示（Pygame）を同時実行
+
 import os
 import time
 import json
@@ -15,7 +18,7 @@ import cv2
 import math
 import threading
 
-# ==== 設定 ====
+# ==== 映像設定 ====
 w, h = 1920, 1020
 BG_VIDEO_PATH = "video/BG.mp4"
 
@@ -275,17 +278,20 @@ pumpkin_talk = None
 
 @app.route('/receive_text', methods=['POST'])
 def receive_text():
+    """pc2.pyからテキストを受信してAI処理"""
     data = request.get_json()
     input_text = data.get("text", "")
     if input_text:
         print(f"受信したテキスト: {input_text}")
-        pumpkin_talk.process_input_text(input_text)
+        # 別スレッドで処理して即座にレスポンス返す
+        threading.Thread(target=pumpkin_talk.process_input_text, args=(input_text,), daemon=True).start()
         return jsonify({"status": "success"}), 200
     else:
         return jsonify({"status": "error", "message": "No text provided"}), 400
 
 @app.route('/key_event', methods=['POST'])
 def receive_key_event():
+    """pc2.pyからキーイベントを受信してPygameに転送"""
     global a_key_active
     data = request.get_json()
     key_name = data.get("key")
@@ -310,15 +316,19 @@ def main():
     global state, a_key_active, pumpkin_talk
     
     # PumpkinTalkの初期化
+    print("PumpkinTalk AI システムを初期化中...")
     pumpkin_talk = PumpkinTalk("pumpkin.json")
+    print("初期化完了")
     
     # Pygameの初期化
+    print("Pygame 初期化中...")
     pygame.init()
     screen = pygame.display.set_mode((w, h))
     pygame.display.set_caption("AI_pumpkin_talk")
     clock = pygame.time.Clock()
 
     # 背景動画
+    print("背景動画を読み込み中...")
     cap_bg = cv2.VideoCapture(BG_VIDEO_PATH)
     if not cap_bg.isOpened():
         print("背景動画読み込み失敗")
@@ -330,6 +340,7 @@ def main():
     bg_counter = 0
 
     # 透過動画
+    print("透過動画を読み込み中...")
     videos = {
         "normal": AlphaVideo(VIDEO_MAIN),
         "full2": AlphaVideo(VIDEO_FULL2),
@@ -339,15 +350,26 @@ def main():
         "full6": AlphaVideo(VIDEO_FULL6),
         "full7": AlphaVideo(VIDEO_FULL7)
     }
+    print("動画読み込み完了")
 
     state = "normal"
 
     # Flaskサーバーを別スレッドで起動
-    server_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False))
+    print("Flaskサーバーを起動中...")
+    server_thread = threading.Thread(
+        target=lambda: app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+    )
     server_thread.daemon = True
     server_thread.start()
-    print("Flaskサーバーを起動しました (port 5000)")
+    print("=" * 50)
+    print("Flaskサーバーが起動しました")
+    print("  - テキスト受信: http://0.0.0.0:5000/receive_text")
+    print("  - キーイベント: http://0.0.0.0:5000/key_event")
+    print("=" * 50)
+    print("pc2.py から接続可能です")
+    print("=" * 50)
 
+    # メインループ
     while True:
         t = pygame.time.get_ticks()
 
