@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import math
 import random
+from flask import Flask, request, jsonify # Flask追加
 
 # ==== 設定 ====
 # ---- 動画 ----
@@ -90,11 +91,36 @@ def draw_video_fullscreen(screen, frame, size, lower, upper):
     surf = surf.convert_alpha()
     screen.blit(surf, (0, 0))
 
+# Flaskアプリケーションの初期化
+app = Flask(__name__)
+
+@app.route('/key_event', methods=['POST'])
+def receive_key_event():
+    data = request.get_json()
+    key_name = data.get("key")
+
+    if key_name == 'left':
+        pygame.event.post(pygame.event.Event(KEYDOWN, key=K_LEFT))
+        print("LEFT key event posted to pygame queue")
+    elif key_name == 'right':
+        pygame.event.post(pygame.event.Event(KEYDOWN, key=K_RIGHT))
+        print("RIGHT key event posted to pygame queue")
+    elif key_name == 'a':
+        # Aキーのイベントは、pygame.key.get_pressed() で処理されるため、
+        # 特にイベントキューに追加する必要はありません。
+        # ただし、何か特別な処理をさせたい場合はここに書けます。
+        print("A key event received (no pygame event posted)")
+    else:
+        print(f"Unknown key received: {key_name}")
+        return jsonify({"status": "error", "message": "Unknown key"}), 400
+
+    return jsonify({"status": "success"})
+
 # ==== メイン ====
 def main():
     pygame.init()
     screen = pygame.display.set_mode((w, h))
-    pygame.display.set_caption("AI_pumpkin_talk") #画面上部の名前
+    pygame.display.set_caption("AI_pumpkin_talk")
     clock = pygame.time.Clock()
 
     # 背景動画を読み込み
@@ -132,6 +158,12 @@ def main():
     move_start_time_main = move_start_time_f3 = move_start_time_f6 = 0
     start_frame_main = start_frame_f3 = start_frame_f6 = 0.0
     return_to_first_third_main = return_to_first_third_f3 = return_to_first_third_f6 = False
+
+    # Flaskサーバーを別スレッドで起動
+    import threading
+    server_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False))
+    server_thread.daemon = True
+    server_thread.start()
 
     while True:
         t = pygame.time.get_ticks()

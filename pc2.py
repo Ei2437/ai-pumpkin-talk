@@ -1,3 +1,4 @@
+# pc2.py
 import os
 import time
 import json
@@ -6,7 +7,7 @@ import numpy as np
 import sounddevice as sd
 import speech_recognition as sr
 from scipy.io import wavfile
-import keyboard
+import keyboard # keyboard ライブラリ追加
 
 def start_recording():
     print("録音開始...")
@@ -56,38 +57,70 @@ def send_text_to_server(text):
     except requests.exceptions.RequestException as e:
         print(f"サーバー送信でエラーが発生しました: {e}")
 
+def send_key_to_temp(key):
+    """temp.pyのFlaskサーバーにキー入力を送信"""
+    url = "http://sudume.hamako-ths.ed.jp:5001/key_event" # temp.py のアドレス
+    payload = {"key": key}
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        print(f"Key '{key}' sent successfully to temp.py server.")
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to send key '{key}' to temp.py server: {e}")
+
+def on_key_event(event):
+    """keyboard ライブラリのイベントリスナー"""
+    if event.event_type == keyboard.KEY_DOWN: # キーが押されたとき
+        if event.name in ['left', 'right', 'a']:
+            send_key_to_temp(event.name)
+
 def main():
     print("Spaceキーを押して録音開始...")
+    print("Left/Right/Aキーも検知します。")
     is_recording = False
     last_key_state = False
     audio_frames = []
     recording_stream = None
 
-    while True:
-        current_key_state = keyboard.is_pressed('space')
+    # キーイベントリスナーを登録
+    keyboard.hook(on_key_event)
 
-        if current_key_state != last_key_state:
-            if current_key_state:
-                if not is_recording:
-                    # 録音開始
-                    recording_stream, audio_frames = start_recording()
-                    is_recording = True
-                else:
-                    # 録音停止
-                    audio = stop_recording(recording_stream, audio_frames)
-                    if audio:
-                        text = transcribe_audio(audio)
-                        if text:
-                            send_text_to_server(text)
-                    is_recording = False
-            last_key_state = current_key_state
+    try:
+        while True:
+            current_key_state = keyboard.is_pressed('space')
 
+            if current_key_state != last_key_state:
+                if current_key_state:
+                    if not is_recording:
+                        # 録音開始
+                        recording_stream, audio_frames = start_recording()
+                        is_recording = True # 状態を更新
+                else: # current_key_state が False (キーが離された)
+                    if is_recording:
+                        # 録音停止
+                        audio = stop_recording(recording_stream, audio_frames)
+                        if audio:
+                            text = transcribe_audio(audio)
+                            if text:
+                                send_text_to_server(text)
+                        is_recording = False # 状態を更新
+                        audio_frames = [] # フレームをクリア
+                        recording_stream = None
+                last_key_state = current_key_state # 状態を更新
+
+            if is_recording:
+                data, overflowed = recording_stream.read(1024)
+                if not overflowed:
+                    audio_frames.append(data)
+
+            time.sleep(0.01)
+    except KeyboardInterrupt:
+        print("\n終了")
         if is_recording:
-            data, overflowed = recording_stream.read(1024)
-            if not overflowed:
-                audio_frames.append(data)
-
-        time.sleep(0.01)
+            stop_recording(recording_stream, audio_frames)
+    finally:
+        # リスナーを解除
+        keyboard.unhook_all()
 
 if __name__ == "__main__":
     try:
