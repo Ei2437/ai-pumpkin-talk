@@ -53,7 +53,7 @@
       "機械科は",
       "電気科は",
       "情報技術科は",
-      "理数工学科は敵だ!!!!!!!!"
+      "理数工学科は"
     ],
     "sweets": [
       "ケーキやプリンも悪くないが、人間の魂が一番美味い。",
@@ -78,6 +78,7 @@
     }
   },
   "system": {
+    "video_server_url": "http://localhost:5001",
     "voicevox": {
       "url": "http://sudume.hamako-ths.ed.jp:50021",
       "speaker_id": 1,

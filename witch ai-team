@@ -1,0 +1,87 @@
+[33mdfaaa0f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mai-team[m[33m, [m[1;31morigin/ai-team[m[33m)[m HEAD@{0}: commit: Auto Update 2025-10-21 08:47:58
+[33mdc769bd[m HEAD@{1}: pull --rebase origin ai-team (finish): returning to refs/heads/ai-team
+[33mdc769bd[m HEAD@{2}: pull --rebase origin ai-team (start): checkout dc769bd13d27655bf99aa639c7cee758bf6aa6fa
+[33meb72bbb[m HEAD@{3}: checkout: moving from 7b9bd43d884e3cfba3eda9f05bc60b94d817c7e4 to ai-team
+[33m7b9bd43[m HEAD@{4}: commit: Auto Update 2025-10-21 08:45:07
+[33mdc769bd[m HEAD@{5}: pull --rebase origin ai-team: Fast-forward
+[33m2999799[m HEAD@{6}: pull --rebase origin ai-team: Fast-forward
+[33m00debf0[m HEAD@{7}: pull --rebase origin ai-team: Fast-forward
+[33mdb3069c[m HEAD@{8}: reset: moving to db3069c
+[33m41987d2[m HEAD@{9}: commit: Auto Update 2025-10-20 17:55:10
+[33m38bb107[m HEAD@{10}: commit: Auto Update 2025-10-20 17:54:24
+[33mdb3069c[m HEAD@{11}: reset: moving to db3069c
+[33m66c7500[m HEAD@{12}: commit: Auto Update 2025-10-20 17:52:23
+[33mdb3069c[m HEAD@{13}: checkout: moving from ai-team to db3069c
+[33meb72bbb[m HEAD@{14}: pull --rebase origin ai-team: Fast-forward
+[33m4184603[m HEAD@{15}: pull --rebase origin ai-team: Fast-forward
+[33m819c8ee[m HEAD@{16}: pull --rebase origin ai-team: Fast-forward
+[33m13c1c73[m HEAD@{17}: pull --rebase origin ai-team: Fast-forward
+[33mb0ff9a7[m HEAD@{18}: pull --rebase origin ai-team: Fast-forward
+[33mdb3069c[m HEAD@{19}: commit: Auto Update 2025-10-20 15:44:01
+[33mf599603[m HEAD@{20}: commit: Auto Update 2025-10-18 16:59:45
+[33m87d706a[m HEAD@{21}: commit: Auto Update 2025-10-18 16:57:39
+[33md54e8c3[m HEAD@{22}: commit: Auto Update 2025-10-18 16:53:06
+[33m4f4c5a9[m HEAD@{23}: commit: Auto Update 2025-10-18 16:43:16
+[33mad5641a[m HEAD@{24}: commit: Auto Update 2025-10-18 16:37:36
+[33m07def8d[m HEAD@{25}: pull --rebase origin ai-team: Fast-forward
+[33m335d499[m HEAD@{26}: commit: Auto Update 2025-10-17 17:18:07
+[33m1d6e5c4[m HEAD@{27}: commit: Auto Update 2025-10-17 11:43:55
+[33ma7d0475[m HEAD@{28}: commit: Auto Update 2025-10-17 11:36:35
+[33m6790d5c[m HEAD@{29}: pull --rebase origin ai-team: Fast-forward
+[33m854f5a2[m HEAD@{30}: pull --rebase origin ai-team: Fast-forward
+[33m4b93fa0[m HEAD@{31}: commit: Auto Update 2025-10-17 08:47:28
+[33m4f7ac83[m HEAD@{32}: pull --rebase origin ai-team: Fast-forward
+[33md65b4c7[m HEAD@{33}: commit: Auto Update 2025-10-16 21:30:37
+[33me631966[m HEAD@{34}: commit: ほぼ完成
+[33mddf9b8f[m HEAD@{35}: pull --rebase origin ai-team: Fast-forward
+[33mcf9b8d1[m HEAD@{36}: pull --rebase origin ai-team: Fast-forward
+[33m1d91d79[m HEAD@{37}: pull --rebase origin ai-team: Fast-forward
+[33m48cb3c5[m HEAD@{38}: commit: asldjkh
+[33m41af952[m HEAD@{39}: pull --rebase origin ai-team: Fast-forward
+[33m8bfe6ca[m HEAD@{40}: commit: Auto Update 2025-10-16 17:25:29
+[33m9272d32[m HEAD@{41}: commit: Auto Update 2025-10-16 17:23:47
+[33m2693e7c[m HEAD@{42}: commit: Auto Update 2025-10-11 16:48:30
+[33me8d2ac2[m HEAD@{43}: commit: Auto Update 2025-10-11 09:57:46
+[33mfe3c3ab[m HEAD@{44}: reset: moving to origin/ai-team
+[33mfe3c3ab[m HEAD@{45}: pull --rebase origin ai-team: Fast-forward
+[33m800202d[m HEAD@{46}: commit: a
+[33m38fb56d[m HEAD@{47}: commit: add pc1.py pc2.py
+[33mf15b6a6[m HEAD@{48}: commit: 雛形を追加
+[33m22df6b0[m[33m ([m[1;33mtag: [m[1;33mv1.2[m[33m)[m HEAD@{49}: commit: ver 1.2
+[33m2c6e6e3[m HEAD@{50}: pull --rebase origin ai-team: Fast-forward
+[33m4d5194e[m HEAD@{51}: pull --rebase origin ai-team: Fast-forward
+[33m93bb2ea[m HEAD@{52}: commit: Auto Update 2025-09-25 18:20:49
+[33mbccd697[m HEAD@{53}: pull --rebase origin ai-team: Fast-forward
+[33mc7a5567[m HEAD@{54}: pull origin ai-team: Fast-forward
+[33mdca9ec6[m HEAD@{55}: commit: Auto Update 2025-09-25 12:22:44
+[33mf42937f[m HEAD@{56}: commit: how_to.txtを更新
+[33ma8b8b27[m HEAD@{57}: commit: remove audio_cache
+[33m22c55c3[m HEAD@{58}: commit: ver 1.0.0
+[33mb92a4f7[m HEAD@{59}: commit: prototype.pyの機能を拡張し、main.pyとpumpkin.jsonとして更新。
+[33m6a5980f[m HEAD@{60}: commit: 大まかな説明を追加
+[33m022674b[m HEAD@{61}: commit: "仮実装"
+[33mb52ca88[m HEAD@{62}: commit: 浜工Wi-fi環境下でも動くように修正
+[33m059ed4f[m HEAD@{63}: commit: Auto Update 2025-09-21 22:55:42
+[33m94be9f3[m HEAD@{64}: commit: プロンプトの保存方法を.jsonに保存する方法に変更 & 処理を大幅に変更
+[33m4a0493b[m HEAD@{65}: commit: キャラ概要の変更
+[33m709a82d[m HEAD@{66}: commit: プロンプトいじったら魔理沙みたいになっちゃった
+[33m96930ff[m HEAD@{67}: commit: Auto Update 2025-09-20 20:54:18
+[33m6868c59[m HEAD@{68}: commit: Auto Update 2025-09-20 20:06:24
+[33m666a53b[m HEAD@{69}: rebase (finish): returning to refs/heads/ai-team
+[33m666a53b[m HEAD@{70}: rebase (pick): add some files
+[33mf7cef15[m HEAD@{71}: rebase (continue): Auto Update 2025-09-20 19:59:51
+[33m8e39461[m HEAD@{72}: pull --rebase origin ai-team (pick): push_test.cpp
+[33m9ffa572[m HEAD@{73}: pull --rebase origin ai-team (pick): push_test.cpp
+[33m5d7a506[m HEAD@{74}: pull --rebase origin ai-team (pick): Add files via upload
+[33m564f0b1[m HEAD@{75}: pull --rebase origin ai-team (pick): Update 企画書.txt
+[33m72aae91[m HEAD@{76}: pull --rebase origin ai-team (pick): Add Infor
+[33mbfe0f51[m HEAD@{77}: pull --rebase origin ai-team (pick): Delete test.py
+[33mc7745af[m HEAD@{78}: pull --rebase origin ai-team (pick): Delete a.cpp
+[33mc927776[m HEAD@{79}: pull --rebase origin ai-team (pick): ai-team test
+[33m998bf79[m HEAD@{80}: pull --rebase origin ai-team (pick): push_test.py
+[33mf7135fe[m HEAD@{81}: pull --rebase origin ai-team (pick): 共有データをアップロード
+[33m1c1e9fb[m HEAD@{82}: pull --rebase origin ai-team (start): checkout 1c1e9fbcbb47449ac4f6a390073269702ffc9465
+[33m7ce283c[m HEAD@{83}: commit: add some files
+[33m9fc5140[m[33m ([m[1;32mmain[m[33m)[m HEAD@{84}: checkout: moving from main to ai-team
+[33m9fc5140[m[33m ([m[1;32mmain[m[33m)[m HEAD@{85}: commit: Auto Update 2025-09-20 19:59:51
+[33me196758[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{86}: initial pull
