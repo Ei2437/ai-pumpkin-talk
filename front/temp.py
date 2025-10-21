@@ -54,6 +54,7 @@ class AlphaVideo:
             self.frames.append(rgba)
         self.total = len(self.frames)
         self.current_frame = 0
+        self.direction = 1  # 1: 順方向, -1: 逆方向
 
     def get_frame(self, idx=None):
         if idx is None:
@@ -72,18 +73,25 @@ def draw_video_fullscreen(screen, video: AlphaVideo):
     frame = video.get_frame()
     draw_video(screen, frame, 0, 0)
 
-# ==== Aキーループ再生（トグル対応） ====
+# ==== Aキー往復再生（トグル対応） ====
 def handle_a_key_video(vid: AlphaVideo, t, seed=0):
     dx, dy = float_motion(t, seed=seed, amp_y=22, amp_x=12, base_speed=0.0009)
 
     if a_key_active:  # トグルがONの場合
-        # フレームを進める
-        vid.current_frame += 1
-        # 最後まで行ったら最初に戻る（ループ）
-        if vid.current_frame >= vid.total:
+        # フレームを進める（方向に応じて）
+        vid.current_frame += vid.direction
+        
+        # 最後まで行ったら逆方向に
+        if vid.current_frame >= vid.total - 1:
+            vid.current_frame = vid.total - 1
+            vid.direction = -1
+        # 最初まで戻ったら順方向に
+        elif vid.current_frame <= 0:
             vid.current_frame = 0
+            vid.direction = 1
     else:  # トグルがOFFの場合
         vid.current_frame = 0
+        vid.direction = 1
 
     return vid.get_frame(), dx, dy
 
