@@ -13,11 +13,11 @@ from flask import Flask, request, jsonify # Flask追加
 BG_VIDEO_PATH = "background.mp4"
 VIDEO_MAIN = "Pumpkin_Center.mp4"
 VIDEO_FULL2 = "Pumkin_Center2Left.mp4"
-VIDEO_FULL4 = "Pumkin_Left2Center.mp4"
-VIDEO_FULL3 = "Pumpkin_Left.mp4"
-VIDEO_FULL5 = "Pumkin_Center2Right.mp4"
-VIDEO_FULL6 = "Pumkin_Right.mp4"
-VIDEO_FULL7 = "Pumkin_Right2Center.mp4"
+VIDEO_FULL4 = "Pumkin_Left2Center.mp.mp4"
+VIDEO_FULL3 = "Pumpkin_Left.mp.mp4"
+VIDEO_FULL5 = "Pumkin_Center2Right.mp.mp4"
+VIDEO_FULL6 = "Pumkin_Right.mp.mp4"
+VIDEO_FULL7 = "Pumkin_Right2Center.mp.mp4"
 
 #---- クロマキー処理の範囲 ----
 LOWER_GREEN = np.array([20, 80, 80])
@@ -94,22 +94,31 @@ def draw_video_fullscreen(screen, frame, size, lower, upper):
 # Flaskアプリケーションの初期化
 app = Flask(__name__)
 
+# Aキーがリモートで押されているかの状態
+a_key_remote_pressed = False
+
 @app.route('/key_event', methods=['POST'])
 def receive_key_event():
+    global a_key_remote_pressed
     data = request.get_json()
     key_name = data.get("key")
+    action = data.get("action", "down") # デフォルトは down
 
     if key_name == 'left':
-        pygame.event.post(pygame.event.Event(KEYDOWN, key=K_LEFT))
-        print("LEFT key event posted to pygame queue")
+        if action == 'down':
+            pygame.event.post(pygame.event.Event(KEYDOWN, key=K_LEFT))
+            print("LEFT key event posted to pygame queue")
     elif key_name == 'right':
-        pygame.event.post(pygame.event.Event(KEYDOWN, key=K_RIGHT))
-        print("RIGHT key event posted to pygame queue")
+        if action == 'down':
+            pygame.event.post(pygame.event.Event(KEYDOWN, key=K_RIGHT))
+            print("RIGHT key event posted to pygame queue")
     elif key_name == 'a':
-        # Aキーのイベントは、pygame.key.get_pressed() で処理されるため、
-        # 特にイベントキューに追加する必要はありません。
-        # ただし、何か特別な処理をさせたい場合はここに書けます。
-        print("A key event received (no pygame event posted)")
+        if action == 'down':
+            a_key_remote_pressed = True
+            print("A key REMOTE pressed")
+        elif action == 'up':
+            a_key_remote_pressed = False
+            print("A key REMOTE released")
     else:
         print(f"Unknown key received: {key_name}")
         return jsonify({"status": "error", "message": "Unknown key"}), 400
@@ -118,6 +127,7 @@ def receive_key_event():
 
 # ==== メイン ====
 def main():
+    global a_key_remote_pressed
     pygame.init()
     screen = pygame.display.set_mode((w, h))
     pygame.display.set_caption("AI_pumpkin_talk")
@@ -168,7 +178,8 @@ def main():
     while True:
         t = pygame.time.get_ticks()
         keys = pygame.key.get_pressed()
-        a_pressed = keys[K_a]
+        # a_pressed はローカルのAキーとリモートのAキーの状態をORで判定
+        a_pressed = keys[K_a] or a_key_remote_pressed
 
         for event in pygame.event.get():
             # 画面を閉じる条件（右上の罰を押すかEscキーを押すと閉じる）
@@ -216,7 +227,7 @@ def main():
         def handle_a_key(cap, total, current, start_frame, move_start_time, return_to_first_third, seed):
             dx, dy = float_motion(t, seed=seed, amp_y=22, amp_x=12, base_speed=0.0009)
             duration = 230
-            if a_pressed:
+            if a_pressed: # 修正: keys[K_a] から a_pressed に変更
                 progress = (t - move_start_time) / duration
                 if return_to_first_third:
                     first_third_frame = random.randint(0, max(1, total // 3))
