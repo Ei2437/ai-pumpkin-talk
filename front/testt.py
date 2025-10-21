@@ -11,13 +11,13 @@ from flask import Flask, request, jsonify # Flask追加
 # ==== 設定 ====
 # ---- 動画 ----
 BG_VIDEO_PATH = "background.mp4"
-VIDEO_MAIN = "Pumpkin_Center.mp.mp4"
-VIDEO_FULL2 = "Pumkin_Center2Left.mp.mp4"
-VIDEO_FULL4 = "Pumkin_Left2Center.mp.mp4"
-VIDEO_FULL3 = "Pumpkin_Left.mp.mp4"
-VIDEO_FULL5 = "Pumkin_Center2Right.mp.mp4"
-VIDEO_FULL6 = "Pumkin_Right.mp.mp4"
-VIDEO_FULL7 = "Pumkin_Right2Center.mp.mp4"
+VIDEO_MAIN = "Pumpkin_Center.mp4"
+VIDEO_FULL2 = "Pumkin_Center2Left.mp4"
+VIDEO_FULL4 = "Pumkin_Left2Center.mp4"
+VIDEO_FULL3 = "Pumpkin_Left.mp4"
+VIDEO_FULL5 = "Pumkin_Center2Right.mp4"
+VIDEO_FULL6 = "Pumkin_Right.mp4"
+VIDEO_FULL7 = "Pumkin_Right2Center.mp4"
 
 #---- クロマキー処理の範囲 ----
 LOWER_GREEN = np.array([20, 80, 80])
@@ -94,18 +94,8 @@ def draw_video_fullscreen(screen, frame, size, lower, upper):
 # Flaskアプリケーションの初期化
 app = Flask(__name__)
 
-# Aキーイベントのカウンター (アニメーション状態を更新するためのトリガー)
-a_key_event_count = 0
-# 各キャプチャごとのアニメーション状態を保持する辞書
-animation_state = {
-    "main": {"dx": 0, "dy": 0, "current": 0.0, "start_frame": 0.0, "move_start_time": 0, "return_to_first_third": False},
-    "full3": {"dx": 0, "dy": 0, "current": 0.0, "start_frame": 0.0, "move_start_time": 0, "return_to_first_third": False},
-    "full6": {"dx": 0, "dy": 0, "current": 0.0, "start_frame": 0.0, "move_start_time": 0, "return_to_first_third": False}
-}
-
 @app.route('/key_event', methods=['POST'])
 def receive_key_event():
-    global a_key_event_count
     data = request.get_json()
     key_name = data.get("key")
 
@@ -116,9 +106,10 @@ def receive_key_event():
         pygame.event.post(pygame.event.Event(KEYDOWN, key=K_RIGHT))
         print("RIGHT key event posted to pygame queue")
     elif key_name == 'a':
-        # Aキーが押されたイベントを受信 -> カウンターをインクリメント
-        a_key_event_count += 1
-        print("A key event received (count incremented)")
+        # Aキーのイベントは、pygame.key.get_pressed() で処理されるため、
+        # 特にイベントキューに追加する必要はありません。
+        # ただし、何か特別な処理をさせたい場合はここに書けます。
+        print("A key event received (no pygame event posted)")
     else:
         print(f"Unknown key received: {key_name}")
         return jsonify({"status": "error", "message": "Unknown key"}), 400
@@ -127,7 +118,6 @@ def receive_key_event():
 
 # ==== メイン ====
 def main():
-    global a_key_event_count, animation_state
     pygame.init()
     screen = pygame.display.set_mode((w, h))
     pygame.display.set_caption("AI_pumpkin_talk")
@@ -163,11 +153,11 @@ def main():
     total_f6 = int(cap_full6.get(cv2.CAP_PROP_FRAME_COUNT))
     #初期化
     state = "normal"
-    # dx_main, dy_main, dx_f3, dy_f3, dx_f6, dy_f6 = 0 # 削除
-    # current_main = current_f3 = current_f6 = 0.0 # 削除
-    # move_start_time_main = move_start_time_f3 = move_start_time_f6 = 0 # 削除
-    # start_frame_main = start_frame_f3 = start_frame_f6 = 0.0 # 削除
-    # return_to_first_third_main = return_to_first_third_f3 = return_to_first_third_f6 = False # 削除
+    dx_main = dy_main = dx_f3 = dy_f3 = dx_f6 = dy_f6 = 0
+    current_main = current_f3 = current_f6 = 0.0
+    move_start_time_main = move_start_time_f3 = move_start_time_f6 = 0
+    start_frame_main = start_frame_f3 = start_frame_f6 = 0.0
+    return_to_first_third_main = return_to_first_third_f3 = return_to_first_third_f6 = False
 
     # Flaskサーバーを別スレッドで起動
     import threading
@@ -175,13 +165,10 @@ def main():
     server_thread.daemon = True
     server_thread.start()
 
-    # Aキーイベント監視用の前回カウント
-    prev_a_key_count = 0
-
     while True:
         t = pygame.time.get_ticks()
-        # keys = pygame.key.get_pressed() # 使用しない
-        # a_pressed = keys[K_a] # 使用しない
+        keys = pygame.key.get_pressed()
+        a_pressed = keys[K_a]
 
         for event in pygame.event.get():
             # 画面を閉じる条件（右上の罰を押すかEscキーを押すと閉じる）
@@ -225,32 +212,52 @@ def main():
         
         bg_frame_counter += 1 # フレームカウンターをインクリメント
 
-        # --- Aキーイベントによるフレーム移動処理 ---
-        # Aキーイベントが発生した回数が前回から増えたら、handle_a_keyを1回実行
-        current_a_count = a_key_event_count
-        if current_a_count > prev_a_key_count:
-            # 1回だけ実行
-            if state == "normal":
-                animation_state["main"] = handle_a_key(cap_main, total_main, animation_state["main"], seed=1, t=t)
-            elif state == "full3":
-                animation_state["full3"] = handle_a_key(cap_full3, total_f3, animation_state["full3"], seed=3, t=t)
-            elif state == "full6":
-                animation_state["full6"] = handle_a_key(cap_full6, total_f6, animation_state["full6"], seed=5, t=t)
-            # 他の状態では実行しない
-            prev_a_key_count = current_a_count # カウントを更新
+        # --- Aキー連続フレーム移動処理 ---
+        def handle_a_key(cap, total, current, start_frame, move_start_time, return_to_first_third, seed):
+            dx, dy = float_motion(t, seed=seed, amp_y=22, amp_x=12, base_speed=0.0009)
+            duration = 230
+            if a_pressed:
+                progress = (t - move_start_time) / duration
+                if return_to_first_third:
+                    first_third_frame = random.randint(0, max(1, total // 3))
+                    if progress >= 1.0:
+                        current = first_third_frame
+                        return_to_first_third = False
+                        move_start_time = t
+                        start_frame = current
+                    else:
+                        ease = ease_in_out_sine(min(progress, 1))
+                        current = start_frame + (first_third_frame - start_frame) * ease
+                else:
+                    random_frame = random.randint(total // 2, total - 1)
+                    if progress >= 1.0:
+                        current = random_frame
+                        return_to_first_third = True
+                        move_start_time = t
+                        start_frame = current
+                    else:
+                        if move_start_time == 0:
+                            move_start_time = t
+                            start_frame = current
+                        ease = ease_in_out_sine(min(progress, 1))
+                        current = start_frame + (random_frame - start_frame) * ease
+            else:
+                move_start_time = 0
+                current = 0
+            return dx, dy, current, start_frame, move_start_time, return_to_first_third
 
         # === 各状態描画 ===
         if state == "normal":
-            dx_main, dy_main = animation_state["main"]["dx"], animation_state["main"]["dy"]
-            current_main = animation_state["main"]["current"]
+            dx_main, dy_main, current_main, start_frame_main, move_start_time_main, return_to_first_third_main = \
+                handle_a_key(cap_main, total_main, current_main, start_frame_main, move_start_time_main, return_to_first_third_main, seed=1)
             draw_video(screen, cap_main, (w, h), dx_main, dy_main, LOWER_GREEN, UPPER_GREEN, current_main)
         elif state == "full3":
-            dx_f3, dy_f3 = animation_state["full3"]["dx"], animation_state["full3"]["dy"]
-            current_f3 = animation_state["full3"]["current"]
+            dx_f3, dy_f3, current_f3, start_frame_f3, move_start_time_f3, return_to_first_third_f3 = \
+                handle_a_key(cap_full3, total_f3, current_f3, start_frame_f3, move_start_time_f3, return_to_first_third_f3, seed=3)
             draw_video(screen, cap_full3, (w, h), dx_f3, dy_f3, LOWER_GREEN, UPPER_GREEN, current_f3)
         elif state == "full6":
-            dx_f6, dy_f6 = animation_state["full6"]["dx"], animation_state["full6"]["dy"]
-            current_f6 = animation_state["full6"]["current"]
+            dx_f6, dy_f6, current_f6, start_frame_f6, move_start_time_f6, return_to_first_third_f6 = \
+                handle_a_key(cap_full6, total_f6, current_f6, start_frame_f6, move_start_time_f6, return_to_first_third_f6, seed=5)
             draw_video(screen, cap_full6, (w, h), dx_f6, dy_f6, LOWER_GREEN, UPPER_GREEN, current_f6)
         elif state == "full2":
             ret, frame = cap_full2.read()
@@ -283,62 +290,6 @@ def main():
 
         pygame.display.update()
         clock.tick(60)
-
-def handle_a_key(cap, total, state_dict, seed, t):
-    """Aキーイベント1回分のアニメーション状態更新"""
-    dx, dy = float_motion(t, seed=seed, amp_y=22, amp_x=12, base_speed=0.0009)
-    duration = 230
-    # 1回のイベントで、アニメーションを1ステップ進める
-    # 既存のロジックを流用するため、progressを1フレーム分進めると仮定
-    # ただし、イベントベースなので、move_start_time をイベント発生時刻に更新
-    # そして、ease_in_out_sine を使用して補間を進める
-    # シード値ごとの状態をstate_dictで管理
-    current = state_dict["current"]
-    start_frame = state_dict["start_frame"]
-    move_start_time = state_dict["move_start_time"]
-    return_to_first_third = state_dict["return_to_first_third"]
-
-    # move_start_time が0の場合、初期状態とみなす
-    if move_start_time == 0:
-        move_start_time = t
-        start_frame = current
-        # 最初はランダムフレームに移動
-        if not return_to_first_third:
-            target_frame = random.randint(total // 2, total - 1)
-        else:
-            target_frame = random.randint(0, max(1, total // 3))
-        state_dict["start_frame"] = start_frame
-        state_dict["current"] = target_frame
-        state_dict["move_start_time"] = move_start_time
-        state_dict["return_to_first_third"] = not return_to_first_third
-        # dx, dy は float_motion で計算
-        state_dict["dx"] = dx
-        state_dict["dy"] = dy
-        return state_dict
-
-    # 前回のイベントからの経過時間で補間
-    progress = (t - move_start_time) / duration
-    if progress >= 1.0:
-        # 前のターゲットに到達
-        if return_to_first_third:
-            new_target = random.randint(0, max(1, total // 3))
-        else:
-            new_target = random.randint(total // 2, total - 1)
-        # 次の移動のための準備
-        state_dict["start_frame"] = current
-        state_dict["current"] = new_target
-        state_dict["move_start_time"] = t # 新しいイベント時刻
-        state_dict["return_to_first_third"] = not return_to_first_third
-    else:
-        # 補間中
-        ease = ease_in_out_sine(min(progress, 1))
-        state_dict["current"] = start_frame + (current - start_frame) * ease
-
-    # dx, dy は float_motion で計算
-    state_dict["dx"] = dx
-    state_dict["dy"] = dy
-    return state_dict
-
 
 if __name__ == "__main__":
     main()
