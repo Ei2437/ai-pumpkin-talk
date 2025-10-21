@@ -58,7 +58,7 @@ class PumpkinTalk:
         self.temp_wav_file = "output.wav"
         
         # 映像サーバーURL
-        self.video_server_url = self.system_config.get("video_server_url", "http://localhost:5001")
+        self.video_server_url = self.system_config.get("video_server_url", "http://sudume.hamako-ths.ed.jp:5001")
 
     def send_video_signal(self, signal):
         """映像サーバーにシグナルを送信"""
