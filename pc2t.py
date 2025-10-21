@@ -7,10 +7,10 @@ import numpy as np
 import sounddevice as sd
 import speech_recognition as sr
 from scipy.io import wavfile
-import keyboard
+import keyboard # keyboard ライブラリをインポート
 
-# 映像サーバーURLを追加
-VIDEO_SERVER_URL = "http://localhost:5001"
+# 映像サーバーURLを追加 (temp.py が動いているPCのIPアドレスに変更してください)
+VIDEO_SERVER_URL = "http://sudume.hamako-ths.ed.jp:5001" # 例: "http://192.168.x.x:5001"
 
 def start_recording():
     print("録音開始...")
@@ -70,45 +70,70 @@ def send_video_signal(signal):
     except requests.exceptions.RequestException as e:
         print(f"Failed to send video signal '{signal}': {e}")
 
+def on_key_event(event):
+    """keyboard ライブラリのイベントリスナー"""
+    if event.event_type == keyboard.KEY_DOWN: # キーが押されたとき
+        if event.name == 'left':
+            send_video_signal('move_left')
+            print(f"Sent LEFT key signal from pc2")
+        elif event.name == 'right':
+            send_video_signal('move_right')
+            print(f"Sent RIGHT key signal from pc2")
+        # Aキーの送信も可能ですが、temp.py に処理がないためコメントアウト
+        # elif event.name == 'a':
+        #     # temp.py に /key_a などのエンドポイントがあれば、それを呼び出す
+        #     # send_video_signal('key_a')
+        #     pass
+
 def main():
     print("Spaceキーを押して録音開始...")
+    print("Left/Rightキーも検知します。")
     is_recording = False
     last_key_state = False
     audio_frames = []
     recording_stream = None
 
-    while True:
-        current_key_state = keyboard.is_pressed('space')
+    # keyboard ライブラリのイベントリスナーを登録
+    keyboard.hook(on_key_event)
 
-        if current_key_state != last_key_state:
-            if current_key_state:
-                if not is_recording:
-                    # 録音開始
-                    recording_stream, audio_frames = start_recording()
-                    # 録音開始時に映像サーバーにシグナル送信（方向をランダムに選ぶ）
-                    import random
-                    if random.choice([True, False]):
-                        send_video_signal("move_left")
-                        print("Sent signal: move_left (random)")
+    try:
+        while True:
+            current_key_state = keyboard.is_pressed('space')
+
+            if current_key_state != last_key_state:
+                if current_key_state:
+                    if not is_recording:
+                        # 録音開始
+                        recording_stream, audio_frames = start_recording()
+                        # 録音開始時に映像サーバーにシグナル送信（方向をランダムに選ぶ）
+                        import random
+                        if random.choice([True, False]):
+                            send_video_signal("move_left")
+                            print("Sent signal: move_left (random)")
+                        else:
+                            send_video_signal("move_right")
+                            print("Sent signal: move_right (random)")
                     else:
-                        send_video_signal("move_right")
-                        print("Sent signal: move_right (random)")
-                else:
-                    # 録音停止
-                    audio = stop_recording(recording_stream, audio_frames)
-                    if audio:
-                        text = transcribe_audio(audio)
-                        if text:
-                            send_text_to_server(text)
-                    is_recording = False
-            last_key_state = current_key_state
+                        # 録音停止
+                        audio = stop_recording(recording_stream, audio_frames)
+                        if audio:
+                            text = transcribe_audio(audio)
+                            if text:
+                                send_text_to_server(text)
+                        is_recording = False
+                last_key_state = current_key_state
 
-        if is_recording:
-            data, overflowed = recording_stream.read(1024)
-            if not overflowed:
-                audio_frames.append(data)
+            if is_recording:
+                data, overflowed = recording_stream.read(1024)
+                if not overflowed:
+                    audio_frames.append(data)
 
-        time.sleep(0.01)
+            time.sleep(0.01)
+    except KeyboardInterrupt:
+        print("\n終了")
+    finally:
+        # リスナーを解除
+        keyboard.unhook_all()
 
 if __name__ == "__main__":
     try:
