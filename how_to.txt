@@ -8,7 +8,7 @@ python.exe -m pip install --upgrade pip
 sudo apt update
 
 PC1 : sudo apt install -y portaudio19-dev alsa-utils
-      pip install numpy scipy requests flask sounddevice pyaudio
+      pip install numpy scipy requests flask sounddevice pyaudio pygame opencv-python av 
 
 PC2 : sudo apt install -y portaudio19-dev
       pip install numpy sounddevice SpeechRecognition scipy requests keyboard

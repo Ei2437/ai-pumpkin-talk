@@ -7,7 +7,7 @@ import numpy as np
 import sounddevice as sd
 import speech_recognition as sr
 from scipy.io import wavfile
-import keyboard # keyboard ライブラリ追加
+import keyboard
 
 def start_recording():
     print("録音開始...")
