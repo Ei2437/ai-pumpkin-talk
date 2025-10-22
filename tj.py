@@ -147,8 +147,4 @@ def main():
 if __name__ == "__main__":
     exit(main())
 
-
-# === 使用例 ===
-# python text_to_speech_writer.py こんにちは、俺様はパンプキンだぜ -o output.wav
-# python text_to_speech_writer.py テスト音声です -o test.wav -c pumpkin.json
-# python text_to_speech_writer.py 複数の 単語を 繋げて 入力できます -o output.wav
+# python main.py {text} -o output.wav
