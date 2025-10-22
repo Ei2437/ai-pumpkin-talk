@@ -19,7 +19,8 @@ import math
 import threading
 
 # ==== 映像設定 ====
-w, h = 1920, 1020
+# w, h = 1920, 1020
+w, h = 960, 510
 BG_VIDEO_PATH = "video/BG.mp4"
 
 VIDEO_MAIN = "video/Pumpkin-Center.mov"
