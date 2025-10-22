@@ -358,17 +358,33 @@ def main():
 
     state = "normal"
 
-    # Flaskサーバーを別スレッドで起動
+    # Flaskサーバーを別スレッドで起動（2つのポート）
     print("Flaskサーバーを起動中...")
-    server_thread = threading.Thread(
-        target=lambda: app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+    
+    # 少し待機してPygameの初期化を確実にする
+    time.sleep(0.5)
+    
+    # ポート5000: テキスト処理用
+    text_server_thread = threading.Thread(
+        target=lambda: app_text.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
     )
-    server_thread.daemon = True
-    server_thread.start()
+    text_server_thread.daemon = True
+    text_server_thread.start()
+    
+    # ポート5001: キーイベント処理用
+    key_server_thread = threading.Thread(
+        target=lambda: app_key.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False)
+    )
+    key_server_thread.daemon = True
+    key_server_thread.start()
+    
+    # サーバー起動を待機
+    time.sleep(1)
+    
     print("=" * 50)
     print("Flaskサーバーが起動しました")
-    print("  - テキスト受信: http://0.0.0.0:5000/receive_text")
-    print("  - キーイベント: http://0.0.0.0:5000/key_event")
+    print("  - テキスト受信 (port 5000): http://0.0.0.0:5000/receive_text")
+    print("  - キーイベント (port 5001): http://0.0.0.0:5001/key_event")
     print("=" * 50)
     print("pc2.py から接続可能です")
     print("=" * 50)
