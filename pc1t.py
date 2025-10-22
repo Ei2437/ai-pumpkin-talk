@@ -273,10 +273,11 @@ def handle_a_key_video(vid: AlphaVideo, t, seed=0):
     return vid.get_frame(), dx, dy
 
 # ==== Flask App ====
-app = Flask(__name__)
+# ポート5000用: テキスト処理
+app_text = Flask(__name__ + '_text')
 pumpkin_talk = None
 
-@app.route('/receive_text', methods=['POST'])
+@app_text.route('/receive_text', methods=['POST'])
 def receive_text():
     """pc2.pyからテキストを受信してAI処理"""
     data = request.get_json()
@@ -289,7 +290,10 @@ def receive_text():
     else:
         return jsonify({"status": "error", "message": "No text provided"}), 400
 
-@app.route('/key_event', methods=['POST'])
+# ポート5001用: キーイベント処理
+app_key = Flask(__name__ + '_key')
+
+@app_key.route('/key_event', methods=['POST'])
 def receive_key_event():
     """pc2.pyからキーイベントを受信してPygameに転送"""
     global a_key_active
