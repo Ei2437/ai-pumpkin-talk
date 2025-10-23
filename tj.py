@@ -147,4 +147,4 @@ def main():
 if __name__ == "__main__":
     exit(main())
 
-# python main.py {text} -o output.wav
+# python tj.py {text} -o output.wav
