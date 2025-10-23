@@ -31,7 +31,7 @@ VIDEO_FULL6 = "video/Pumpkin-Right.mov"
 VIDEO_FULL7 = "video/Pumpkin-Right2Center.mov"
 
 BACK_SPEED_SKIP = 10
-TRANSITION_SPEED = 0.2  # 遷移動画の再生速度（full2,4,5,7）1.0=通常速度
+TRANSITION_SPEED = 0.8  # 遷移動画の再生速度（full2,4,5,7）1.0=通常速度
 
 # ==== 数字キー対応wavファイルパス ====
 SOUND_FILES = {
