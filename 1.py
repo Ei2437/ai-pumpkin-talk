@@ -31,13 +31,14 @@ VIDEO_FULL6 = "video/Pumpkin-Right.mov"
 VIDEO_FULL7 = "video/Pumpkin-Right2Center.mov"
 
 BACK_SPEED_SKIP = 10
+TRANSITION_SPEED = 0.8  # 遷移動画の再生速度（full2,4,5,7）1.0=通常速度
 
 # ==== 数字キー対応wavファイルパス ====
 SOUND_FILES = {
-    '1': "sounds/OP1.wav",
-    '2': "sounds/OP2.wav",
-    '3': "sounds/質問催促1.wav",
-    '4': "sounds/質問催促2.wav",
+    '1': "sounds/sound1.wav",
+    '2': "sounds/sound2.wav",
+    '3': "sounds/sound3.wav",
+    '4': "sounds/sound4.wav",
     '5': "sounds/sound5.wav",
     '6': "sounds/sound6.wav",
     '7': "sounds/sound7.wav",
@@ -269,6 +270,7 @@ class AlphaVideo:
         self.total = len(self.frames)
         self.current_frame = 0
         self.direction = 1
+        self.frame_accumulator = 0.0  # 小数点以下のフレーム進行を蓄積
 
     def get_frame(self, idx=None):
         if idx is None:
@@ -475,27 +477,43 @@ def main():
             draw_video(screen, frame, dx, dy)
         elif state == "full2":
             draw_video_fullscreen(screen, videos["full2"])
-            videos["full2"].current_frame += 1
+            videos["full2"].frame_accumulator += TRANSITION_SPEED
+            if videos["full2"].frame_accumulator >= 1.0:
+                videos["full2"].current_frame += int(videos["full2"].frame_accumulator)
+                videos["full2"].frame_accumulator -= int(videos["full2"].frame_accumulator)
             if videos["full2"].current_frame >= videos["full2"].total:
                 videos["full2"].current_frame = 0
+                videos["full2"].frame_accumulator = 0.0
                 state = "full3"
         elif state == "full4":
             draw_video_fullscreen(screen, videos["full4"])
-            videos["full4"].current_frame += 1
+            videos["full4"].frame_accumulator += TRANSITION_SPEED
+            if videos["full4"].frame_accumulator >= 1.0:
+                videos["full4"].current_frame += int(videos["full4"].frame_accumulator)
+                videos["full4"].frame_accumulator -= int(videos["full4"].frame_accumulator)
             if videos["full4"].current_frame >= videos["full4"].total:
                 videos["full4"].current_frame = 0
+                videos["full4"].frame_accumulator = 0.0
                 state = "normal"
         elif state == "full5":
             draw_video_fullscreen(screen, videos["full5"])
-            videos["full5"].current_frame += 1
+            videos["full5"].frame_accumulator += TRANSITION_SPEED
+            if videos["full5"].frame_accumulator >= 1.0:
+                videos["full5"].current_frame += int(videos["full5"].frame_accumulator)
+                videos["full5"].frame_accumulator -= int(videos["full5"].frame_accumulator)
             if videos["full5"].current_frame >= videos["full5"].total:
                 videos["full5"].current_frame = 0
+                videos["full5"].frame_accumulator = 0.0
                 state = "full6"
         elif state == "full7":
             draw_video_fullscreen(screen, videos["full7"])
-            videos["full7"].current_frame += 1
+            videos["full7"].frame_accumulator += TRANSITION_SPEED
+            if videos["full7"].frame_accumulator >= 1.0:
+                videos["full7"].current_frame += int(videos["full7"].frame_accumulator)
+                videos["full7"].frame_accumulator -= int(videos["full7"].frame_accumulator)
             if videos["full7"].current_frame >= videos["full7"].total:
                 videos["full7"].current_frame = 0
+                videos["full7"].frame_accumulator = 0.0
                 state = "normal"
 
         pygame.display.flip()
