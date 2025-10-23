@@ -31,7 +31,7 @@ VIDEO_FULL7 = "videos/Pumpkin-Right2Center.mov"
 BACK_SPEED_SKIP = 10
 TRANSITION_SPEED = 0.8
 SOUND_FILES = {
-    '1': "sounds/sound1.wav",
+    '1': "sounds/OP1.wav",
     '2': "sounds/sound2.wav",
     '3': "sounds/sound3.wav",
     '4': "sounds/sound4.wav",
