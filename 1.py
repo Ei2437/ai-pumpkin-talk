@@ -20,20 +20,16 @@ import threading
 
 # ==== 映像設定 ====
 w, h = 960, 510
-BG_VIDEO_PATH = "video/BG.mp4"
-
-VIDEO_MAIN = "video/Pumpkin-Center.mov"
-VIDEO_FULL2 = "video/Pumpkin-Center2Left.mov"
-VIDEO_FULL3 = "video/Pumpkin-Left.mov"
-VIDEO_FULL4 = "video/Pumpkin-Left2Center.mov"
-VIDEO_FULL5 = "video/Pumpkin-Center2Right.mov"
-VIDEO_FULL6 = "video/Pumpkin-Right.mov"
-VIDEO_FULL7 = "video/Pumpkin-Right2Center.mov"
-
+BG_VIDEO_PATH = "videos/BG.mp4"
+VIDEO_MAIN = "videos/Pumpkin-Center.mov"
+VIDEO_FULL2 = "videos/Pumpkin-Center2Left.mov"
+VIDEO_FULL3 = "videos/Pumpkin-Left.mov"
+VIDEO_FULL4 = "videos/Pumpkin-Left2Center.mov"
+VIDEO_FULL5 = "videos/Pumpkin-Center2Right.mov"
+VIDEO_FULL6 = "videos/Pumpkin-Right.mov"
+VIDEO_FULL7 = "videos/Pumpkin-Right2Center.mov"
 BACK_SPEED_SKIP = 10
-TRANSITION_SPEED = 0.8  # 遷移動画の再生速度（full2,4,5,7）1.0=通常速度
-
-# ==== 数字キー対応wavファイルパス ====
+TRANSITION_SPEED = 0.8
 SOUND_FILES = {
     '1': "sounds/sound1.wav",
     '2': "sounds/sound2.wav",
@@ -46,11 +42,8 @@ SOUND_FILES = {
     '9': "sounds/sound9.wav",
     '0': "sounds/sound0.wav"
 }
-
-# グローバル変数
 a_key_active = False
 state = "normal"
-# [修正] 音声再生状態を管理するロック
 audio_lock = threading.Lock()
 
 # ==== Config Loader ====
@@ -82,7 +75,7 @@ class LoadConfig:
     def get_advanced_config(self):
         return self.config.get("advanced", {})
 
-# ==== PumpkinTalk AI System ====
+# ==== PumpkinTalk ====
 class PumpkinTalk:
     def __init__(self, config_path="pumpkin.json"):
         self.config_loader = LoadConfig(config_path)
@@ -181,7 +174,6 @@ class PumpkinTalk:
             print(f"VOICEVOX APIとの通信中にエラーが発生しました: {e}")
             return None, None
 
-    # [修正] 音声再生時にa_key_activeを自動制御
     def play_audio_with_aplay(self, wav_file=None):
         global a_key_active
         
@@ -197,7 +189,6 @@ class PumpkinTalk:
             return
 
         try:
-            # [修正] 再生開始前にa_key_activeをON
             with audio_lock:
                 a_key_active = True
             print(f"[音声再生開始] a_key_active = ON")
@@ -215,7 +206,6 @@ class PumpkinTalk:
         except Exception as e:
             print(f"音声再生中にエラーが発生しました: {e}")
         finally:
-            # [修正] 再生完了後にa_key_activeをOFF
             with audio_lock:
                 a_key_active = False
             print(f"[音声再生終了] a_key_active = OFF")
@@ -270,7 +260,7 @@ class AlphaVideo:
         self.total = len(self.frames)
         self.current_frame = 0
         self.direction = 1
-        self.frame_accumulator = 0.0  # 小数点以下のフレーム進行を蓄積
+        self.frame_accumulator = 0.0
 
     def get_frame(self, idx=None):
         if idx is None:
@@ -289,7 +279,7 @@ def draw_video_fullscreen(screen, video: AlphaVideo):
     frame = video.get_frame()
     draw_video(screen, frame, 0, 0)
 
-# ==== Aキー往復再生(トグル対応) ====
+# ==== おしゃべりモーション ====
 def handle_a_key_video(vid: AlphaVideo, t, seed=0):
     dx, dy = float_motion(t, seed=seed, amp_y=22, amp_x=12, base_speed=0.0009)
 
@@ -308,13 +298,12 @@ def handle_a_key_video(vid: AlphaVideo, t, seed=0):
 
     return vid.get_frame(), dx, dy
 
-# ==== Flask App ====
+# ==== Flask ====
 app_text = Flask(__name__ + '_text')
 pumpkin_talk = None
 
 @app_text.route('/receive_text', methods=['POST'])
 def receive_text():
-    """pc2.pyからテキストを受信してAI処理"""
     data = request.get_json()
     input_text = data.get("text", "")
     if input_text:
@@ -328,7 +317,6 @@ app_key = Flask(__name__ + '_key')
 
 @app_key.route('/key_event', methods=['POST'])
 def receive_key_event():
-    """pc2.pyからキーイベントを受信してPygameに転送"""
     global a_key_active
     data = request.get_json()
     key_name = data.get("key")
@@ -340,7 +328,6 @@ def receive_key_event():
         pygame.event.post(pygame.event.Event(KEYDOWN, key=K_RIGHT))
         print("RIGHT key event posted to pygame queue")
     elif key_name == 'a':
-        # [修正] Aキーは手動トグルとして残す(オプション)
         pygame.event.post(pygame.event.Event(KEYDOWN, key=K_a))
         print("A key event posted to pygame queue")
     elif key_name in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
@@ -356,7 +343,7 @@ def receive_key_event():
 def main():
     global state, a_key_active, pumpkin_talk
     
-    print("PumpkinTalk AI システムを初期化中...")
+    print("初期化中...")
     pumpkin_talk = PumpkinTalk("pumpkin.json")
     print("初期化完了")
     
@@ -409,11 +396,10 @@ def main():
     time.sleep(1)
     
     print("=" * 50)
-    print("Flaskサーバーが起動しました")
+    print("起動")
     print("  - テキスト受信 (port 5000): http://0.0.0.0:5000/receive_text")
     print("  - キーイベント (port 5001): http://0.0.0.0:5001/key_event")
     print("=" * 50)
-    print("pc2.py から接続可能です")
     print("=" * 50)
 
     while True:
@@ -424,7 +410,6 @@ def main():
                 pygame.quit()
                 sys.exit()
             elif event.type == KEYDOWN and event.key == K_a:
-                # [修正] 手動トグル機能(オプション - 必要なければ削除可能)
                 with audio_lock:
                     a_key_active = not a_key_active
                 print(f"A key manually toggled: {'ON' if a_key_active else 'OFF'}")
