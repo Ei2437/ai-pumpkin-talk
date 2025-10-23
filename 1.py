@@ -34,10 +34,10 @@ BACK_SPEED_SKIP = 10
 
 # ==== 数字キー対応wavファイルパス ====
 SOUND_FILES = {
-    '1': "sounds/sound1.wav",
-    '2': "sounds/sound2.wav",
-    '3': "sounds/sound3.wav",
-    '4': "sounds/sound4.wav",
+    '1': "sounds/OP1.wav",
+    '2': "sounds/OP2.wav",
+    '3': "sounds/質問催促1.wav",
+    '4': "sounds/質問催促2.wav",
     '5': "sounds/sound5.wav",
     '6': "sounds/sound6.wav",
     '7': "sounds/sound7.wav",
