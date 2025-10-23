@@ -29,7 +29,7 @@ VIDEO_FULL5 = "videos/Pumpkin-Center2Right.mov"
 VIDEO_FULL6 = "videos/Pumpkin-Right.mov"
 VIDEO_FULL7 = "videos/Pumpkin-Right2Center.mov"
 BACK_SPEED_SKIP = 10
-TRANSITION_SPEED = 0.8
+TRANSITION_SPEED = 0.9
 SOUND_FILES = {
     '1': "sounds/OP1.wav",
     '2': "sounds/sound2.wav",
