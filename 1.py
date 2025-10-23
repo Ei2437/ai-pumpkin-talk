@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-# pc1.py + temp.py 統合版
-# AI処理(Ollama + VOICEVOX)と映像表示(Pygame)を同時実行
-# 数字キー(1-0)でwav再生機能追加
+# 音声再生時にa_key_activeを自動制御するバージョン
+# 修正箇所にコメント「# [修正]」を付与
 
 import os
 import time
@@ -20,7 +19,6 @@ import math
 import threading
 
 # ==== 映像設定 ====
-# w, h = 1920, 1020
 w, h = 960, 510
 BG_VIDEO_PATH = "video/BG.mp4"
 
@@ -32,7 +30,7 @@ VIDEO_FULL5 = "video/Pumpkin-Center2Right.mov"
 VIDEO_FULL6 = "video/Pumpkin-Right.mov"
 VIDEO_FULL7 = "video/Pumpkin-Right2Center.mov"
 
-BACK_SPEED_SKIP = 10  # 背景動画速度(フレーム単位)
+BACK_SPEED_SKIP = 10
 
 # ==== 数字キー対応wavファイルパス ====
 SOUND_FILES = {
@@ -51,6 +49,8 @@ SOUND_FILES = {
 # グローバル変数
 a_key_active = False
 state = "normal"
+# [修正] 音声再生状態を管理するロック
+audio_lock = threading.Lock()
 
 # ==== Config Loader ====
 class LoadConfig:
@@ -180,7 +180,10 @@ class PumpkinTalk:
             print(f"VOICEVOX APIとの通信中にエラーが発生しました: {e}")
             return None, None
 
+    # [修正] 音声再生時にa_key_activeを自動制御
     def play_audio_with_aplay(self, wav_file=None):
+        global a_key_active
+        
         if wav_file is None:
             wav_file = self.temp_wav_file
             
@@ -193,16 +196,28 @@ class PumpkinTalk:
             return
 
         try:
+            # [修正] 再生開始前にa_key_activeをON
+            with audio_lock:
+                a_key_active = True
+            print(f"[音声再生開始] a_key_active = ON")
+            
             print(f"'{wav_file}' を aplay で再生中...")
             result = subprocess.run(["aplay", "-q", wav_file])
+            
             if result.returncode == 0:
                 print("再生完了")
             else:
                 print(f"aplay でエラーが発生しました (終了コード: {result.returncode})")
+                
         except FileNotFoundError:
             print("aplay が見つかりません。'sudo apt install alsa-utils' でインストールしてください。")
         except Exception as e:
             print(f"音声再生中にエラーが発生しました: {e}")
+        finally:
+            # [修正] 再生完了後にa_key_activeをOFF
+            with audio_lock:
+                a_key_active = False
+            print(f"[音声再生終了] a_key_active = OFF")
 
     def process_input_text(self, input_text):
         response_text = self.generate_response(input_text)
@@ -292,7 +307,6 @@ def handle_a_key_video(vid: AlphaVideo, t, seed=0):
     return vid.get_frame(), dx, dy
 
 # ==== Flask App ====
-# ポート5000用: テキスト処理
 app_text = Flask(__name__ + '_text')
 pumpkin_talk = None
 
@@ -303,13 +317,11 @@ def receive_text():
     input_text = data.get("text", "")
     if input_text:
         print(f"受信したテキスト: {input_text}")
-        # 別スレッドで処理して即座にレスポンス返す
         threading.Thread(target=pumpkin_talk.process_input_text, args=(input_text,), daemon=True).start()
         return jsonify({"status": "success"}), 200
     else:
         return jsonify({"status": "error", "message": "No text provided"}), 400
 
-# ポート5001用: キーイベント処理
 app_key = Flask(__name__ + '_key')
 
 @app_key.route('/key_event', methods=['POST'])
@@ -326,10 +338,10 @@ def receive_key_event():
         pygame.event.post(pygame.event.Event(KEYDOWN, key=K_RIGHT))
         print("RIGHT key event posted to pygame queue")
     elif key_name == 'a':
+        # [修正] Aキーは手動トグルとして残す(オプション)
         pygame.event.post(pygame.event.Event(KEYDOWN, key=K_a))
         print("A key event posted to pygame queue")
     elif key_name in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
-        # 数字キーイベントをカスタムイベントとして送信
         pygame.event.post(pygame.event.Event(USEREVENT, key=key_name))
         print(f"Number key '{key_name}' event posted to pygame queue")
     else:
@@ -342,19 +354,16 @@ def receive_key_event():
 def main():
     global state, a_key_active, pumpkin_talk
     
-    # PumpkinTalkの初期化
     print("PumpkinTalk AI システムを初期化中...")
     pumpkin_talk = PumpkinTalk("pumpkin.json")
     print("初期化完了")
     
-    # Pygameの初期化
     print("Pygame 初期化中...")
     pygame.init()
     screen = pygame.display.set_mode((w, h))
     pygame.display.set_caption("AI_pumpkin_talk")
     clock = pygame.time.Clock()
 
-    # 背景動画
     print("背景動画を読み込み中...")
     cap_bg = cv2.VideoCapture(BG_VIDEO_PATH)
     if not cap_bg.isOpened():
@@ -366,7 +375,6 @@ def main():
         ret_bg, frame_bg = cap_bg.read()
     bg_counter = 0
 
-    # 透過動画
     print("透過動画を読み込み中...")
     videos = {
         "normal": AlphaVideo(VIDEO_MAIN),
@@ -381,27 +389,21 @@ def main():
 
     state = "normal"
 
-    # Flaskサーバーを別スレッドで起動(2つのポート)
     print("Flaskサーバーを起動中...")
-    
-    # 少し待機してPygameの初期化を確実にする
     time.sleep(0.5)
     
-    # ポート5000: テキスト処理用
     text_server_thread = threading.Thread(
         target=lambda: app_text.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
     )
     text_server_thread.daemon = True
     text_server_thread.start()
     
-    # ポート5001: キーイベント処理用
     key_server_thread = threading.Thread(
         target=lambda: app_key.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False)
     )
     key_server_thread.daemon = True
     key_server_thread.start()
     
-    # サーバー起動を待機
     time.sleep(1)
     
     print("=" * 50)
@@ -412,7 +414,6 @@ def main():
     print("pc2.py から接続可能です")
     print("=" * 50)
 
-    # メインループ
     while True:
         t = pygame.time.get_ticks()
 
@@ -421,8 +422,10 @@ def main():
                 pygame.quit()
                 sys.exit()
             elif event.type == KEYDOWN and event.key == K_a:
-                a_key_active = not a_key_active
-                print(f"A key toggled: {'ON' if a_key_active else 'OFF'}")
+                # [修正] 手動トグル機能(オプション - 必要なければ削除可能)
+                with audio_lock:
+                    a_key_active = not a_key_active
+                print(f"A key manually toggled: {'ON' if a_key_active else 'OFF'}")
             elif event.type == KEYDOWN:
                 if event.key == K_LEFT:
                     if state == "normal": 
@@ -435,7 +438,6 @@ def main():
                     elif state == "full6": 
                         state = "full7"
             elif event.type == USEREVENT:
-                # 数字キーイベント処理
                 key_num = event.key
                 if key_num in SOUND_FILES:
                     wav_path = SOUND_FILES[key_num]
