@@ -13,11 +13,18 @@ PC1 : sudo apt install -y portaudio19-dev alsa-utils
 PC2 : sudo apt install -y portaudio19-dev
       pip install numpy sounddevice SpeechRecognition scipy requests keyboard
 
---- sudume側 ---
-
+sudumeの「端末」で以下を実行
 linux-nvidia/run --host 0.0.0.0 --port 50021
-これをsudume側で実行することで、http://sudume.hamako-ths.ed.jp:50021からアクセス可能。
+
+--- sudume側 ---
+source venv/bin/activate
+python 1.py
 ----------------
+
+--- PC1側 ---
+venv/Scripts/activate
+python 2.py
+-------------
 
 --- 仮想環境の終了 ---
 deactivate
