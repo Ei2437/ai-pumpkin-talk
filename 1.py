@@ -234,7 +234,8 @@ class PumpkinTalk:
             comma_count = sentence.count("、")
             period_count = sentence.count("。")
             tcomma_count = sentence.count("...")
-            char_count = char_count - comma_count - period_count - tcomma_count
+            mark_count = sentence.count("！") + sentence.count("？") + sentence.count("*")
+            char_count -= mark_count
             
             sentence_duration = (
                 char_count * CHAR_DURATION + 
