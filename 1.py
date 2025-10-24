@@ -40,7 +40,7 @@ SUBTITLE_MAX_WIDTH = w - 200  # 字幕の最大幅
 
 # 読み上げ速度の設定
 CHAR_DURATION = 0.13  # 1文字読むのにかかる時間（秒）
-PUNCTUATION_DURATION = 0.4  # 「、」「。」の読み上げ時間（秒）
+PUNCTUATION_DURATION = 0.43  # 「、」「。」の読み上げ時間（秒）
 
 SOUND_FILES = {
     '1': "sounds/OP1.wav",
