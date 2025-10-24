@@ -44,7 +44,7 @@ def transcribe_audio(audio):
         return None
 
 def send_text_to_server(text):
-    url = "http://sudume.hamako-ths.ed.jp:5000/receive_text"  # pc1.py のアドレス
+    url = "http://sudume.hamako-ths.ed.jp:5000"  # pc1.py のアドレス
     payload = {"text": text}
     try:
         response = requests.post(url, json=payload)
@@ -59,7 +59,7 @@ def send_text_to_server(text):
 
 def send_key_to_temp(key):
     """temp.pyのFlaskサーバーにキー入力を送信"""
-    url = "http://sudume.hamako-ths.ed.jp:5001/key_event" # temp.py のアドレス
+    url = "http://sudume.hamako-ths.ed.jp:5001" # temp.py のアドレス
     payload = {"key": key}
     try:
         response = requests.post(url, json=payload)

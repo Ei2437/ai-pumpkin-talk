@@ -536,8 +536,8 @@ def main():
     
     print("=" * 50)
     print("起動")
-    print("  - テキスト受信 (port 5000): http://sudume.hamako-ths.ed.jp:5000/receive_text")
-    print("  - キーイベント (port 5001): http://sudume.hamako-ths.ed.jp:5001/key_event")
+    print("  - テキスト受信 (port 5000): http://sudume.hamako-ths.ed.jp:5000")
+    print("  - キーイベント (port 5001): http://sudume.hamako-ths.ed.jp:5001")
     print("=" * 50)
 
     while True:
