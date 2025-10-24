@@ -203,13 +203,13 @@ class PumpkinTalk:
             return 0
 
     def display_subtitle_gradually(self, text, duration):
-        """字幕を句点で区切って段階的に表示"""
+        """字幕を句点で区切って段階的に表示し、各文を一度表示して消す"""
         global current_subtitle
         
         if duration <= 0:
             duration = 3.0  # デフォルト3秒
         
-        # 「。」で文を分割（句点も含める）
+        # 「。」で文を分割(句点も含める)
         sentences = []
         current_sentence = ""
         
@@ -226,10 +226,7 @@ class PumpkinTalk:
         if not sentences:
             sentences = [text]
         
-        # 各文の表示タイミングを計算
-        display_times = []
-        cumulative_text = ""
-        
+        # 各文の表示時間を計算
         for sentence in sentences:
             # 文字数をカウント
             char_count = len(sentence)
@@ -243,23 +240,16 @@ class PumpkinTalk:
                 (comma_count + period_count + tcomma_count) * PUNCTUATION_DURATION
             )
             
-            cumulative_text += sentence
-            display_times.append({
-                "text": cumulative_text,
-                "duration": sentence_duration
-            })
-
-        for i, item in enumerate(display_times):
+            # その文だけを表示
             with subtitle_lock:
-                current_subtitle = item["text"]
+                current_subtitle = sentence
             
-            if i < len(display_times) - 1:
-                time.sleep(item["duration"])
-            else:
-                time.sleep(item["duration"] + 1.0)
-        
-        with subtitle_lock:
-            current_subtitle = ""
+            # 表示時間待機
+            time.sleep(sentence_duration)
+            
+            # 文を消す
+            with subtitle_lock:
+                current_subtitle = ""
 
     def play_audio_with_aplay(self, wav_file=None, show_subtitle=False, subtitle_text=""):
         global a_key_active
