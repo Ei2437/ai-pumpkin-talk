@@ -39,7 +39,7 @@ SUBTITLE_Y_POSITION = h - 150  # 画面下部からの位置
 SUBTITLE_MAX_WIDTH = w - 200  # 字幕の最大幅
 
 # 読み上げ速度の設定
-CHAR_DURATION = 0.146  # 1文字読むのにかかる時間（秒）
+CHAR_DURATION = 0.112  # 1文字読むのにかかる時間（秒）
 PUNCTUATION_DURATION = 0.4  # 「、」「。」の読み上げ時間（秒）
 
 SOUND_FILES = {
@@ -234,12 +234,10 @@ class PumpkinTalk:
             # 文字数をカウント
             char_count = len(sentence)
             
-            # 「、」と「。」の数をカウント
             comma_count = sentence.count("、")
             period_count = sentence.count("。")
             tcomma_count = sentence.count("...")
             
-            # この文の読み上げ時間を計算
             sentence_duration = (
                 char_count * CHAR_DURATION + 
                 (comma_count + period_count + tcomma_count) * PUNCTUATION_DURATION
@@ -250,20 +248,16 @@ class PumpkinTalk:
                 "text": cumulative_text,
                 "duration": sentence_duration
             })
-        
-        # 段階的に表示
+
         for i, item in enumerate(display_times):
             with subtitle_lock:
                 current_subtitle = item["text"]
             
-            # 次の文が表示されるまで待機
             if i < len(display_times) - 1:
                 time.sleep(item["duration"])
             else:
-                # 最後の文は少し長めに表示
                 time.sleep(item["duration"] + 1.0)
         
-        # クリア
         with subtitle_lock:
             current_subtitle = ""
 
