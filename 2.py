@@ -44,10 +44,10 @@ def transcribe_audio(audio):
         return None
 
 def send_text_to_server(text):
-    url = "http://sudume.hamako-ths.ed.jp:5000"  # pc1.py のアドレス
+    url = "http://sudume.hamako-ths.ed.jp:5000/receive_text"
     payload = {"text": text}
     try:
-        response = requests.post(url, json=payload)
+        response = requests.post(url, json=payload, timeout=10)
         response.raise_for_status()
         print("サーバー送信が完了しました。")
     except requests.exceptions.ConnectionError:
@@ -58,19 +58,19 @@ def send_text_to_server(text):
         print(f"サーバー送信でエラーが発生しました: {e}")
 
 def send_key_to_temp(key):
-    """temp.pyのFlaskサーバーにキー入力を送信"""
-    url = "http://sudume.hamako-ths.ed.jp:5001" # temp.py のアドレス
+    """1.pyのFlaskサーバーにキー入力を送信"""
+    url = "http://sudume.hamako-ths.ed.jp:5001/key_event"
     payload = {"key": key}
     try:
-        response = requests.post(url, json=payload)
+        response = requests.post(url, json=payload, timeout=5)
         response.raise_for_status()
-        print(f"Key '{key}' sent successfully to temp.py server.")
+        print(f"Key '{key}' sent successfully to 1.py server.")
     except requests.exceptions.RequestException as e:
-        print(f"Failed to send key '{key}' to temp.py server: {e}")
+        print(f"Failed to send key '{key}' to 1.py server: {e}")
 
 def on_key_event(event):
     """keyboard ライブラリのイベントリスナー"""
-    if event.event_type == keyboard.KEY_DOWN: # キーが押されたとき
+    if event.event_type == keyboard.KEY_DOWN:
         # 左右、A、数字キー(1-0)を検知
         if event.name in ['left', 'right', 'a', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
             send_key_to_temp(event.name)
@@ -95,8 +95,8 @@ def main():
                     if not is_recording:
                         # 録音開始
                         recording_stream, audio_frames = start_recording()
-                        is_recording = True # 状態を更新
-                else: # current_key_state が False (キーが離れた)
+                        is_recording = True
+                else:
                     if is_recording:
                         # 録音停止
                         audio = stop_recording(recording_stream, audio_frames)
@@ -104,10 +104,10 @@ def main():
                             text = transcribe_audio(audio)
                             if text:
                                 send_text_to_server(text)
-                        is_recording = False # 状態を更新
-                        audio_frames = [] # フレームをクリア
+                        is_recording = False
+                        audio_frames = []
                         recording_stream = None
-                last_key_state = current_key_state # 状態を更新
+                last_key_state = current_key_state
 
             if is_recording:
                 data, overflowed = recording_stream.read(1024)
