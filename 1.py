@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-# 音声再生時にa_key_activeを自動制御するバージョン
-# 修正箇所にコメント「# [修正]」を付与
+# 字幕表示機能付き
 
 import os
 import time
@@ -17,6 +16,7 @@ import av
 import cv2
 import math
 import threading
+import wave
 
 # ==== 映像設定 ====
 w, h = 1920, 1020
@@ -30,6 +30,15 @@ VIDEO_FULL6 = "videos/Pumpkin-Right.mov"
 VIDEO_FULL7 = "videos/Pumpkin-Right2Center.mov"
 BACK_SPEED_SKIP = 10
 TRANSITION_SPEED = 0.9
+
+# ==== 字幕設定 ====
+SUBTITLE_FONT_SIZE = 48
+SUBTITLE_COLOR = (255, 255, 255)  # 白
+SUBTITLE_BG_COLOR = (0, 0, 0, 180)  # 半透明黒背景
+SUBTITLE_Y_POSITION = h - 150  # 画面下部からの位置
+SUBTITLE_MAX_WIDTH = w - 200  # 字幕の最大幅
+SUBTITLE_CHARS_PER_CHUNK = 15  # 一度に表示する文字数
+
 SOUND_FILES = {
     '1': "sounds/OP1.wav",
     '2': "sounds/sound2.wav",
@@ -42,9 +51,13 @@ SOUND_FILES = {
     '9': "sounds/sound9.wav",
     '0': "sounds/sound0.wav"
 }
+
+# グローバル変数
 a_key_active = False
 state = "normal"
 audio_lock = threading.Lock()
+current_subtitle = ""  # 現在表示中の字幕
+subtitle_lock = threading.Lock()
 
 # ==== Config Loader ====
 class LoadConfig:
@@ -174,7 +187,50 @@ class PumpkinTalk:
             print(f"VOICEVOX APIとの通信中にエラーが発生しました: {e}")
             return None, None
 
-    def play_audio_with_aplay(self, wav_file=None):
+    def get_audio_duration(self, wav_file):
+        """WAVファイルの再生時間を取得（秒）"""
+        try:
+            with wave.open(wav_file, 'rb') as wf:
+                frames = wf.getnframes()
+                rate = wf.getframerate()
+                duration = frames / float(rate)
+                return duration
+        except Exception as e:
+            print(f"音声ファイルの長さ取得エラー: {e}")
+            return 0
+
+    def display_subtitle_gradually(self, text, duration):
+        """字幕を段階的に表示"""
+        global current_subtitle
+        
+        if duration <= 0:
+            duration = 3.0  # デフォルト3秒
+        
+        # テキストをチャンクに分割
+        chunks = []
+        for i in range(0, len(text), SUBTITLE_CHARS_PER_CHUNK):
+            chunks.append(text[:i + SUBTITLE_CHARS_PER_CHUNK])
+        
+        if not chunks:
+            chunks = [text]
+        
+        # 各チャンクの表示時間を計算
+        time_per_chunk = duration / len(chunks)
+        
+        # 段階的に表示
+        for chunk in chunks:
+            with subtitle_lock:
+                current_subtitle = chunk
+            time.sleep(time_per_chunk)
+        
+        # 表示を維持
+        time.sleep(1.0)
+        
+        # クリア
+        with subtitle_lock:
+            current_subtitle = ""
+
+    def play_audio_with_aplay(self, wav_file=None, show_subtitle=False, subtitle_text=""):
         global a_key_active
         
         if wav_file is None:
@@ -192,6 +248,19 @@ class PumpkinTalk:
             with audio_lock:
                 a_key_active = True
             print(f"[音声再生開始] a_key_active = ON")
+            
+            # 音声の長さを取得
+            duration = self.get_audio_duration(wav_file)
+            print(f"音声の長さ: {duration:.2f}秒")
+            
+            # 字幕表示スレッドを開始
+            if show_subtitle and subtitle_text:
+                subtitle_thread = threading.Thread(
+                    target=self.display_subtitle_gradually,
+                    args=(subtitle_text, duration),
+                    daemon=True
+                )
+                subtitle_thread.start()
             
             print(f"'{wav_file}' を aplay で再生中...")
             result = subprocess.run(["aplay", "-q", wav_file])
@@ -219,7 +288,8 @@ class PumpkinTalk:
         
         if sample_rate is not None and audio_data is not None:
             print("再生中...")
-            self.play_audio_with_aplay()
+            # 字幕付きで再生
+            self.play_audio_with_aplay(show_subtitle=True, subtitle_text=response_text)
         else:
             print("音声合成に失敗しました")
 
@@ -248,7 +318,7 @@ def float_motion(t, seed=0, amp_y=16, amp_x=7, base_speed=0.0007):
     )
     return int(dx), int(dy)
 
-# ==== PyAV動画クラス(全フレーム先読み) ====
+# ==== PyAV動画クラス ====
 class AlphaVideo:
     def __init__(self, path):
         container = av.open(path)
@@ -278,6 +348,66 @@ def draw_video(screen, frame, dx=0, dy=0):
 def draw_video_fullscreen(screen, video: AlphaVideo):
     frame = video.get_frame()
     draw_video(screen, frame, 0, 0)
+
+def draw_subtitle(screen, font):
+    """字幕を描画"""
+    global current_subtitle
+    
+    with subtitle_lock:
+        text = current_subtitle
+    
+    if not text:
+        return
+    
+    # 複数行に分割（自動改行）
+    lines = []
+    words = text
+    current_line = ""
+    
+    for char in words:
+        test_line = current_line + char
+        test_surface = font.render(test_line, True, SUBTITLE_COLOR)
+        if test_surface.get_width() > SUBTITLE_MAX_WIDTH:
+            if current_line:
+                lines.append(current_line)
+            current_line = char
+        else:
+            current_line = test_line
+    
+    if current_line:
+        lines.append(current_line)
+    
+    # 背景矩形のサイズを計算
+    max_width = 0
+    total_height = 0
+    rendered_lines = []
+    
+    for line in lines:
+        rendered = font.render(line, True, SUBTITLE_COLOR)
+        rendered_lines.append(rendered)
+        max_width = max(max_width, rendered.get_width())
+        total_height += rendered.get_height() + 5
+    
+    # 背景矩形を描画
+    padding = 20
+    bg_rect = pygame.Rect(
+        (w - max_width - padding * 2) // 2,
+        SUBTITLE_Y_POSITION - padding,
+        max_width + padding * 2,
+        total_height + padding * 2
+    )
+    
+    # 半透明背景
+    bg_surface = pygame.Surface((bg_rect.width, bg_rect.height), pygame.SRCALPHA)
+    bg_surface.fill(SUBTITLE_BG_COLOR)
+    screen.blit(bg_surface, bg_rect)
+    
+    # テキストを描画
+    y_offset = SUBTITLE_Y_POSITION
+    for rendered in rendered_lines:
+        x = (w - rendered.get_width()) // 2
+        screen.blit(rendered, (x, y_offset))
+        y_offset += rendered.get_height() + 5
 
 # ==== おしゃべりモーション ====
 def handle_a_key_video(vid: AlphaVideo, t, seed=0):
@@ -352,6 +482,15 @@ def main():
     screen = pygame.display.set_mode((w, h))
     pygame.display.set_caption("AI_pumpkin_talk")
     clock = pygame.time.Clock()
+    
+    # フォントの初期化
+    font = pygame.font.Font(None, SUBTITLE_FONT_SIZE)
+    # 日本語フォントが必要な場合
+    try:
+        font = pygame.font.Font("/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc", SUBTITLE_FONT_SIZE)
+    except:
+        print("日本語フォントが見つかりません。デフォルトフォントを使用します。")
+        font = pygame.font.Font(None, SUBTITLE_FONT_SIZE)
 
     print("背景動画を読み込み中...")
     cap_bg = cv2.VideoCapture(BG_VIDEO_PATH)
@@ -399,7 +538,6 @@ def main():
     print("起動")
     print("  - テキスト受信 (port 5000): http://0.0.0.0:5000/receive_text")
     print("  - キーイベント (port 5001): http://0.0.0.0:5001/key_event")
-    print("=" * 50)
     print("=" * 50)
 
     while True:
@@ -500,6 +638,9 @@ def main():
                 videos["full7"].current_frame = 0
                 videos["full7"].frame_accumulator = 0.0
                 state = "normal"
+
+        # 字幕描画
+        draw_subtitle(screen, font)
 
         pygame.display.flip()
         clock.tick(60)
