@@ -37,7 +37,10 @@ SUBTITLE_COLOR = (255, 255, 255)  # 白
 SUBTITLE_BG_COLOR = (0, 0, 0, 180)  # 半透明黒背景
 SUBTITLE_Y_POSITION = h - 150  # 画面下部からの位置
 SUBTITLE_MAX_WIDTH = w - 200  # 字幕の最大幅
-SUBTITLE_CHARS_PER_CHUNK = 15  # 一度に表示する文字数
+
+# 読み上げ速度の設定
+CHAR_DURATION = 0.146  # 1文字読むのにかかる時間（秒）
+PUNCTUATION_DURATION = 0.4  # 「、」「。」の読み上げ時間（秒）
 
 SOUND_FILES = {
     '1': "sounds/OP1.wav",
@@ -200,31 +203,64 @@ class PumpkinTalk:
             return 0
 
     def display_subtitle_gradually(self, text, duration):
-        """字幕を段階的に表示"""
+        """字幕を句点で区切って段階的に表示"""
         global current_subtitle
         
         if duration <= 0:
             duration = 3.0  # デフォルト3秒
         
-        # テキストをチャンクに分割
-        chunks = []
-        for i in range(0, len(text), SUBTITLE_CHARS_PER_CHUNK):
-            chunks.append(text[:i + SUBTITLE_CHARS_PER_CHUNK])
+        # 「。」で文を分割（句点も含める）
+        sentences = []
+        current_sentence = ""
         
-        if not chunks:
-            chunks = [text]
+        for char in text:
+            current_sentence += char
+            if char == "。":
+                sentences.append(current_sentence)
+                current_sentence = ""
         
-        # 各チャンクの表示時間を計算
-        time_per_chunk = duration / len(chunks)
+        # 最後に「。」がない場合
+        if current_sentence:
+            sentences.append(current_sentence)
+        
+        if not sentences:
+            sentences = [text]
+        
+        # 各文の表示タイミングを計算
+        display_times = []
+        cumulative_text = ""
+        
+        for sentence in sentences:
+            # 文字数をカウント
+            char_count = len(sentence)
+            
+            # 「、」と「。」の数をカウント
+            comma_count = sentence.count("、")
+            period_count = sentence.count("。")
+            
+            # この文の読み上げ時間を計算
+            sentence_duration = (
+                char_count * CHAR_DURATION + 
+                (comma_count + period_count) * PUNCTUATION_DURATION
+            )
+            
+            cumulative_text += sentence
+            display_times.append({
+                "text": cumulative_text,
+                "duration": sentence_duration
+            })
         
         # 段階的に表示
-        for chunk in chunks:
+        for i, item in enumerate(display_times):
             with subtitle_lock:
-                current_subtitle = chunk
-            time.sleep(time_per_chunk)
-        
-        # 表示を維持
-        time.sleep(1.0)
+                current_subtitle = item["text"]
+            
+            # 次の文が表示されるまで待機
+            if i < len(display_times) - 1:
+                time.sleep(item["duration"])
+            else:
+                # 最後の文は少し長めに表示
+                time.sleep(item["duration"] + 1.0)
         
         # クリア
         with subtitle_lock:
@@ -647,6 +683,3 @@ def main():
 
 if __name__=="__main__":
     main()
-
-# 1文字0.146
-# 句読点0.4
