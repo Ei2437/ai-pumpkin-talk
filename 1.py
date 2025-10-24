@@ -215,7 +215,7 @@ class PumpkinTalk:
         
         for char in text:
             current_sentence += char
-            if char == "。":
+            if char == "。" or char == "！" or char == "？":
                 sentences.append(current_sentence)
                 current_sentence = ""
         
