@@ -237,11 +237,12 @@ class PumpkinTalk:
             # 「、」と「。」の数をカウント
             comma_count = sentence.count("、")
             period_count = sentence.count("。")
+            tcomma_count = sentence.count("...")
             
             # この文の読み上げ時間を計算
             sentence_duration = (
                 char_count * CHAR_DURATION + 
-                (comma_count + period_count) * PUNCTUATION_DURATION
+                (comma_count + period_count + tcomma_count) * PUNCTUATION_DURATION
             )
             
             cumulative_text += sentence
