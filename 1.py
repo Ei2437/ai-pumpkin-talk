@@ -487,7 +487,7 @@ def main():
     font = pygame.font.Font(None, SUBTITLE_FONT_SIZE)
     # 日本語フォントが必要な場合
     try:
-        font = pygame.font.Font("/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc", SUBTITLE_FONT_SIZE)
+        font = pygame.font.Font("ZenKakuGothicNew-Regular.ttf", SUBTITLE_FONT_SIZE)
     except:
         print("日本語フォントが見つかりません。デフォルトフォントを使用します。")
         font = pygame.font.Font(None, SUBTITLE_FONT_SIZE)
