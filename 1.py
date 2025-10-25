@@ -28,21 +28,21 @@ VIDEO_FULL4 = "videos/Pumpkin-Left2Center.mov"
 VIDEO_FULL5 = "videos/Pumpkin-Center2Right.mov"
 VIDEO_FULL6 = "videos/Pumpkin-Right.mov"
 VIDEO_FULL7 = "videos/Pumpkin-Right2Center.mov"
-VIDEO_ENTRY = "videos/Pumpkin-Entry.mov"      # 追加
-VIDEO_FINISH = "videos/Pumpkin-Finish.mov"    # 追加
+VIDEO_ENTRY = "videos/Pumpkin-Entry.mov"
+VIDEO_FINISH = "videos/Pumpkin-Finish.mov"
 BACK_SPEED_SKIP = 10
 TRANSITION_SPEED = 0.9
 
 # ==== 字幕設定 ====
 SUBTITLE_FONT_SIZE = 48
-SUBTITLE_COLOR = (255, 255, 255)  # 白
-SUBTITLE_BG_COLOR = (0, 0, 0, 180)  # 半透明黒背景
-SUBTITLE_Y_POSITION = h - 150  # 画面下部からの位置
-SUBTITLE_MAX_WIDTH = w - 200  # 字幕の最大幅
+SUBTITLE_COLOR = (255, 255, 255)
+SUBTITLE_BG_COLOR = (0, 0, 0, 180)
+SUBTITLE_Y_POSITION = h - 150
+SUBTITLE_MAX_WIDTH = w - 200
 
 # 読み上げ速度の設定
-CHAR_DURATION = 0.13  # 1文字読むのにかかる時間(秒)
-PUNCTUATION_DURATION = 0.43  # 「、」「。」の読み上げ時間(秒)
+CHAR_DURATION = 0.13
+PUNCTUATION_DURATION = 0.43
 
 SOUND_FILES = {
     '1': "sounds/OP1.wav",
@@ -59,9 +59,9 @@ SOUND_FILES = {
 
 # グローバル変数
 a_key_active = False
-state = "idle"  # 初期状態をidleに変更
+state = "idle"
 audio_lock = threading.Lock()
-current_subtitle = ""  # 現在表示中の字幕
+current_subtitle = ""
 subtitle_lock = threading.Lock()
 
 # ==== Config Loader ====
@@ -193,7 +193,6 @@ class PumpkinTalk:
             return None, None
 
     def get_audio_duration(self, wav_file):
-        """WAVファイルの再生時間を取得(秒)"""
         try:
             with wave.open(wav_file, 'rb') as wf:
                 frames = wf.getnframes()
@@ -205,13 +204,11 @@ class PumpkinTalk:
             return 0
 
     def display_subtitle_gradually(self, text, duration):
-        """字幕を句点で区切って段階的に表示し、各文を一度表示して消す"""
         global current_subtitle
         
         if duration <= 0:
-            duration = 3.0  # デフォルト3秒
+            duration = 3.0
         
-        # 「。」で文を分割(句点も含める)
         sentences = []
         current_sentence = ""
         
@@ -221,16 +218,13 @@ class PumpkinTalk:
                 sentences.append(current_sentence)
                 current_sentence = ""
         
-        # 最後に「。」がない場合
         if current_sentence:
             sentences.append(current_sentence)
         
         if not sentences:
             sentences = [text]
         
-        # 各文の表示時間を計算
         for sentence in sentences:
-            # 文字数をカウント
             char_count = len(sentence)
             
             comma_count = sentence.count("、")
@@ -244,14 +238,11 @@ class PumpkinTalk:
                 (comma_count + period_count + tcomma_count) * PUNCTUATION_DURATION
             )
             
-            # その文だけを表示
             with subtitle_lock:
                 current_subtitle = sentence
             
-            # 表示時間待機
             time.sleep(sentence_duration)
             
-            # 文を消す
             with subtitle_lock:
                 current_subtitle = ""
 
@@ -274,11 +265,9 @@ class PumpkinTalk:
                 a_key_active = True
             print(f"[音声再生開始] a_key_active = ON")
             
-            # 音声の長さを取得
             duration = self.get_audio_duration(wav_file)
             print(f"音声の長さ: {duration:.2f}秒")
             
-            # 字幕表示スレッドを開始
             if show_subtitle and subtitle_text:
                 subtitle_thread = threading.Thread(
                     target=self.display_subtitle_gradually,
@@ -313,7 +302,6 @@ class PumpkinTalk:
         
         if sample_rate is not None and audio_data is not None:
             print("再生中...")
-            # 字幕付きで再生
             self.play_audio_with_aplay(show_subtitle=True, subtitle_text=response_text)
         else:
             print("音声合成に失敗しました")
@@ -375,7 +363,6 @@ def draw_video_fullscreen(screen, video: AlphaVideo):
     draw_video(screen, frame, 0, 0)
 
 def draw_subtitle(screen, font):
-    """字幕を描画"""
     global current_subtitle
     
     with subtitle_lock:
@@ -384,7 +371,6 @@ def draw_subtitle(screen, font):
     if not text:
         return
     
-    # 複数行に分割(自動改行)
     lines = []
     words = text
     current_line = ""
@@ -402,7 +388,6 @@ def draw_subtitle(screen, font):
     if current_line:
         lines.append(current_line)
     
-    # 背景矩形のサイズを計算
     max_width = 0
     total_height = 0
     rendered_lines = []
@@ -413,7 +398,6 @@ def draw_subtitle(screen, font):
         max_width = max(max_width, rendered.get_width())
         total_height += rendered.get_height() + 5
     
-    # 背景矩形を描画
     padding = 20
     bg_rect = pygame.Rect(
         (w - max_width - padding * 2) // 2,
@@ -422,12 +406,10 @@ def draw_subtitle(screen, font):
         total_height + padding * 2
     )
     
-    # 半透明背景
     bg_surface = pygame.Surface((bg_rect.width, bg_rect.height), pygame.SRCALPHA)
     bg_surface.fill(SUBTITLE_BG_COLOR)
     screen.blit(bg_surface, bg_rect)
     
-    # テキストを描画
     y_offset = SUBTITLE_Y_POSITION
     for rendered in rendered_lines:
         x = (w - rendered.get_width()) // 2
@@ -464,7 +446,6 @@ def receive_text():
     input_text = data.get("text", "")
     if input_text:
         print(f"受信したテキスト: {input_text}")
-        # idle状態の場合はテキスト処理をしない
         if state != "idle" and state != "entry" and state != "finish":
             threading.Thread(target=pumpkin_talk.process_input_text, args=(input_text,), daemon=True).start()
             return jsonify({"status": "success"}), 200
@@ -519,9 +500,7 @@ def main():
     pygame.display.set_caption("AI_pumpkin_talk")
     clock = pygame.time.Clock()
     
-    # フォントの初期化
     font = pygame.font.Font(None, SUBTITLE_FONT_SIZE)
-    # 日本語フォントが必要な場合
     try:
         font = pygame.font.Font("ZenKakuGothicNew-Regular.ttf", SUBTITLE_FONT_SIZE)
     except:
@@ -548,12 +527,17 @@ def main():
         "full5": AlphaVideo(VIDEO_FULL5),
         "full6": AlphaVideo(VIDEO_FULL6),
         "full7": AlphaVideo(VIDEO_FULL7),
-        "entry": AlphaVideo(VIDEO_ENTRY),      # 追加
-        "finish": AlphaVideo(VIDEO_FINISH)     # 追加
+        "entry": AlphaVideo(VIDEO_ENTRY),
+        "finish": AlphaVideo(VIDEO_FINISH)
     }
     print("動画読み込み完了")
 
-    state = "idle"  # 初期状態はidle
+    state = "idle"
+    
+    # 浮遊モーション制御用の変数
+    float_offset_x = 0.0
+    float_offset_y = 0.0
+    transition_blend = 1.0  # 1.0=通常浮遊, 0.0=トランジション中(0に収束)
 
     print("Flaskサーバーを起動中...")
     time.sleep(0.5)
@@ -593,14 +577,12 @@ def main():
                 print(f"A key manually toggled: {'ON' if a_key_active else 'OFF'}")
             elif event.type == KEYDOWN:
                 if event.key == K_k:
-                    # Kキー: idle状態の時のみ登場モーション開始
                     if state == "idle":
                         state = "entry"
                         videos["entry"].current_frame = 0
                         videos["entry"].frame_accumulator = 0.0
                         print("登場モーション開始")
                 elif event.key == K_l:
-                    # Lキー: normal, full3, full6状態の時のみ退場モーション開始
                     if state in ["normal", "full3", "full6"]:
                         state = "finish"
                         videos["finish"].current_frame = 0
@@ -642,12 +624,30 @@ def main():
         bg_surf = pygame.image.frombuffer(bg_rgb.tobytes(), bg_rgb.shape[1::-1], "RGB")
         screen.blit(bg_surf, (0, 0))
 
+        # 浮遊モーションの基本値を計算
+        base_float_x, base_float_y = float_motion(t, seed=1)
+        
+        # トランジション状態の判定
+        is_transitioning = state in ["full2", "full4", "full5", "full7"]
+        
+        # transition_blendを調整 (トランジション中は0に近づける)
+        if is_transitioning:
+            transition_blend = max(0.0, transition_blend - 0.05)  # 徐々に0へ
+        else:
+            transition_blend = min(1.0, transition_blend + 0.05)  # 徐々に1へ
+        
+        # 実際のオフセットを計算 (ブレンド適用)
+        float_offset_x = base_float_x * transition_blend
+        float_offset_y = base_float_y * transition_blend
+        
+        dx = int(float_offset_x)
+        dy = int(float_offset_y)
+
         # 状態管理
         if state == "idle":
-            # 背景のみ表示(キャラクターなし)
             pass
+            
         elif state == "entry":
-            # 登場モーション再生
             draw_video_fullscreen(screen, videos["entry"])
             videos["entry"].frame_accumulator += TRANSITION_SPEED
             if videos["entry"].frame_accumulator >= 1.0:
@@ -657,9 +657,10 @@ def main():
                 videos["entry"].current_frame = 0
                 videos["entry"].frame_accumulator = 0.0
                 state = "normal"
+                transition_blend = 0.0  # 登場完了時は0からスタート
                 print("登場モーション完了 → normal状態へ")
+                
         elif state == "finish":
-            # 退場モーション再生
             draw_video_fullscreen(screen, videos["finish"])
             videos["finish"].frame_accumulator += TRANSITION_SPEED
             if videos["finish"].frame_accumulator >= 1.0:
@@ -670,17 +671,23 @@ def main():
                 videos["finish"].frame_accumulator = 0.0
                 state = "idle"
                 print("退場モーション完了 → idle状態へ")
+                
         elif state == "normal":
-            frame, dx, dy = handle_a_key_video(videos["normal"], t, seed=1)
+            frame, _, _ = handle_a_key_video(videos["normal"], t, seed=1)
             draw_video(screen, frame, dx, dy)
+            
         elif state == "full3":
-            frame, dx, dy = handle_a_key_video(videos["full3"], t, seed=3)
+            frame, _, _ = handle_a_key_video(videos["full3"], t, seed=3)
             draw_video(screen, frame, dx, dy)
+            
         elif state == "full6":
-            frame, dx, dy = handle_a_key_video(videos["full6"], t, seed=5)
+            frame, _, _ = handle_a_key_video(videos["full6"], t, seed=5)
             draw_video(screen, frame, dx, dy)
+            
         elif state == "full2":
-            draw_video_fullscreen(screen, videos["full2"])
+            frame = videos["full2"].get_frame()
+            draw_video(screen, frame, dx, dy)
+            
             videos["full2"].frame_accumulator += TRANSITION_SPEED
             if videos["full2"].frame_accumulator >= 1.0:
                 videos["full2"].current_frame += int(videos["full2"].frame_accumulator)
@@ -689,8 +696,12 @@ def main():
                 videos["full2"].current_frame = 0
                 videos["full2"].frame_accumulator = 0.0
                 state = "full3"
+                transition_blend = 0.0  # トランジション完了時に0にリセット
+                
         elif state == "full4":
-            draw_video_fullscreen(screen, videos["full4"])
+            frame = videos["full4"].get_frame()
+            draw_video(screen, frame, dx, dy)
+            
             videos["full4"].frame_accumulator += TRANSITION_SPEED
             if videos["full4"].frame_accumulator >= 1.0:
                 videos["full4"].current_frame += int(videos["full4"].frame_accumulator)
@@ -699,8 +710,12 @@ def main():
                 videos["full4"].current_frame = 0
                 videos["full4"].frame_accumulator = 0.0
                 state = "normal"
+                transition_blend = 0.0
+                
         elif state == "full5":
-            draw_video_fullscreen(screen, videos["full5"])
+            frame = videos["full5"].get_frame()
+            draw_video(screen, frame, dx, dy)
+            
             videos["full5"].frame_accumulator += TRANSITION_SPEED
             if videos["full5"].frame_accumulator >= 1.0:
                 videos["full5"].current_frame += int(videos["full5"].frame_accumulator)
@@ -709,8 +724,12 @@ def main():
                 videos["full5"].current_frame = 0
                 videos["full5"].frame_accumulator = 0.0
                 state = "full6"
+                transition_blend = 0.0
+                
         elif state == "full7":
-            draw_video_fullscreen(screen, videos["full7"])
+            frame = videos["full7"].get_frame()
+            draw_video(screen, frame, dx, dy)
+            
             videos["full7"].frame_accumulator += TRANSITION_SPEED
             if videos["full7"].frame_accumulator >= 1.0:
                 videos["full7"].current_frame += int(videos["full7"].frame_accumulator)
@@ -719,6 +738,7 @@ def main():
                 videos["full7"].current_frame = 0
                 videos["full7"].frame_accumulator = 0.0
                 state = "normal"
+                transition_blend = 0.0
 
         # 字幕描画
         draw_subtitle(screen, font)
@@ -726,5 +746,5 @@ def main():
         pygame.display.flip()
         clock.tick(60)
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
