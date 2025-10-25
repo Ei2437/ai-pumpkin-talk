@@ -71,13 +71,15 @@ def send_key_to_temp(key):
 def on_key_event(event):
     """keyboard ライブラリのイベントリスナー"""
     if event.event_type == keyboard.KEY_DOWN: # キーが押されたとき
-        # 左右、A、数字キー(1-0)を検知
-        if event.name in ['left', 'right', 'a', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
+        # 左右、A、K、L、数字キー(1-0)を検知
+        if event.name in ['left', 'right', 'a', 'k', 'l', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
             send_key_to_temp(event.name)
 
 def main():
     print("Spaceキーを押して録音開始...")
-    print("Left/Right/Aキー、および1-0の数字キーも検知します。")
+    print("Left/Right/A/K/Lキー、および1-0の数字キーも検知します。")
+    print("  K: 登場モーション")
+    print("  L: 退場モーション")
     is_recording = False
     last_key_state = False
     audio_frames = []
