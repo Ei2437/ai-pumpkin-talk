@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 字幕表示機能付き
+# 字幕表示機能付き + 開始・終了モーション
 
 import os
 import time
@@ -28,6 +28,8 @@ VIDEO_FULL4 = "videos/Pumpkin-Left2Center.mov"
 VIDEO_FULL5 = "videos/Pumpkin-Center2Right.mov"
 VIDEO_FULL6 = "videos/Pumpkin-Right.mov"
 VIDEO_FULL7 = "videos/Pumpkin-Right2Center.mov"
+VIDEO_ENTRY = "videos/Pumpkin-Entry.mov"      # 追加
+VIDEO_FINISH = "videos/Pumpkin-Finish.mov"    # 追加
 BACK_SPEED_SKIP = 10
 TRANSITION_SPEED = 0.9
 
@@ -39,8 +41,8 @@ SUBTITLE_Y_POSITION = h - 150  # 画面下部からの位置
 SUBTITLE_MAX_WIDTH = w - 200  # 字幕の最大幅
 
 # 読み上げ速度の設定
-CHAR_DURATION = 0.13  # 1文字読むのにかかる時間（秒）
-PUNCTUATION_DURATION = 0.43  # 「、」「。」の読み上げ時間（秒）
+CHAR_DURATION = 0.13  # 1文字読むのにかかる時間(秒)
+PUNCTUATION_DURATION = 0.43  # 「、」「。」の読み上げ時間(秒)
 
 SOUND_FILES = {
     '1': "sounds/OP1.wav",
@@ -57,7 +59,7 @@ SOUND_FILES = {
 
 # グローバル変数
 a_key_active = False
-state = "normal"
+state = "idle"  # 初期状態をidleに変更
 audio_lock = threading.Lock()
 current_subtitle = ""  # 現在表示中の字幕
 subtitle_lock = threading.Lock()
@@ -191,7 +193,7 @@ class PumpkinTalk:
             return None, None
 
     def get_audio_duration(self, wav_file):
-        """WAVファイルの再生時間を取得（秒）"""
+        """WAVファイルの再生時間を取得(秒)"""
         try:
             with wave.open(wav_file, 'rb') as wf:
                 frames = wf.getnframes()
@@ -215,7 +217,7 @@ class PumpkinTalk:
         
         for char in text:
             current_sentence += char
-            if char == "。" or char == "！" or char == "？":
+            if char == "。" or char == "!" or char == "?":
                 sentences.append(current_sentence)
                 current_sentence = ""
         
@@ -234,7 +236,7 @@ class PumpkinTalk:
             comma_count = sentence.count("、")
             period_count = sentence.count("。")
             tcomma_count = sentence.count("...")
-            mark_count = sentence.count("！") + sentence.count("？") + sentence.count("*")
+            mark_count = sentence.count("!") + sentence.count("?") + sentence.count("*")
             char_count -= mark_count
             
             sentence_duration = (
@@ -382,7 +384,7 @@ def draw_subtitle(screen, font):
     if not text:
         return
     
-    # 複数行に分割（自動改行）
+    # 複数行に分割(自動改行)
     lines = []
     words = text
     current_line = ""
@@ -457,12 +459,17 @@ pumpkin_talk = None
 
 @app_text.route('/receive_text', methods=['POST'])
 def receive_text():
+    global state
     data = request.get_json()
     input_text = data.get("text", "")
     if input_text:
         print(f"受信したテキスト: {input_text}")
-        threading.Thread(target=pumpkin_talk.process_input_text, args=(input_text,), daemon=True).start()
-        return jsonify({"status": "success"}), 200
+        # idle状態の場合はテキスト処理をしない
+        if state != "idle" and state != "entry" and state != "finish":
+            threading.Thread(target=pumpkin_talk.process_input_text, args=(input_text,), daemon=True).start()
+            return jsonify({"status": "success"}), 200
+        else:
+            return jsonify({"status": "ignored", "message": "Character not ready"}), 200
     else:
         return jsonify({"status": "error", "message": "No text provided"}), 400
 
@@ -483,6 +490,12 @@ def receive_key_event():
     elif key_name == 'a':
         pygame.event.post(pygame.event.Event(KEYDOWN, key=K_a))
         print("A key event posted to pygame queue")
+    elif key_name == 'k':
+        pygame.event.post(pygame.event.Event(KEYDOWN, key=K_k))
+        print("K key event posted to pygame queue")
+    elif key_name == 'l':
+        pygame.event.post(pygame.event.Event(KEYDOWN, key=K_l))
+        print("L key event posted to pygame queue")
     elif key_name in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
         pygame.event.post(pygame.event.Event(USEREVENT, key=key_name))
         print(f"Number key '{key_name}' event posted to pygame queue")
@@ -534,11 +547,13 @@ def main():
         "full4": AlphaVideo(VIDEO_FULL4),
         "full5": AlphaVideo(VIDEO_FULL5),
         "full6": AlphaVideo(VIDEO_FULL6),
-        "full7": AlphaVideo(VIDEO_FULL7)
+        "full7": AlphaVideo(VIDEO_FULL7),
+        "entry": AlphaVideo(VIDEO_ENTRY),      # 追加
+        "finish": AlphaVideo(VIDEO_FINISH)     # 追加
     }
     print("動画読み込み完了")
 
-    state = "normal"
+    state = "idle"  # 初期状態はidle
 
     print("Flaskサーバーを起動中...")
     time.sleep(0.5)
@@ -558,9 +573,11 @@ def main():
     time.sleep(1)
     
     print("=" * 50)
-    print("起動")
+    print("起動完了")
     print("  - テキスト受信 (port 5000): http://0.0.0.0:5000/receive_text")
     print("  - キーイベント (port 5001): http://0.0.0.0:5001/key_event")
+    print("  - Kキー: 登場モーション")
+    print("  - Lキー: 退場モーション")
     print("=" * 50)
 
     while True:
@@ -575,7 +592,21 @@ def main():
                     a_key_active = not a_key_active
                 print(f"A key manually toggled: {'ON' if a_key_active else 'OFF'}")
             elif event.type == KEYDOWN:
-                if event.key == K_LEFT:
+                if event.key == K_k:
+                    # Kキー: idle状態の時のみ登場モーション開始
+                    if state == "idle":
+                        state = "entry"
+                        videos["entry"].current_frame = 0
+                        videos["entry"].frame_accumulator = 0.0
+                        print("登場モーション開始")
+                elif event.key == K_l:
+                    # Lキー: normal, full3, full6状態の時のみ退場モーション開始
+                    if state in ["normal", "full3", "full6"]:
+                        state = "finish"
+                        videos["finish"].current_frame = 0
+                        videos["finish"].frame_accumulator = 0.0
+                        print("退場モーション開始")
+                elif event.key == K_LEFT:
                     if state == "normal": 
                         state = "full2"
                     elif state == "full3": 
@@ -612,7 +643,34 @@ def main():
         screen.blit(bg_surf, (0, 0))
 
         # 状態管理
-        if state == "normal":
+        if state == "idle":
+            # 背景のみ表示(キャラクターなし)
+            pass
+        elif state == "entry":
+            # 登場モーション再生
+            draw_video_fullscreen(screen, videos["entry"])
+            videos["entry"].frame_accumulator += TRANSITION_SPEED
+            if videos["entry"].frame_accumulator >= 1.0:
+                videos["entry"].current_frame += int(videos["entry"].frame_accumulator)
+                videos["entry"].frame_accumulator -= int(videos["entry"].frame_accumulator)
+            if videos["entry"].current_frame >= videos["entry"].total:
+                videos["entry"].current_frame = 0
+                videos["entry"].frame_accumulator = 0.0
+                state = "normal"
+                print("登場モーション完了 → normal状態へ")
+        elif state == "finish":
+            # 退場モーション再生
+            draw_video_fullscreen(screen, videos["finish"])
+            videos["finish"].frame_accumulator += TRANSITION_SPEED
+            if videos["finish"].frame_accumulator >= 1.0:
+                videos["finish"].current_frame += int(videos["finish"].frame_accumulator)
+                videos["finish"].frame_accumulator -= int(videos["finish"].frame_accumulator)
+            if videos["finish"].current_frame >= videos["finish"].total:
+                videos["finish"].current_frame = 0
+                videos["finish"].frame_accumulator = 0.0
+                state = "idle"
+                print("退場モーション完了 → idle状態へ")
+        elif state == "normal":
             frame, dx, dy = handle_a_key_video(videos["normal"], t, seed=1)
             draw_video(screen, frame, dx, dy)
         elif state == "full3":
