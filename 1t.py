@@ -63,6 +63,8 @@ state = "idle"
 audio_lock = threading.Lock()
 current_subtitle = ""
 subtitle_lock = threading.Lock()
+is_speaking = False  # 会話全体の状態を管理
+speaking_lock = threading.Lock()
 
 # HTTPセッション（接続プーリング）
 session = requests.Session()
@@ -280,15 +282,19 @@ class PumpkinTalk:
             with subtitle_lock:
                 current_subtitle = ""
 
-    def play_audio_with_aplay(self, wav_file, show_subtitle=False, subtitle_text=""):
-        global a_key_active
+    def play_audio_with_aplay(self, wav_file, show_subtitle=False, subtitle_text="", is_final=False):
+        global a_key_active, is_speaking
         
         if not os.path.exists(wav_file) or os.path.getsize(wav_file) == 0:
             return
 
         try:
-            with audio_lock:
-                a_key_active = True
+            # 最初の文の場合のみ a_key_active をオン
+            with speaking_lock:
+                if not is_speaking:
+                    is_speaking = True
+                    with audio_lock:
+                        a_key_active = True
             
             duration = self.get_audio_duration(wav_file)
             
@@ -311,24 +317,33 @@ class PumpkinTalk:
         except Exception as e:
             print(f"音声再生エラー: {e}")
         finally:
-            with audio_lock:
-                a_key_active = False
+            # 最後の文の場合のみ a_key_active をオフ
+            if is_final:
+                with speaking_lock:
+                    is_speaking = False
+                with audio_lock:
+                    a_key_active = False
 
     def process_input_text(self, input_text):
         """ストリーミング処理"""
         print(f"受信: {input_text}")
         
         # ストリーミングで応答生成 → 即座に音声合成 → 即座に再生
-        for sentence in self.generate_response_streaming(input_text):
+        sentences = list(self.generate_response_streaming(input_text))
+        total = len(sentences)
+        
+        for idx, sentence in enumerate(sentences):
             if sentence:
                 print(f"生成: {sentence}")
                 
-                # 音声合成（非同期）
+                # 音声合成
                 wav_file = self.text_to_speech_fast(sentence)
                 
                 if wav_file:
+                    # 最後の文かどうかを判定
+                    is_final = (idx == total - 1)
                     # 即座に再生
-                    self.play_audio_with_aplay(wav_file, show_subtitle=True, subtitle_text=sentence)
+                    self.play_audio_with_aplay(wav_file, show_subtitle=True, subtitle_text=sentence, is_final=is_final)
 
     def filter_response(self, response_text):
         if "response_filtering" in self.advanced_config:
