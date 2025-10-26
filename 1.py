@@ -19,7 +19,7 @@ import threading
 import wave
 
 # ==== 映像設定 ====
-w, h = 1920, 1020
+w, h = 960, 510
 BG_VIDEO_PATH = "videos/BG.mp4"
 VIDEO_MAIN = "videos/Pumpkin-Center.mov"
 VIDEO_FULL2 = "videos/Pumpkin-Center2Left.mov"
