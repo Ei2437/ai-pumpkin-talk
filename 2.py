@@ -1,132 +1,119 @@
-# pc2.py
-import os
-import time
-import json
+# pc2.py - 最適化版
 import requests
 import numpy as np
 import sounddevice as sd
 import speech_recognition as sr
-from scipy.io import wavfile
 import keyboard
+from threading import Thread, Lock
 
-def start_recording():
-    print("録音開始...")
-    audio_frames = []
-    recording_stream = sd.InputStream(samplerate=16000, channels=1, dtype=np.int16)
-    recording_stream.start()
-    return recording_stream, audio_frames
+# 設定
+SERVER_URL = "http://sudume.hamako-ths.ed.jp:5000/receive_text"
+KEY_URL = "http://sudume.hamako-ths.ed.jp:5001/key_event"
+SAMPLE_RATE = 16000
 
-def stop_recording(recording_stream, audio_frames):
-    print("録音終了...")
-    recording_stream.stop()
+# グローバル変数
+recording = False
+audio_frames = []
+audio_lock = Lock()
+stream = None
+
+def send_key(key):
+    """キーイベントを送信（最小構成）"""
+    try:
+        requests.post(KEY_URL, json={"key": key}, timeout=0.5)
+    except:
+        pass  # エラーは無視してレスポンスを待たない
+
+def send_text(text):
+    """テキストを送信"""
+    try:
+        requests.post(SERVER_URL, json={"text": text}, timeout=2)
+        print(f"送信完了: {text}")
+    except Exception as e:
+        print(f"送信エラー: {e}")
+
+def on_key(event):
+    """キー押下時の処理（イベント駆動）"""
+    if event.event_type != keyboard.KEY_DOWN:
+        return
     
-    if audio_frames:
-        audio_data = np.concatenate(audio_frames, axis=0)
-        audio = sr.AudioData(audio_data.tobytes(), 16000, 2)
-        recording_stream.close()
-        return audio
-    
-    recording_stream.close()
-    return None
+    key = event.name
+    # 対象キーのみ処理
+    if key in ['left', 'right', 'a', 'k', 'l', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
+        # 非同期で送信（ブロックしない）
+        Thread(target=send_key, args=(key,), daemon=True).start()
 
-def transcribe_audio(audio):
+def audio_callback(indata, frames, time, status):
+    """音声データのコールバック"""
+    if recording:
+        with audio_lock:
+            audio_frames.append(indata.copy())
+
+def transcribe(audio_data):
+    """音声認識"""
     recognizer = sr.Recognizer()
     try:
-        print("文字起こし中...")
+        audio = sr.AudioData(audio_data.tobytes(), SAMPLE_RATE, 2)
         text = recognizer.recognize_google(audio, language="ja-JP")
-        print(f"認識されたテキスト: {text}")
         return text
-    except sr.UnknownValueError:
-        print("音声を認識できませんでした")
+    except:
         return None
-    except sr.RequestError as e:
-        print(f"音声認識サービスでエラーが発生しました: {e}")
-        return None
-
-def send_text_to_server(text):
-    url = "http://sudume.hamako-ths.ed.jp:5000/receive_text"  # pc1.py のアドレス
-    payload = {"text": text}
-    try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        print("サーバー送信が完了しました。")
-    except requests.exceptions.ConnectionError:
-        print("サーバーに接続できません。pc1.py が起動しているか確認してください。")
-    except requests.exceptions.Timeout:
-        print("サーバーへのリクエストがタイムアウトしました。")
-    except requests.exceptions.RequestException as e:
-        print(f"サーバー送信でエラーが発生しました: {e}")
-
-def send_key_to_temp(key):
-    """temp.pyのFlaskサーバーにキー入力を送信"""
-    url = "http://sudume.hamako-ths.ed.jp:5001/key_event" # temp.py のアドレス
-    payload = {"key": key}
-    try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        print(f"Key '{key}' sent successfully to temp.py server.")
-    except requests.exceptions.RequestException as e:
-        print(f"Failed to send key '{key}' to temp.py server: {e}")
-
-def on_key_event(event):
-    """keyboard ライブラリのイベントリスナー"""
-    if event.event_type == keyboard.KEY_DOWN: # キーが押されたとき
-        # 左右、A、K、L、数字キー(1-0)を検知
-        if event.name in ['left', 'right', 'a', 'k', 'l', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
-            send_key_to_temp(event.name)
 
 def main():
-    print("Spaceキーを押して録音開始...")
-    print("Left/Right/A/K/Lキー、および1-0の数字キーも検知します。")
-    print("  K: 登場モーション")
-    print("  L: 退場モーション")
-    is_recording = False
-    last_key_state = False
-    audio_frames = []
-    recording_stream = None
-
-    # キーイベントリスナーを登録
-    keyboard.hook(on_key_event)
-
+    global recording, audio_frames, stream
+    
+    print("起動完了")
+    print("Space: 録音 | Left/Right/A/K/L/数字: キー送信")
+    
+    # キーフックを登録（軽量）
+    keyboard.hook(on_key)
+    
+    # 音声ストリーム開始
+    stream = sd.InputStream(
+        samplerate=SAMPLE_RATE,
+        channels=1,
+        dtype=np.int16,
+        callback=audio_callback
+    )
+    stream.start()
+    
     try:
         while True:
-            current_key_state = keyboard.is_pressed('space')
-
-            if current_key_state != last_key_state:
-                if current_key_state:
-                    if not is_recording:
-                        # 録音開始
-                        recording_stream, audio_frames = start_recording()
-                        is_recording = True # 状態を更新
-                else: # current_key_state が False (キーが離れた)
-                    if is_recording:
-                        # 録音停止
-                        audio = stop_recording(recording_stream, audio_frames)
-                        if audio:
-                            text = transcribe_audio(audio)
+            # Spaceキーの状態をポーリング（軽量）
+            if keyboard.is_pressed('space'):
+                if not recording:
+                    print("録音開始...")
+                    with audio_lock:
+                        audio_frames = []
+                    recording = True
+            else:
+                if recording:
+                    print("録音終了...")
+                    recording = False
+                    
+                    # 音声処理を別スレッドで実行
+                    with audio_lock:
+                        data = np.concatenate(audio_frames) if audio_frames else None
+                    
+                    if data is not None and len(data) > 0:
+                        def process():
+                            text = transcribe(data)
                             if text:
-                                send_text_to_server(text)
-                        is_recording = False # 状態を更新
-                        audio_frames = [] # フレームをクリア
-                        recording_stream = None
-                last_key_state = current_key_state # 状態を更新
-
-            if is_recording:
-                data, overflowed = recording_stream.read(1024)
-                if not overflowed:
-                    audio_frames.append(data)
-
-            time.sleep(0.01)
+                                print(f"認識: {text}")
+                                send_text(text)
+                        
+                        Thread(target=process, daemon=True).start()
+            
+            # CPU負荷を下げる
+            keyboard.read_event(suppress=False)
+            
     except KeyboardInterrupt:
         print("\n終了")
-        if is_recording:
-            stop_recording(recording_stream, audio_frames)
     finally:
-        # リスナーを解除
         keyboard.unhook_all()
+        if stream:
+            stream.stop()
+            stream.close()
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n終了")
+    main()

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 最適化版 1.py
+# ストリーミング対応版 1.py
 
 import os
 import time
@@ -17,7 +17,8 @@ import cv2
 import math
 import threading
 import wave
-from functools import lru_cache
+import re
+import tempfile
 
 # ==== 映像設定 ====
 w, h = 960, 510
@@ -112,44 +113,86 @@ class PumpkinTalk:
         self.character_prompt = self.config_loader.get_character_prompt()
         self.conversation_history = []
         
-        self.temp_wav_file = "output.wav"
-        
-        # VOICEVOX設定を事前に構築
+        # VOICEVOXキャッシュ設定
         self.voicevox_settings = self.system_config.get("voicevox", {})
 
-    def generate_response(self, input_text):
+    def split_sentences(self, text):
+        """テキストを文単位に分割"""
+        sentences = re.split(r'([。！？!?])', text)
+        result = []
+        temp = ""
+        
+        for i, part in enumerate(sentences):
+            temp += part
+            if part in ['。', '！', '？', '!', '?']:
+                result.append(temp.strip())
+                temp = ""
+        
+        if temp.strip():
+            result.append(temp.strip())
+        
+        return [s for s in result if s]
+
+    def generate_response_streaming(self, input_text):
+        """ストリーミングで応答生成"""
         if not input_text:
-            return "何か言ったか?もう一度言ってみろよ!"
+            yield "何か言ったか?もう一度言ってみろよ!"
+            return
         
         try:
             self.conversation_history.append(f"ユーザー: {input_text}")
-            recent_history = "\n".join(self.conversation_history[-6:])
+            recent_history = "\n".join(self.conversation_history[-3:])  # 3件に短縮
             
             url = f"{self.ollama_url}/api/generate"
             payload = {
                 "model": self.model,
                 "prompt": f"{self.character_prompt}\n\n【会話履歴】\n{recent_history}\n\nパンプキン: ",
-                "stream": False,
+                "stream": True,  # ストリーミング有効
                 "options": self.ollama_config.get("params", {})
             }
             
-            response = session.post(url, json=payload)
+            response = session.post(url, json=payload, stream=True)
             response.raise_for_status()
             
-            result = response.json()
-            response_text = result.get("response", "応答を生成できませんでした。")
+            buffer = ""
+            full_response = ""
             
-            if self.advanced_config:
-                response_text = self.filter_response(response_text)
+            for line in response.iter_lines():
+                if line:
+                    try:
+                        chunk = json.loads(line)
+                        if "response" in chunk:
+                            token = chunk["response"]
+                            buffer += token
+                            full_response += token
+                            
+                            # 文の区切りを検出
+                            if token in ['。', '！', '？', '!', '?', '\n']:
+                                if buffer.strip():
+                                    sentence = self.filter_response(buffer.strip())
+                                    if sentence:
+                                        yield sentence
+                                    buffer = ""
+                        
+                        if chunk.get("done", False):
+                            break
+                    except json.JSONDecodeError:
+                        continue
             
-            self.conversation_history.append(f"パンプキン: {response_text}")
-            return response_text
+            # 残りのバッファを出力
+            if buffer.strip():
+                sentence = self.filter_response(buffer.strip())
+                if sentence:
+                    yield sentence
+            
+            self.conversation_history.append(f"パンプキン: {full_response}")
             
         except Exception as e:
             print(f"Ollama APIエラー: {e}")
-            return "ちっ、調子が悪いぞ!もう一度話しかけてみろよ!"
+            yield "ちっ、調子が悪いぞ!もう一度話しかけてみろよ!"
 
-    def text_to_speech(self, text):
+    def text_to_speech_fast(self, text):
+        """高速音声合成"""
         try:
             # クエリ生成
             query_url = f"{self.voicevox_url}/audio_query"
@@ -179,20 +222,14 @@ class PumpkinTalk:
             )
             synthesis_response.raise_for_status()
             
-            # ファイル保存
-            with open(self.temp_wav_file, "wb") as f:
-                f.write(synthesis_response.content)
-            
-            sample_rate, audio_data = wavfile.read(self.temp_wav_file)
-            
-            if len(audio_data.shape) == 1:
-                audio_data = np.column_stack((audio_data, audio_data))
-            
-            return sample_rate, audio_data
+            # 一時ファイルに保存
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
+                tmp.write(synthesis_response.content)
+                return tmp.name
             
         except Exception as e:
             print(f"VOICEVOX APIエラー: {e}")
-            return None, None
+            return None
 
     def get_audio_duration(self, wav_file):
         try:
@@ -243,12 +280,9 @@ class PumpkinTalk:
             with subtitle_lock:
                 current_subtitle = ""
 
-    def play_audio_with_aplay(self, wav_file=None, show_subtitle=False, subtitle_text=""):
+    def play_audio_with_aplay(self, wav_file, show_subtitle=False, subtitle_text=""):
         global a_key_active
         
-        if wav_file is None:
-            wav_file = self.temp_wav_file
-            
         if not os.path.exists(wav_file) or os.path.getsize(wav_file) == 0:
             return
 
@@ -265,8 +299,14 @@ class PumpkinTalk:
                     daemon=True
                 ).start()
             
-            # aplay実行（最優先）
+            # aplay実行
             subprocess.run(["aplay", "-q", wav_file], check=False)
+            
+            # 一時ファイル削除
+            try:
+                os.unlink(wav_file)
+            except:
+                pass
                 
         except Exception as e:
             print(f"音声再生エラー: {e}")
@@ -275,18 +315,20 @@ class PumpkinTalk:
                 a_key_active = False
 
     def process_input_text(self, input_text):
+        """ストリーミング処理"""
         print(f"受信: {input_text}")
         
-        # 応答生成
-        response_text = self.generate_response(input_text)
-        print(f"応答: {response_text}")
-        
-        # 音声合成
-        sample_rate, audio_data = self.text_to_speech(response_text)
-        
-        # 即座に再生
-        if sample_rate is not None and audio_data is not None:
-            self.play_audio_with_aplay(show_subtitle=True, subtitle_text=response_text)
+        # ストリーミングで応答生成 → 即座に音声合成 → 即座に再生
+        for sentence in self.generate_response_streaming(input_text):
+            if sentence:
+                print(f"生成: {sentence}")
+                
+                # 音声合成（非同期）
+                wav_file = self.text_to_speech_fast(sentence)
+                
+                if wav_file:
+                    # 即座に再生
+                    self.play_audio_with_aplay(wav_file, show_subtitle=True, subtitle_text=sentence)
 
     def filter_response(self, response_text):
         if "response_filtering" in self.advanced_config:
@@ -506,7 +548,7 @@ def main():
     ).start()
     
     time.sleep(1)
-    print("起動完了")
+    print("起動完了（ストリーミングモード）")
 
     while True:
         t = pygame.time.get_ticks()
@@ -544,11 +586,9 @@ def main():
                 if key_num in SOUND_FILES:
                     wav_path = SOUND_FILES[key_num]
                     if os.path.exists(wav_path):
-                        threading.Thread(
-                            target=pumpkin_talk.play_audio_with_aplay, 
-                            args=(wav_path,), 
-                            daemon=True
-                        ).start()
+                        def play_sound():
+                            pumpkin_talk.play_audio_with_aplay(wav_path)
+                        threading.Thread(target=play_sound, daemon=True).start()
 
         # 背景描画
         if bg_counter % BACK_SPEED_SKIP == 0:
