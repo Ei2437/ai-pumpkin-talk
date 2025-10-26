@@ -1,4 +1,4 @@
 mainpush.ps1
 tg.py
-*.mov
+videos/*
 output.wav
