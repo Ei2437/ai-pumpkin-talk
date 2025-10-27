@@ -114,7 +114,7 @@ class LoadConfig:
     def get_advanced_config(self):
         return self.config.get("advanced", {})
 
-# ==== PumpkinTalk ====
+# ==== PumpkinTalk クラス（修正版） ====
 class PumpkinTalk:
     def __init__(self, config_path="pumpkin.json"):
         self.config_loader = LoadConfig(config_path)
@@ -131,8 +131,12 @@ class PumpkinTalk:
         self.character_prompt = self.config_loader.get_character_prompt()
         self.conversation_history = []
         
-        # VOICEVOXキャッシュ設定
         self.voicevox_settings = self.system_config.get("voicevox", {})
+        
+        # 字幕キュー管理用
+        self.subtitle_queue = []
+        self.subtitle_queue_lock = threading.Lock()
+        self.subtitle_thread = None
 
     def split_sentences(self, text):
         """テキストを文単位に分割"""
@@ -250,47 +254,64 @@ class PumpkinTalk:
         except:
             return 0
 
-    def display_subtitle_gradually(self, text, duration):
+    def subtitle_worker(self):
+        """字幕表示ワーカースレッド（キュー処理）"""
         global current_subtitle
         
-        if duration <= 0:
-            duration = 3.0
-        
-        sentences = []
-        current_sentence = ""
-        
-        for char in text:
-            current_sentence += char
-            if char in ["。", "!", "?"]:
+        while True:
+            with self.subtitle_queue_lock:
+                if not self.subtitle_queue:
+                    break
+                text, duration = self.subtitle_queue.pop(0)
+            
+            if duration <= 0:
+                duration = 3.0
+            
+            sentences = []
+            current_sentence = ""
+            
+            for char in text:
+                current_sentence += char
+                if char in ["。", "!", "?"]:
+                    sentences.append(current_sentence)
+                    current_sentence = ""
+            
+            if current_sentence:
                 sentences.append(current_sentence)
-                current_sentence = ""
-        
-        if current_sentence:
-            sentences.append(current_sentence)
-        
-        if not sentences:
-            sentences = [text]
-        
-        for sentence in sentences:
-            char_count = len(sentence)
-            comma_count = sentence.count("、")
-            period_count = sentence.count("。")
-            tcomma_count = sentence.count("...")
-            mark_count = sentence.count("!") + sentence.count("?") + sentence.count("*")
-            char_count -= mark_count
             
-            sentence_duration = (
-                char_count * CHAR_DURATION + 
-                (comma_count + period_count + tcomma_count) * PUNCTUATION_DURATION
-            )
+            if not sentences:
+                sentences = [text]
             
-            with subtitle_lock:
-                current_subtitle = sentence
+            for sentence in sentences:
+                char_count = len(sentence)
+                comma_count = sentence.count("、")
+                period_count = sentence.count("。")
+                tcomma_count = sentence.count("...")
+                mark_count = sentence.count("!") + sentence.count("?") + sentence.count("*")
+                char_count -= mark_count
+                
+                sentence_duration = (
+                    char_count * CHAR_DURATION + 
+                    (comma_count + period_count + tcomma_count) * PUNCTUATION_DURATION
+                )
+                
+                with subtitle_lock:
+                    current_subtitle = sentence
+                
+                time.sleep(sentence_duration)
+                
+                with subtitle_lock:
+                    current_subtitle = ""
+
+    def display_subtitle_gradually(self, text, duration):
+        """字幕をキューに追加"""
+        with self.subtitle_queue_lock:
+            self.subtitle_queue.append((text, duration))
             
-            time.sleep(sentence_duration)
-            
-            with subtitle_lock:
-                current_subtitle = ""
+            # ワーカースレッドが動いていなければ起動
+            if self.subtitle_thread is None or not self.subtitle_thread.is_alive():
+                self.subtitle_thread = threading.Thread(target=self.subtitle_worker, daemon=True)
+                self.subtitle_thread.start()
 
     def play_audio_with_aplay(self, wav_file, show_subtitle=False, subtitle_text="", is_final=False):
         global a_key_active, is_speaking
@@ -307,13 +328,11 @@ class PumpkinTalk:
             
             duration = self.get_audio_duration(wav_file)
             
+            # 字幕をキューに追加（ブロックしない）
             if show_subtitle and subtitle_text:
-                threading.Thread(
-                    target=self.display_subtitle_gradually,
-                    args=(subtitle_text, duration),
-                    daemon=True
-                ).start()
+                self.display_subtitle_gradually(subtitle_text, duration)
             
+            # 音声再生（これはブロックする）
             subprocess.run(["aplay", "-q", wav_file], check=False)
             
             try:
@@ -358,6 +377,7 @@ class PumpkinTalk:
                     response_text = response_text.replace(old, new)
         
         return response_text.strip()
+
 
 # ==== ユーザー質問字幕表示関数 ====
 def show_user_subtitle(text):
