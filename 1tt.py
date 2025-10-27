@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# ストリーミング対応版 1.py - 字幕機能強化版
+# 1tt_v2.py - 修正版完全版
 
 import os
 import time
@@ -49,9 +49,9 @@ USER_SUBTITLE_FONT_SIZE = 36
 USER_SUBTITLE_COLOR = (255, 255, 255)
 USER_SUBTITLE_BG_COLOR = (40, 40, 40, 220)
 USER_SUBTITLE_MAX_WIDTH = w - 400
-USER_SUBTITLE_DISPLAY_TIME = 4.0  # 表示時間（秒）
-USER_SUBTITLE_SLIDE_DURATION = 0.3  # スライドインアニメーション時間
-USER_SUBTITLE_FADE_DURATION = 0.4  # フェードアウト時間
+USER_SUBTITLE_DISPLAY_TIME = 4.0
+USER_SUBTITLE_SLIDE_DURATION = 0.3
+USER_SUBTITLE_FADE_DURATION = 0.4
 
 SOUND_FILES = {
     '1': "sounds/OP1.wav",
@@ -86,94 +86,105 @@ speaking_lock = threading.Lock()
 session = requests.Session()
 session.mount('http://', requests.adapters.HTTPAdapter(pool_connections=10, pool_maxsize=10))
 
-# ==== Config Loader ====
-class LoadConfig:
+# ==== PumpkinTalk V2 クラス ====
+class PumpkinTalkV2:
     def __init__(self, config_path="pumpkin.json"):
-        if not os.path.exists(config_path):
-            raise FileNotFoundError(f"設定ファイルが見つかりません: {config_path}")
         with open(config_path, "r", encoding="utf-8") as f:
             self.config = json.load(f)
-    
-    def get_character_prompt(self):
-        char = self.config["character"]
-        knowledge_dict = self.config.get("knowledge", {})
-        knowledge_str = ""
-        for category, items in knowledge_dict.items():
-            knowledge_str += f"\n【{category}】\n" + "\n".join(items) + "\n"
-        return char["prompt"].format(knowledge=knowledge_str)
-    
-    def get_ollama_config(self):
-        return self.config["api"]["ollama"]
-    
-    def get_voicevox_config(self):
-        return self.config["api"]["voicevox"]
-    
-    def get_system_config(self):
-        return self.config.get("system", {})
-    
-    def get_advanced_config(self):
-        return self.config.get("advanced", {})
-
-# ==== PumpkinTalk クラス（修正版） ====
-class PumpkinTalk:
-    def __init__(self, config_path="pumpkin.json"):
-        self.config_loader = LoadConfig(config_path)
-        self.ollama_config = self.config_loader.get_ollama_config()
-        self.voicevox_config = self.config_loader.get_voicevox_config()
-        self.system_config = self.config_loader.get_system_config()
-        self.advanced_config = self.config_loader.get_advanced_config()
         
-        self.ollama_url = self.ollama_config["url"]
-        self.voicevox_url = self.voicevox_config["url"]
-        self.speaker_id = self.voicevox_config["speaker_id"]
-        self.model = self.ollama_config["model"]
+        self.character = self.config["character"]
+        self.knowledge = self.config["knowledge_base"]
+        self.ollama_config = self.config["api"]["ollama"]
+        self.voicevox_config = self.config["api"]["voicevox"]
         
-        self.character_prompt = self.config_loader.get_character_prompt()
         self.conversation_history = []
+        self.max_history = 5
         
-        self.voicevox_settings = self.system_config.get("voicevox", {})
+        # セッション管理
+        self.http_session = requests.Session()
+        self.http_session.mount('http://', requests.adapters.HTTPAdapter(pool_connections=10, pool_maxsize=10))
         
-        # 字幕キュー管理用
+        # 字幕キュー管理
         self.subtitle_queue = []
         self.subtitle_queue_lock = threading.Lock()
         self.subtitle_thread = None
-
-    def split_sentences(self, text):
-        """テキストを文単位に分割"""
-        sentences = re.split(r'([。！？!?])', text)
-        result = []
-        temp = ""
         
-        for i, part in enumerate(sentences):
-            temp += part
-            if part in ['。', '！', '？', '!', '?']:
-                result.append(temp.strip())
-                temp = ""
+    def search_knowledge(self, query):
+        """質問に関連する知識を検索（無理に返さない）"""
+        query_lower = query.lower()
+        relevant = []
         
-        if temp.strip():
-            result.append(temp.strip())
+        # キーワードマッチング（厳密に）
+        keywords = {
+            "浜工": "hamako_basic",
+            "浜松工業": "hamako_basic",
+            "情報処理部": "syoribu",
+            "処理部": "syoribu",
+            "システム化学": ("departments", "システム化学科"),
+            "デザイン": ("departments", "デザイン科"),
+            "建築": ("departments", "建築科"),
+            "土木": ("departments", "土木科")
+        }
         
-        return [s for s in result if s]
-
+        for keyword, path in keywords.items():
+            if keyword in query:
+                if isinstance(path, tuple):
+                    info = self.knowledge.get(path[0], {}).get(path[1], "")
+                    if info:
+                        relevant.append(info)
+                else:
+                    relevant.extend(self.knowledge.get(path, []))
+        
+        # 関連情報がなければ空を返す（無理に返さない）
+        return "\n".join(relevant[:3]) if relevant else ""
+    
+    def build_prompt(self, user_input):
+        """動的プロンプト生成（知識は必要時のみ）"""
+        # 基本プロンプト
+        prompt = self.character["base_prompt"] + "\n\n"
+        
+        # Few-shot例（必ず含める）
+        prompt += "【会話例】\n"
+        for ex in self.character["few_shot_examples"]:
+            prompt += f"ユーザー: {ex['user']}\nパンプキン: {ex['assistant']}\n\n"
+        
+        # 関連知識（質問に応じて）
+        knowledge = self.search_knowledge(user_input)
+        if knowledge:
+            prompt += f"【参考情報】（必要なら使う。無理に使わない）\n{knowledge}\n\n"
+        
+        # 会話履歴
+        if self.conversation_history:
+            prompt += "【最近の会話】\n"
+            for hist in self.conversation_history[-3:]:
+                prompt += f"{hist}\n"
+            prompt += "\n"
+        
+        # 現在の質問
+        prompt += f"ユーザー: {user_input}\nパンプキン: "
+        
+        return prompt
+    
     def generate_response_streaming(self, input_text):
-        """ストリーミングで応答生成"""
-        if not input_text:
-            yield "何か言ったか?もう一度言ってみろよ!"
+        """ストリーミング応答生成（修正版）"""
+        if not input_text.strip():
+            yield "何か言ったか？もう一度言ってみろよ。"
             return
         
         try:
-            self.conversation_history.append(f"ユーザー: {input_text}")
-            recent_history = "\n".join(self.conversation_history[-3:])
+            # プロンプト構築
+            prompt = self.build_prompt(input_text)
             
-            url = f"{self.ollama_url}/api/generate"
+            # Ollama API呼び出し
+            url = f"{self.ollama_config['url']}/api/generate"
             payload = {
-                "model": self.model,
-                "prompt": f"{self.character_prompt}\n\n【会話履歴】\n{recent_history}\n\nパンプキン: ",
+                "model": self.ollama_config["model"],
+                "prompt": prompt,
                 "stream": True,
-                "options": self.ollama_config.get("params", {})
+                "options": self.ollama_config["params"]
             }
             
-            response = session.post(url, json=payload, stream=True)
+            response = self.http_session.post(url, json=payload, stream=True, timeout=30)
             response.raise_for_status()
             
             buffer = ""
@@ -188,9 +199,10 @@ class PumpkinTalk:
                             buffer += token
                             full_response += token
                             
+                            # 文の区切りで出力
                             if token in ['。', '！', '？', '!', '?', '\n']:
                                 if buffer.strip():
-                                    sentence = self.filter_response(buffer.strip())
+                                    sentence = self.post_process(buffer.strip())
                                     if sentence:
                                         yield sentence
                                     buffer = ""
@@ -200,38 +212,73 @@ class PumpkinTalk:
                     except json.JSONDecodeError:
                         continue
             
+            # 残りのバッファ
             if buffer.strip():
-                sentence = self.filter_response(buffer.strip())
+                sentence = self.post_process(buffer.strip())
                 if sentence:
                     yield sentence
             
+            # 履歴更新
+            self.conversation_history.append(f"ユーザー: {input_text}")
             self.conversation_history.append(f"パンプキン: {full_response}")
+            
+            # 履歴削減
+            if len(self.conversation_history) > self.max_history * 2:
+                self.conversation_history = self.conversation_history[-self.max_history * 2:]
             
         except Exception as e:
             print(f"Ollama APIエラー: {e}")
-            yield "ちっ、調子が悪いぞ!もう一度話しかけてみろよ!"
-
+            yield "ちっ、調子が悪いぞ！もう一度話しかけてみろよ！"
+    
+    def post_process(self, text):
+        """応答の後処理（フィルタリング）"""
+        # 空白除去
+        text = text.strip()
+        
+        # メタ発言検出と除去
+        meta_patterns = [
+            r"俺様は.*?だが.*?優しくなる",
+            r"甘いもの.*?機嫌.*?良くなる",
+            r"傲慢.*?横柄.*?甘い",
+            r".*らしい(ぜ|な|だ|。)$",  # 文末の「らしい」（自分のことを）
+        ]
+        
+        for pattern in meta_patterns:
+            if re.search(pattern, text):
+                # メタ発言が含まれる文は削除
+                return ""
+        
+        # 多言語混入除去（韓国語、中国語）
+        if re.search(r'[\u3131-\uD79D]', text):  # ハングル
+            text = re.sub(r'[\u3131-\uD79D]+', '', text)
+        if re.search(r'[\u4e00-\u9fff]', text) and not re.search(r'[ぁ-んァ-ヶ]', text):  # 漢字のみ
+            return ""
+        
+        # 敬語除去
+        text = text.replace("です", "だ").replace("ます", "る")
+        
+        return text
+    
     def text_to_speech_fast(self, text):
         """高速音声合成"""
         try:
-            query_url = f"{self.voicevox_url}/audio_query"
-            query_params = {"text": text, "speaker": self.speaker_id}
-            query_response = session.post(query_url, params=query_params)
+            query_url = f"{self.voicevox_config['url']}/audio_query"
+            query_params = {"text": text, "speaker": self.voicevox_config["speaker_id"]}
+            query_response = self.http_session.post(query_url, params=query_params)
             query_response.raise_for_status()
             query_data = query_response.json()
             
-            if self.voicevox_settings:
-                query_data.update({
-                    "speedScale": self.voicevox_settings.get("speed", 1.3),
-                    "pitchScale": self.voicevox_settings.get("pitch", 0.0),
-                    "intonationScale": self.voicevox_settings.get("intonation", 1.0),
-                    "volumeScale": self.voicevox_settings.get("volume", 1.0),
-                    "postPhonemeLength": self.voicevox_settings.get("post_phoneme_length", 0.2)
-                })
+            # VOICEVOX設定
+            query_data.update({
+                "speedScale": self.voicevox_config.get("speed", 1.3),
+                "pitchScale": self.voicevox_config.get("pitch", 0.0),
+                "intonationScale": self.voicevox_config.get("intonation", 1.0),
+                "volumeScale": self.voicevox_config.get("volume", 1.0)
+            })
             
-            synthesis_url = f"{self.voicevox_url}/synthesis"
-            synthesis_params = {"speaker": self.speaker_id}
-            synthesis_response = session.post(
+            synthesis_url = f"{self.voicevox_config['url']}/synthesis"
+            synthesis_params = {"speaker": self.voicevox_config["speaker_id"]}
+            synthesis_response = self.http_session.post(
                 synthesis_url, 
                 params=synthesis_params,
                 json=query_data,
@@ -246,14 +293,14 @@ class PumpkinTalk:
         except Exception as e:
             print(f"VOICEVOX APIエラー: {e}")
             return None
-
+    
     def get_audio_duration(self, wav_file):
         try:
             with wave.open(wav_file, 'rb') as wf:
                 return wf.getnframes() / float(wf.getframerate())
         except:
             return 0
-
+    
     def subtitle_worker(self):
         """字幕表示ワーカースレッド（キュー処理）"""
         global current_subtitle
@@ -302,7 +349,7 @@ class PumpkinTalk:
                 
                 with subtitle_lock:
                     current_subtitle = ""
-
+    
     def display_subtitle_gradually(self, text, duration):
         """字幕をキューに追加"""
         with self.subtitle_queue_lock:
@@ -312,7 +359,7 @@ class PumpkinTalk:
             if self.subtitle_thread is None or not self.subtitle_thread.is_alive():
                 self.subtitle_thread = threading.Thread(target=self.subtitle_worker, daemon=True)
                 self.subtitle_thread.start()
-
+    
     def play_audio_with_aplay(self, wav_file, show_subtitle=False, subtitle_text="", is_final=False):
         global a_key_active, is_speaking
         
@@ -348,7 +395,7 @@ class PumpkinTalk:
                     is_speaking = False
                 with audio_lock:
                     a_key_active = False
-
+    
     def process_input_text(self, input_text):
         """ストリーミング処理"""
         print(f"受信: {input_text}")
@@ -367,16 +414,6 @@ class PumpkinTalk:
                 if wav_file:
                     is_final = (idx == total - 1)
                     self.play_audio_with_aplay(wav_file, show_subtitle=True, subtitle_text=sentence, is_final=is_final)
-
-    def filter_response(self, response_text):
-        if "response_filtering" in self.advanced_config:
-            filtering = self.advanced_config["response_filtering"]
-            
-            if "replace_patterns" in filtering:
-                for old, new in filtering["replace_patterns"].items():
-                    response_text = response_text.replace(old, new)
-        
-        return response_text.strip()
 
 
 # ==== ユーザー質問字幕表示関数 ====
@@ -638,7 +675,7 @@ def main():
     global state, a_key_active, pumpkin_talk
     
     print("初期化中...")
-    pumpkin_talk = PumpkinTalk("pumpkin.json")
+    pumpkin_talk = PumpkinTalkV2("pumpkin_v2.json")
     
     pygame.init()
     screen = pygame.display.set_mode((w, h))
@@ -861,5 +898,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-#たまに字幕がスキップされる（1つ分ずれることはない）。
