@@ -33,7 +33,7 @@ VIDEO_FULL7 = "videos/Pumpkin-Right2Center.mov"
 VIDEO_ENTRY = "videos/Pumpkin-Entry.mov"
 VIDEO_FINISH = "videos/Pumpkin-Finish.mov"
 BACK_SPEED_SKIP = 10
-TRANSITION_SPEED = 1.0
+TRANSITION_SPEED = 2.0
 
 # ==== 字幕設定 ====
 SUBTITLE_FONT_SIZE = 48
