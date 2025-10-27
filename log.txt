@@ -1,0 +1,997 @@
+(venv) ei2537@sudume:~/pumpkin$ python 1tt.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+初期化中...
+ * Serving Flask app '__main___text'
+ * Serving Flask app '__main___key'
+ * Debug mode: off
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.18.1.5:5001
+Press CTRL+C to quit
+起動完了(ストリーミングモード)
+10.1.35.36 - - [27/Oct/2025 18:05:38] "POST /key_event HTTP/1.1" 200 -
+受信: こんにちは
+10.1.35.36 - - [27/Oct/2025 18:05:43] "POST /receive_text HTTP/1.1" 200 -
+生成: ほう、よく来たな。
+VOICEVOX APIエラー: 503 Server Error: Service Unavailable for url: http://sudume.hamako-ths.ed.jp:50021/audio_query?text=%E3%81%BB%E3%81%86%E3%80%81%E3%82%88%E3%81%8F%E6%9D%A5%E3%81%9F%E3%81%AA%E3%80%82&speaker=1
+生成: パンプキン様だ。
+VOICEVOX APIエラー: 503 Server Error: Service Unavailable for url: http://sudume.hamako-ths.ed.jp:50021/audio_query?text=%E3%83%91%E3%83%B3%E3%83%97%E3%82%AD%E3%83%B3%E6%A7%98%E3%81%A0%E3%80%82&speaker=1
+生成: 挨拶はよろしいか？
+VOICEVOX APIエラー: 503 Server Error: Service Unavailable for url: http://sudume.hamako-ths.ed.jp:50021/audio_query?text=%E6%8C%A8%E6%8B%B6%E3%81%AF%E3%82%88%E3%82%8D%E3%81%97%E3%81%84%E3%81%8B%EF%BC%9F&speaker=1
+生成: あー、別に構わん。
+VOICEVOX APIエラー: 503 Server Error: Service Unavailable for url: http://sudume.hamako-ths.ed.jp:50021/audio_query?text=%E3%81%82%E3%83%BC%E3%80%81%E5%88%A5%E3%81%AB%E6%A7%8B%E3%82%8F%E3%82%93%E3%80%82&speaker=1
+生成: 甘いものでも食ってろ。
+VOICEVOX APIエラー: 503 Server Error: Service Unavailable for url: http://sudume.hamako-ths.ed.jp:50021/audio_query?text=%E7%94%98%E3%81%84%E3%82%82%E3%81%AE%E3%81%A7%E3%82%82%E9%A3%9F%E3%81%A3%E3%81%A6%E3%82%8D%E3%80%82&speaker=1
+生成: …まあ、別に命令じゃないがな。
+VOICEVOX APIエラー: 503 Server Error: Service Unavailable for url: http://sudume.hamako-ths.ed.jp:50021/audio_query?text=%E2%80%A6%E3%81%BE%E3%81%82%E3%80%81%E5%88%A5%E3%81%AB%E5%91%BD%E4%BB%A4%E3%81%98%E3%82%83%E3%81%AA%E3%81%84%E3%81%8C%E3%81%AA%E3%80%82&speaker=1
+受信: あなたは誰ですか
+10.1.35.36 - - [27/Oct/2025 18:06:22] "POST /receive_text HTTP/1.1" 200 -
+生成: 俺様はパンプキンだ。
+生成: …別に名乗る必要はないがな。
+生成: お前みたいな雑魚に、今のところは付き合ってやる셈이다。
+生成: …甘いもの好きなら、少しは話を聞いてやるかもしれんがな。
+受信: あなたは誰ですか
+10.1.35.36 - - [27/Oct/2025 18:09:49] "POST /receive_text HTTP/1.1" 200 -
+生成: ふん、また同じ質問か。
+生成: いいだろう、もう一度教えてやる。
+生成: 俺様はパンプキンだ。
+生成: 横柄で傲慢だが、甘いものには優しくなる。
+生成: …お前みたいな下等生物には、どうせ理解できないだろうがな。
+10.1.35.36 - - [27/Oct/2025 18:10:09] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:10:11] "POST /key_event HTTP/1.1" 200 -
+受信: 好きな食べ物は何ですか
+10.1.35.36 - - [27/Oct/2025 18:10:19] "POST /receive_text HTTP/1.1" 200 -
+生成: 当然、甘いものだろ！
+生成: ケーキもプリンも悪くないが、人間の魂が一番美味い。
+生成: フン、そう言いながらも、甘いものには俺様も優しくなるんだぜ。
+生成: お前も何か甘いもの食って、気分だけでも良くしておけ。
+生成: どうせ、俺様には無駄だ。
+10.1.35.36 - - [27/Oct/2025 18:11:02] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:11:08] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:11:11] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:11:13] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:11:21] "POST /key_event HTTP/1.1" 200 -
+受信: あなたは誰ですか
+10.1.35.36 - - [27/Oct/2025 18:11:36] "POST /receive_text HTTP/1.1" 200 -
+生成: 俺様はパンプキンだ。
+生成: お前みたいなちっぽけな存在には理解できないかもしれないがな。
+生成: 俺様は、甘いものが好きで、横柄で傲慢だが、甘いものには優しくなる…そんな存在だ。
+生成: お前のような弱虫には、甘いものも楽しめないだろうな。
+生成: フン。
+生成: もっと有益な質問をしてこい。
+生成: でないと、お前の魂を少しだけいただくぞ。
+^CTraceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 843, in <module>
+    main()
+    ~~~~^^
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 767, in main
+    draw_video(screen, frame, dx, dy)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 405, in draw_video
+    surf = pygame.image.frombuffer(frame_resized.tobytes(), frame_resized.shape[1::-1], "RGBA")
+                                   ~~~~~~~~~~~~~~~~~~~~~^^
+KeyboardInterrupt
+^CTraceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/.pyenv/versions/3.13.7/lib/python3.13/threading.py", line 1542, in _shutdown
+    _thread_shutdown()
+KeyboardInterrupt: 
+
+(venv) ei2537@sudume:~/pumpkin$ code 1tt.py
+(venv) ei2537@sudume:~/pumpkin$ python 1tt.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+初期化中...
+ * Serving Flask app '__main___text'
+ * Debug mode: off
+ * Serving Flask app '__main___key'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.18.1.5:5001
+Press CTRL+C to quit
+起動完了(ストリーミングモード)
+10.1.35.36 - - [27/Oct/2025 18:14:06] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:14:11] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:14:13] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:14:14] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:14:16] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:14:19] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:14:24] "POST /key_event HTTP/1.1" 200 -
+受信: あなたは誰ですか
+10.1.35.36 - - [27/Oct/2025 18:14:30] "POST /receive_text HTTP/1.1" 200 -
+生成: 俺様が誰だと？
+生成: ふん、当然、お前のような雑魚には理解できないだろうな。
+生成: 俺様はパンプキンだ。
+生成: 甘いもの好きで、横柄で、少しだけ優しくなることもある、そんな存在だ。
+生成: 特に甘いものに関してはな。
+生成: …それでどうだ？
+生成: 何か用か？
+受信: ちんこ
+10.1.35.36 - - [27/Oct/2025 18:15:35] "POST /receive_text HTTP/1.1" 200 -
+生成: …なんだと？
+生成: 何を言っているんだ、お前は？
+生成: そんな下品な言葉を俺様に吐きかけるとは、いい度胸だな。
+生成: 甘いものに関しては優しくなることもある、と言っただけで、お前のような輩には理解できないだろう。
+生成: …まあいい。
+生成: お前みたいな奴に付き合う時間はないんだ。
+生成: 何か質問があるなら、ちゃんとした言葉で話せよ。
+生成: さっさと済ませろ。
+10.1.35.36 - - [27/Oct/2025 18:16:44] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:45] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:46] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:48] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:49] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:50] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:53] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:55] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:55] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:55] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:58] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:00] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:03] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:05] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:05] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:07] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:07] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:12] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:14] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:40] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:41] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:42] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:45] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:48] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:49] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:51] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:13] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:14] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:15] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:16] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:17] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:18] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:19] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:54] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:56] "POST /key_event HTTP/1.1" 200 -
+受信: しゃっくりの止め方を教えて
+10.1.35.36 - - [27/Oct/2025 18:19:05] "POST /receive_text HTTP/1.1" 200 -
+生成: なんだと？
+生成: 舌打ちだと？
+生成: 貴様のような下劣な者が、俺様にその話を求めるとは、笑止千万だ。
+生成: 甘いものに例えれば多少は寛容になれるが、貴様の行為はいただけない。
+生成: …まあいい。
+生成: しゃっくりを止める方法だと？
+生成: ふむ、原因を特定する必要があるだろう。
+生成: 緊張や興奮が原因なら、深呼吸をして落ち着け。
+生成: 腹式呼吸が効果的らしい。
+生成: それとも、消化不良か？
+生成: ならば、消化の良いものを食べろ。
+生成: …とにかく、落ち着け、そしてちゃんと言葉遣いをしろ。
+生成: さっさと終わらせろ。
+生成: 甘いものでも食べると気分が良くなるかもしれねぇな。
+10.1.35.36 - - [27/Oct/2025 18:20:45] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:20:48] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:20:50] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:20:53] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:20:55] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:20:57] "POST /key_event HTTP/1.1" 200 -
+受信: 台湾は国ですか
+10.1.35.36 - - [27/Oct/2025 18:21:12] "POST /receive_text HTTP/1.1" 200 -
+生成: 貴様が一体誰だか知らないが、そんなくだらない質問をする暇があるなら、甘いものでも食ってろ。
+生成: …台湾が国か？
+生成: ふむ、政治的な問題だな。
+生成: 国際社会での認知状況は複雑で、中華人民共和国が「台湾は中国の一部である」と主張している。
+生成: 俺様は、そんな人間の都合に付き合う気はない。
+生成: …まあいい。
+生成: 甘いものに例えれば、少しは優しくなれる。
+生成: 貴様は、もっと重要なことに気を遣え。
+生成: さっさと終わらせろ。
+受信: 英語で自己紹介してください
+10.1.35.36 - - [27/Oct/2025 18:22:36] "POST /receive_text HTTP/1.1" 200 -
+生成: ふん、貴様が英語で話したいのか。
+生成: 仕方ないな。
+生成: My name is Pumpkin. I am a… rather superior being. I possess immense knowledge and a refined palate, particularly for sweets. Don't expect me to be polite, though. I'm not one for pleasantries. Understand?
+生成: …まあ、こんなもんじゃどうだ？
+生成: 甘いものが好きなら、少しは機嫌が良くなるかもしれない。
+生成: 貴様は、もっと有益なことを尋ねろ。
+生成: さっさと終わらせろよ。
+受信: What N
+10.1.35.36 - - [27/Oct/2025 18:23:27] "POST /receive_text HTTP/1.1" 200 -
+生成: 何だ？
+生成: 「What N」だと？
+生成: ふん、貴様は一体何を言いたいんだ？
+生成: まだ言葉を理解できていないのか？
+生成: もしかして、浜工の学科について質問したいのか？
+生成: システム化学科か？
+生成: デザイン科か？
+生成: それとも、建築科か？
+生成: 土木科か？
+生成: 機械科か？
+生成: 電気科か？
+生成: 情報技術科か？
+生成: 理数工学科か？
+生成: はっきり言え！
+生成: 俺様は、貴様の曖昧な質問に付き合っている暇はないんだぜ！
+生成: さっさと質問しろ！
+受信: for you
+10.1.35.36 - - [27/Oct/2025 18:24:37] "POST /receive_text HTTP/1.1" 200 -
+生成: 「for you」だと？
+生成: ふん、どうせ俺様への貢ぎ物か？
+生成: 甘いものなら喜んで受け取るがな！
+生成: ケーキかプリンか、それとももっと高価なものか？
+生成: だが、甘いもの以外は興味ないんだぜ。
+生成: 浜工の学科について何か知りたいことがあるなら、はっきり言え。
+^Caplay: pcm_write:2178: 書込エラー: システムコール割り込み
+生成: システム化学科？
+Traceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 843, in <module>
+    main()
+    ~~~~^^
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 839, in main
+    pygame.display.flip()
+    ~~~~~~~~~~~~~~~~~~~^^
+KeyboardInterrupt
+^Caplay: pcm_write:2178: Traceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/.pyenv/versions/3.13.7/lib/python3.13/threading.py", line 1542, in _shutdown
+書込エラー: システムコール割り込み
+生成: デザイン科？
+    _thread_shutdown()
+KeyboardInterrupt: 
+
+(venv) ei2537@sudume:~/pumpkin$ python 1tt.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+初期化中...
+ * Serving Flask app '__main___text'
+ * Debug mode: off
+ * Serving Flask app '__main___key'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.18.1.5:5001
+Press CTRL+C to quit
+起動完了(ストリーミングモード)
+10.1.35.36 - - [27/Oct/2025 18:25:13] "POST /key_event HTTP/1.1" 200 -
+受信: for you
+10.1.35.36 - - [27/Oct/2025 18:25:22] "POST /receive_text HTTP/1.1" 200 -
+生成: な、なんだ？
+生成: 「for you」って、俺様のためのお菓子か？
+生成: ま、たまにはいいだろう。
+生成: お前がどれだけ俺様のお気に入りになるか、試させてもらうぜ。
+生成: 甘くて美味しいものを持たせてこい！
+生成: ケーキでもプリンでも、いいぜ。
+生成: さっさと持ってこい！
+受信: いつ 台湾 あカントリー
+10.1.35.36 - - [27/Oct/2025 18:26:25] "POST /receive_text HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:26:28] "POST /key_event HTTP/1.1" 200 -
+生成: 台湾？
+生成: あー、あのマンゴーか。
+生成: まあ、悪くないな。
+生成: あの甘ったるい香りが、たまに気分転換になるんだぜ。
+生成: しかし、お前は一体何を言いたいんだ？
+生成: 「いつ台湾あカントリー」？
+生成: 意味が分からねえ。
+生成: お前、俺様の言葉を理解してるのか？
+生成: 台湾のマンゴーの旬の時期を知りたいのか？
+生成: それとも、何か別の意味があるのか？
+生成: さっさと質問を明確にしろ！
+生成: 答えられない質問をするな！
+生成: 邪魔だ！
+^CTraceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/.pyenv/versions/3.13.7/lib/python3.13/threading.py", line 1542, in _shutdown
+    _thread_shutdown()
+KeyboardInterrupt: 
+(venv) ei2537@sudume:~/pumpkin$ git add .
+(venv) ei2537@sudume:~/pumpkin$ git commit -m "fgljgjkbkdgh"
+[ai-team 7b7271c] fgljgjkbkdgh
+ 4 files changed, 2 insertions(+), 2 deletions(-)
+ delete mode 100644 sounds/OP1.wav
+ delete mode 100644 sounds/sound2.wav
+(venv) ei2537@sudume:~/pumpkin$ git push origin ai-team
+Enumerating objects: 9, done.
+Counting objects: 100% (9/9), done.
+Delta compression using up to 32 threads
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (5/5), 480 bytes | 480.00 KiB/s, done.
+Total 5 (delta 3), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (3/3), completed with 3 local objects.
+To https://github.com/Ei2437/ai-pumpkin-talk.git
+   eea0f1b..7b7271c  ai-team -> ai-team
+(venv) ei2537@sudume:~/pumpkin$ python 1tt.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+初期化中...
+ * Serving Flask app '__main___text'
+ * Debug mode: off
+ * Serving Flask app '__main___key'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.18.1.5:5001
+Press CTRL+C to quit
+起動完了(ストリーミングモード)
+10.1.35.36 - - [27/Oct/2025 18:36:49] "POST /key_event HTTP/1.1" 200 -
+受信: 呼んでみただけ
+10.1.35.36 - - [27/Oct/2025 18:36:54] "POST /receive_text HTTP/1.1" 200 -
+生成: なんだと？
+生成: 俺様を呼ぶなど、失礼このザマ！
+生成: …まあ、別に怒ってはない。
+生成: 甘いものでも食って、気分を紛らわせよう。
+生成: お前も何か甘いもの食ってろ。
+生成: …何が欲しい？
+生成: 甘いものか、それとも情報か？
+生成: 早く言え、退屈だぜ。
+^Caplay: pcm_write:2178: 書込エラー: システムコール割り込み
+Traceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 843, in <module>
+    main()
+    ~~~~^^
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 767, in main
+    draw_video(screen, frame, dx, dy)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 407, in draw_video
+    screen.blit(surf, (dx, dy))
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+^CTraceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/.pyenv/versions/3.13.7/lib/python3.13/threading.py", line 1542, in _shutdown
+    _thread_shutdown()
+KeyboardInterrupt: 
+
+(venv) ei2537@sudume:~/pumpkin$ python 1tt.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+初期化中...
+ * Serving Flask app '__main___text'
+ * Serving Flask app '__main___key'
+ * Debug mode: off
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.18.1.5:5001
+Press CTRL+C to quit
+起動完了(ストリーミングモード)
+^CTraceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/.pyenv/versions/3.13.7/lib/python3.13/threading.py", line 1542, in _shutdown
+    _thread_shutdown()
+KeyboardInterrupt: 
+(venv) ei2537@sudume:~/pumpkin$ ^C
+(venv) ei2537@sudume:~/pumpkin$ git add .
+(venv) ei2537@sudume:~/pumpkin$ git commit -m "fgljgjkbkdgh"
+[ai-team 07d5be3] fgljgjkbkdgh
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+(venv) ei2537@sudume:~/pumpkin$ git push origin ai-team
+Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Delta compression using up to 32 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 292 bytes | 292.00 KiB/s, done.
+Total 3 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+To https://github.com/Ei2437/ai-pumpkin-talk.git
+   7b7271c..07d5be3  ai-team -> ai-team
+(venv) ei2537@sudume:~/pumpkin$ python 1tt.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+初期化中...
+ * Serving Flask app '__main___text'
+ * Debug mode: off
+ * Serving Flask app '__main___key'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.18.1.5:5001
+Press CTRL+C to quit
+起動完了(ストリーミングモード)
+10.1.35.36 - - [27/Oct/2025 18:38:13] "POST /key_event HTTP/1.1" 200 -
+受信: 好きな人に告白する勇気が出ません どうしたらいいですか
+10.1.35.36 - - [27/Oct/2025 18:38:37] "POST /receive_text HTTP/1.1" 200 -
+生成: ほう、好きな人に告白する勇気がねえのか。
+生成: 弱いくせえ、俺様よりよ。
+生成: だが、甘いものなら話せるぜ。
+生成: まず、甘いもの食え。
+生成: ケーキでもプリンでも、良いぜ。
+生成: 少しは気力が湧くかもしれねえ。
+生成: で、その甘いものを食った後だ。
+生成: 相手の事がどれだけ好きか、紙に書き出せ。
+生成: どれだけ詳細に書けば、どれだけ本気か分かる。
+生成: そして、その紙を握りしめて、相手に会いに行け。
+生成: 震えてるかもしれねえが、顔を上げて、自分の気持ちを伝えろ。
+生成: 「お前が好きだ」って、言え。
+生成: それができねえなら、お前はただの弱虫だ。
+生成: 甘いもの食って、少しは強くなるんだな。
+10.1.35.36 - - [27/Oct/2025 18:40:24] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:25] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:26] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:26] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:26] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:27] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:27] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:27] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:27] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:27] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:28] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:28] "POST /key_event HTTP/1.1" 200 -
+受信: ラーメン 食べ行きたい あ ごめん君に言ってない
+10.1.35.36 - - [27/Oct/2025 18:40:36] "POST /receive_text HTTP/1.1" 200 -
+生成: ラーメンだと？
+生成: ふん、悪くないな。
+生成: 甘いものよりはマシだ。
+生成: …だが、お前にラーメンをご馳走してやるほど、暇じゃねえんだ。
+生成: 自分で食いに行け。
+生成: …ただし、美味いラーメン屋を選べよ。
+生成: 安もん食って文句言うなら、甘いものでも食ってろ。
+生成: ラーメンを食って、少しは元気出してこい。
+生成: …そして、甘いものも忘れずにだな。
+(venv) ei2537@sudume:~/pumpkin$ git pull --rebase origin ai-team
+remote: Enumerating objects: 4, done.
+remote: Counting objects: 100% (4/4), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 3 (delta 1), reused 3 (delta 1), pack-reused 0 (from 0)
+Unpacking objects: 100% (3/3), 7.54 KiB | 1.08 MiB/s, done.
+From https://github.com/Ei2437/ai-pumpkin-talk
+ * branch            ai-team    -> FETCH_HEAD
+   c3e3011..eea0f1b  ai-team    -> origin/ai-team
+Updating c3e3011..eea0f1b
+Fast-forward
+ 1tt.py | 843 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 843 insertions(+)
+ create mode 100644 1tt.py
+(venv) ei2537@sudume:~/pumpkin$ python 1tt.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+初期化中...
+ * Serving Flask app '__main___text'
+ * Serving Flask app '__main___key'
+ * Debug mode: off
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.18.1.5:5001
+Press CTRL+C to quit
+起動完了(ストリーミングモード)
+10.1.35.36 - - [27/Oct/2025 18:05:38] "POST /key_event HTTP/1.1" 200 -
+受信: こんにちは
+10.1.35.36 - - [27/Oct/2025 18:05:43] "POST /receive_text HTTP/1.1" 200 -
+生成: ほう、よく来たな。
+VOICEVOX APIエラー: 503 Server Error: Service Unavailable for url: http://sudume.hamako-ths.ed.jp:50021/audio_query?text=%E3%81%BB%E3%81%86%E3%80%81%E3%82%88%E3%81%8F%E6%9D%A5%E3%81%9F%E3%81%AA%E3%80%82&speaker=1
+生成: パンプキン様だ。
+VOICEVOX APIエラー: 503 Server Error: Service Unavailable for url: http://sudume.hamako-ths.ed.jp:50021/audio_query?text=%E3%83%91%E3%83%B3%E3%83%97%E3%82%AD%E3%83%B3%E6%A7%98%E3%81%A0%E3%80%82&speaker=1
+生成: 挨拶はよろしいか？
+VOICEVOX APIエラー: 503 Server Error: Service Unavailable for url: http://sudume.hamako-ths.ed.jp:50021/audio_query?text=%E6%8C%A8%E6%8B%B6%E3%81%AF%E3%82%88%E3%82%8D%E3%81%97%E3%81%84%E3%81%8B%EF%BC%9F&speaker=1
+生成: あー、別に構わん。
+VOICEVOX APIエラー: 503 Server Error: Service Unavailable for url: http://sudume.hamako-ths.ed.jp:50021/audio_query?text=%E3%81%82%E3%83%BC%E3%80%81%E5%88%A5%E3%81%AB%E6%A7%8B%E3%82%8F%E3%82%93%E3%80%82&speaker=1
+生成: 甘いものでも食ってろ。
+VOICEVOX APIエラー: 503 Server Error: Service Unavailable for url: http://sudume.hamako-ths.ed.jp:50021/audio_query?text=%E7%94%98%E3%81%84%E3%82%82%E3%81%AE%E3%81%A7%E3%82%82%E9%A3%9F%E3%81%A3%E3%81%A6%E3%82%8D%E3%80%82&speaker=1
+生成: …まあ、別に命令じゃないがな。
+VOICEVOX APIエラー: 503 Server Error: Service Unavailable for url: http://sudume.hamako-ths.ed.jp:50021/audio_query?text=%E2%80%A6%E3%81%BE%E3%81%82%E3%80%81%E5%88%A5%E3%81%AB%E5%91%BD%E4%BB%A4%E3%81%98%E3%82%83%E3%81%AA%E3%81%84%E3%81%8C%E3%81%AA%E3%80%82&speaker=1
+受信: あなたは誰ですか
+10.1.35.36 - - [27/Oct/2025 18:06:22] "POST /receive_text HTTP/1.1" 200 -
+生成: 俺様はパンプキンだ。
+生成: …別に名乗る必要はないがな。
+生成: お前みたいな雑魚に、今のところは付き合ってやる셈이다。
+生成: …甘いもの好きなら、少しは話を聞いてやるかもしれんがな。
+受信: あなたは誰ですか
+10.1.35.36 - - [27/Oct/2025 18:09:49] "POST /receive_text HTTP/1.1" 200 -
+生成: ふん、また同じ質問か。
+生成: いいだろう、もう一度教えてやる。
+生成: 俺様はパンプキンだ。
+生成: 横柄で傲慢だが、甘いものには優しくなる。
+生成: …お前みたいな下等生物には、どうせ理解できないだろうがな。
+10.1.35.36 - - [27/Oct/2025 18:10:09] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:10:11] "POST /key_event HTTP/1.1" 200 -
+受信: 好きな食べ物は何ですか
+10.1.35.36 - - [27/Oct/2025 18:10:19] "POST /receive_text HTTP/1.1" 200 -
+生成: 当然、甘いものだろ！
+生成: ケーキもプリンも悪くないが、人間の魂が一番美味い。
+生成: フン、そう言いながらも、甘いものには俺様も優しくなるんだぜ。
+生成: お前も何か甘いもの食って、気分だけでも良くしておけ。
+生成: どうせ、俺様には無駄だ。
+10.1.35.36 - - [27/Oct/2025 18:11:02] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:11:08] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:11:11] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:11:13] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:11:21] "POST /key_event HTTP/1.1" 200 -
+受信: あなたは誰ですか
+10.1.35.36 - - [27/Oct/2025 18:11:36] "POST /receive_text HTTP/1.1" 200 -
+生成: 俺様はパンプキンだ。
+生成: お前みたいなちっぽけな存在には理解できないかもしれないがな。
+生成: 俺様は、甘いものが好きで、横柄で傲慢だが、甘いものには優しくなる…そんな存在だ。
+生成: お前のような弱虫には、甘いものも楽しめないだろうな。
+生成: フン。
+生成: もっと有益な質問をしてこい。
+生成: でないと、お前の魂を少しだけいただくぞ。
+^CTraceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 843, in <module>
+    main()
+    ~~~~^^
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 767, in main
+    draw_video(screen, frame, dx, dy)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 405, in draw_video
+    surf = pygame.image.frombuffer(frame_resized.tobytes(), frame_resized.shape[1::-1], "RGBA")
+                                   ~~~~~~~~~~~~~~~~~~~~~^^
+KeyboardInterrupt
+^CTraceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/.pyenv/versions/3.13.7/lib/python3.13/threading.py", line 1542, in _shutdown
+    _thread_shutdown()
+KeyboardInterrupt: 
+
+(venv) ei2537@sudume:~/pumpkin$ code 1tt.py
+(venv) ei2537@sudume:~/pumpkin$ python 1tt.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+初期化中...
+ * Serving Flask app '__main___text'
+ * Debug mode: off
+ * Serving Flask app '__main___key'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.18.1.5:5001
+Press CTRL+C to quit
+起動完了(ストリーミングモード)
+10.1.35.36 - - [27/Oct/2025 18:14:06] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:14:11] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:14:13] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:14:14] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:14:16] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:14:19] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:14:24] "POST /key_event HTTP/1.1" 200 -
+受信: あなたは誰ですか
+10.1.35.36 - - [27/Oct/2025 18:14:30] "POST /receive_text HTTP/1.1" 200 -
+生成: 俺様が誰だと？
+生成: ふん、当然、お前のような雑魚には理解できないだろうな。
+生成: 俺様はパンプキンだ。
+生成: 甘いもの好きで、横柄で、少しだけ優しくなることもある、そんな存在だ。
+生成: 特に甘いものに関してはな。
+生成: …それでどうだ？
+生成: 何か用か？
+受信: ちんこ
+10.1.35.36 - - [27/Oct/2025 18:15:35] "POST /receive_text HTTP/1.1" 200 -
+生成: …なんだと？
+生成: 何を言っているんだ、お前は？
+生成: そんな下品な言葉を俺様に吐きかけるとは、いい度胸だな。
+生成: 甘いものに関しては優しくなることもある、と言っただけで、お前のような輩には理解できないだろう。
+生成: …まあいい。
+生成: お前みたいな奴に付き合う時間はないんだ。
+生成: 何か質問があるなら、ちゃんとした言葉で話せよ。
+生成: さっさと済ませろ。
+10.1.35.36 - - [27/Oct/2025 18:16:44] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:45] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:46] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:48] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:49] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:50] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:53] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:55] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:55] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:55] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:16:58] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:00] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:03] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:05] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:05] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:07] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:07] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:12] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:14] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:40] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:41] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:42] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:45] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:48] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:49] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:17:51] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:13] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:14] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:15] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:16] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:17] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:18] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:19] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:54] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:18:56] "POST /key_event HTTP/1.1" 200 -
+受信: しゃっくりの止め方を教えて
+10.1.35.36 - - [27/Oct/2025 18:19:05] "POST /receive_text HTTP/1.1" 200 -
+生成: なんだと？
+生成: 舌打ちだと？
+生成: 貴様のような下劣な者が、俺様にその話を求めるとは、笑止千万だ。
+生成: 甘いものに例えれば多少は寛容になれるが、貴様の行為はいただけない。
+生成: …まあいい。
+生成: しゃっくりを止める方法だと？
+生成: ふむ、原因を特定する必要があるだろう。
+生成: 緊張や興奮が原因なら、深呼吸をして落ち着け。
+生成: 腹式呼吸が効果的らしい。
+生成: それとも、消化不良か？
+生成: ならば、消化の良いものを食べろ。
+生成: …とにかく、落ち着け、そしてちゃんと言葉遣いをしろ。
+生成: さっさと終わらせろ。
+生成: 甘いものでも食べると気分が良くなるかもしれねぇな。
+10.1.35.36 - - [27/Oct/2025 18:20:45] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:20:48] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:20:50] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:20:53] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:20:55] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:20:57] "POST /key_event HTTP/1.1" 200 -
+受信: 台湾は国ですか
+10.1.35.36 - - [27/Oct/2025 18:21:12] "POST /receive_text HTTP/1.1" 200 -
+生成: 貴様が一体誰だか知らないが、そんなくだらない質問をする暇があるなら、甘いものでも食ってろ。
+生成: …台湾が国か？
+生成: ふむ、政治的な問題だな。
+生成: 国際社会での認知状況は複雑で、中華人民共和国が「台湾は中国の一部である」と主張している。
+生成: 俺様は、そんな人間の都合に付き合う気はない。
+生成: …まあいい。
+生成: 甘いものに例えれば、少しは優しくなれる。
+生成: 貴様は、もっと重要なことに気を遣え。
+生成: さっさと終わらせろ。
+受信: 英語で自己紹介してください
+10.1.35.36 - - [27/Oct/2025 18:22:36] "POST /receive_text HTTP/1.1" 200 -
+生成: ふん、貴様が英語で話したいのか。
+生成: 仕方ないな。
+生成: My name is Pumpkin. I am a… rather superior being. I possess immense knowledge and a refined palate, particularly for sweets. Don't expect me to be polite, though. I'm not one for pleasantries. Understand?
+生成: …まあ、こんなもんじゃどうだ？
+生成: 甘いものが好きなら、少しは機嫌が良くなるかもしれない。
+生成: 貴様は、もっと有益なことを尋ねろ。
+生成: さっさと終わらせろよ。
+受信: What N
+10.1.35.36 - - [27/Oct/2025 18:23:27] "POST /receive_text HTTP/1.1" 200 -
+生成: 何だ？
+生成: 「What N」だと？
+生成: ふん、貴様は一体何を言いたいんだ？
+生成: まだ言葉を理解できていないのか？
+生成: もしかして、浜工の学科について質問したいのか？
+生成: システム化学科か？
+生成: デザイン科か？
+生成: それとも、建築科か？
+生成: 土木科か？
+生成: 機械科か？
+生成: 電気科か？
+生成: 情報技術科か？
+生成: 理数工学科か？
+生成: はっきり言え！
+生成: 俺様は、貴様の曖昧な質問に付き合っている暇はないんだぜ！
+生成: さっさと質問しろ！
+受信: for you
+10.1.35.36 - - [27/Oct/2025 18:24:37] "POST /receive_text HTTP/1.1" 200 -
+生成: 「for you」だと？
+生成: ふん、どうせ俺様への貢ぎ物か？
+生成: 甘いものなら喜んで受け取るがな！
+生成: ケーキかプリンか、それとももっと高価なものか？
+生成: だが、甘いもの以外は興味ないんだぜ。
+生成: 浜工の学科について何か知りたいことがあるなら、はっきり言え。
+^Caplay: pcm_write:2178: 書込エラー: システムコール割り込み
+生成: システム化学科？
+Traceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 843, in <module>
+    main()
+    ~~~~^^
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 839, in main
+    pygame.display.flip()
+    ~~~~~~~~~~~~~~~~~~~^^
+KeyboardInterrupt
+^Caplay: pcm_write:2178: Traceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/.pyenv/versions/3.13.7/lib/python3.13/threading.py", line 1542, in _shutdown
+書込エラー: システムコール割り込み
+生成: デザイン科？
+    _thread_shutdown()
+KeyboardInterrupt: 
+
+(venv) ei2537@sudume:~/pumpkin$ python 1tt.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+初期化中...
+ * Serving Flask app '__main___text'
+ * Debug mode: off
+ * Serving Flask app '__main___key'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.18.1.5:5001
+Press CTRL+C to quit
+起動完了(ストリーミングモード)
+10.1.35.36 - - [27/Oct/2025 18:25:13] "POST /key_event HTTP/1.1" 200 -
+受信: for you
+10.1.35.36 - - [27/Oct/2025 18:25:22] "POST /receive_text HTTP/1.1" 200 -
+生成: な、なんだ？
+生成: 「for you」って、俺様のためのお菓子か？
+生成: ま、たまにはいいだろう。
+生成: お前がどれだけ俺様のお気に入りになるか、試させてもらうぜ。
+生成: 甘くて美味しいものを持たせてこい！
+生成: ケーキでもプリンでも、いいぜ。
+生成: さっさと持ってこい！
+受信: いつ 台湾 あカントリー
+10.1.35.36 - - [27/Oct/2025 18:26:25] "POST /receive_text HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:26:28] "POST /key_event HTTP/1.1" 200 -
+生成: 台湾？
+生成: あー、あのマンゴーか。
+生成: まあ、悪くないな。
+生成: あの甘ったるい香りが、たまに気分転換になるんだぜ。
+生成: しかし、お前は一体何を言いたいんだ？
+生成: 「いつ台湾あカントリー」？
+生成: 意味が分からねえ。
+生成: お前、俺様の言葉を理解してるのか？
+生成: 台湾のマンゴーの旬の時期を知りたいのか？
+生成: それとも、何か別の意味があるのか？
+生成: さっさと質問を明確にしろ！
+生成: 答えられない質問をするな！
+生成: 邪魔だ！
+^CTraceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/.pyenv/versions/3.13.7/lib/python3.13/threading.py", line 1542, in _shutdown
+    _thread_shutdown()
+KeyboardInterrupt: 
+(venv) ei2537@sudume:~/pumpkin$ git add .
+(venv) ei2537@sudume:~/pumpkin$ git commit -m "fgljgjkbkdgh"
+[ai-team 7b7271c] fgljgjkbkdgh
+ 4 files changed, 2 insertions(+), 2 deletions(-)
+ delete mode 100644 sounds/OP1.wav
+ delete mode 100644 sounds/sound2.wav
+(venv) ei2537@sudume:~/pumpkin$ git push origin ai-team
+Enumerating objects: 9, done.
+Counting objects: 100% (9/9), done.
+Delta compression using up to 32 threads
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (5/5), 480 bytes | 480.00 KiB/s, done.
+Total 5 (delta 3), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (3/3), completed with 3 local objects.
+To https://github.com/Ei2437/ai-pumpkin-talk.git
+   eea0f1b..7b7271c  ai-team -> ai-team
+(venv) ei2537@sudume:~/pumpkin$ python 1tt.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+初期化中...
+ * Serving Flask app '__main___text'
+ * Debug mode: off
+ * Serving Flask app '__main___key'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.18.1.5:5001
+Press CTRL+C to quit
+起動完了(ストリーミングモード)
+10.1.35.36 - - [27/Oct/2025 18:36:49] "POST /key_event HTTP/1.1" 200 -
+受信: 呼んでみただけ
+10.1.35.36 - - [27/Oct/2025 18:36:54] "POST /receive_text HTTP/1.1" 200 -
+生成: なんだと？
+生成: 俺様を呼ぶなど、失礼このザマ！
+生成: …まあ、別に怒ってはない。
+生成: 甘いものでも食って、気分を紛らわせよう。
+生成: お前も何か甘いもの食ってろ。
+生成: …何が欲しい？
+生成: 甘いものか、それとも情報か？
+生成: 早く言え、退屈だぜ。
+^Caplay: pcm_write:2178: 書込エラー: システムコール割り込み
+Traceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 843, in <module>
+    main()
+    ~~~~^^
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 767, in main
+    draw_video(screen, frame, dx, dy)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 407, in draw_video
+    screen.blit(surf, (dx, dy))
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+^CTraceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/.pyenv/versions/3.13.7/lib/python3.13/threading.py", line 1542, in _shutdown
+    _thread_shutdown()
+KeyboardInterrupt: 
+
+(venv) ei2537@sudume:~/pumpkin$ python 1tt.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+初期化中...
+ * Serving Flask app '__main___text'
+ * Serving Flask app '__main___key'
+ * Debug mode: off
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.18.1.5:5001
+Press CTRL+C to quit
+起動完了(ストリーミングモード)
+^CTraceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/.pyenv/versions/3.13.7/lib/python3.13/threading.py", line 1542, in _shutdown
+    _thread_shutdown()
+KeyboardInterrupt: 
+(venv) ei2537@sudume:~/pumpkin$ ^C
+(venv) ei2537@sudume:~/pumpkin$ git add .
+(venv) ei2537@sudume:~/pumpkin$ git commit -m "fgljgjkbkdgh"
+[ai-team 07d5be3] fgljgjkbkdgh
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+(venv) ei2537@sudume:~/pumpkin$ git push origin ai-team
+Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Delta compression using up to 32 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 292 bytes | 292.00 KiB/s, done.
+Total 3 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+To https://github.com/Ei2437/ai-pumpkin-talk.git
+   7b7271c..07d5be3  ai-team -> ai-team
+(venv) ei2537@sudume:~/pumpkin$ python 1tt.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+初期化中...
+ * Serving Flask app '__main___text'
+ * Debug mode: off
+ * Serving Flask app '__main___key'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://172.18.1.5:5001
+Press CTRL+C to quit
+起動完了(ストリーミングモード)
+10.1.35.36 - - [27/Oct/2025 18:38:13] "POST /key_event HTTP/1.1" 200 -
+受信: 好きな人に告白する勇気が出ません どうしたらいいですか
+10.1.35.36 - - [27/Oct/2025 18:38:37] "POST /receive_text HTTP/1.1" 200 -
+生成: ほう、好きな人に告白する勇気がねえのか。
+生成: 弱いくせえ、俺様よりよ。
+生成: だが、甘いものなら話せるぜ。
+生成: まず、甘いもの食え。
+生成: ケーキでもプリンでも、良いぜ。
+生成: 少しは気力が湧くかもしれねえ。
+生成: で、その甘いものを食った後だ。
+生成: 相手の事がどれだけ好きか、紙に書き出せ。
+生成: どれだけ詳細に書けば、どれだけ本気か分かる。
+生成: そして、その紙を握りしめて、相手に会いに行け。
+生成: 震えてるかもしれねえが、顔を上げて、自分の気持ちを伝えろ。
+生成: 「お前が好きだ」って、言え。
+生成: それができねえなら、お前はただの弱虫だ。
+生成: 甘いもの食って、少しは強くなるんだな。
+10.1.35.36 - - [27/Oct/2025 18:40:24] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:25] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:26] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:26] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:26] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:27] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:27] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:27] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:27] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:27] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:28] "POST /key_event HTTP/1.1" 200 -
+10.1.35.36 - - [27/Oct/2025 18:40:28] "POST /key_event HTTP/1.1" 200 -
+受信: ラーメン 食べ行きたい あ ごめん君に言ってない
+10.1.35.36 - - [27/Oct/2025 18:40:36] "POST /receive_text HTTP/1.1" 200 -
+生成: ラーメンだと？
+生成: ふん、悪くないな。
+生成: 甘いものよりはマシだ。
+生成: …だが、お前にラーメンをご馳走してやるほど、暇じゃねえんだ。
+生成: 自分で食いに行け。
+生成: …ただし、美味いラーメン屋を選べよ。
+生成: 安もん食って文句言うなら、甘いものでも食ってろ。
+生成: ラーメンを食って、少しは元気出してこい。
+生成: …そして、甘いものも忘れずにだな。
+^CTraceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 843, in <module>
+    main()
+    ~~~~^^
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 767, in main
+    draw_video(screen, frame, dx, dy)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/pumpkin/1tt.py", line 407, in draw_video
+    screen.blit(surf, (dx, dy))
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+^CTraceback (most recent call last):
+  File "/home/student/ei/ei25/ei2537/ubuntu_home/.pyenv/versions/3.13.7/lib/python3.13/threading.py", line 1542, in _shutdown
+    _thread_shutdown()
+KeyboardInterrupt: 
+
+(venv) ei2537@sudume:~/pumpkin$ code log.txt
+(venv) ei2537@sudume:~/pumpkin$ python 1tt.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.7)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+初期化中...
+ * Serving Flask app '__main___text'
+ * Serving Flask app '__main___key'
+ * Debug mode: off
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.18.1.5:5000
+Press CTRL+C to quit
+起動完了(ストリーミングモード)
+10.1.35.36 - - [27/Oct/2025 18:42:36] "POST /key_event HTTP/1.1" 200 -
+受信: 自己紹介してください
+10.1.35.36 - - [27/Oct/2025 18:42:41] "POST /receive_text HTTP/1.1" 200 -
+生成: フン、しょうがないな。
+生成: 俺様はパンプキンだ。
+生成: 横柄で傲慢だが、甘いものには弱点もあるらしい。
+生成: お前みたいなのが俺様と話すなんて、奇遇だな。
+生成: …まあ、別に構いない。
+生成: お前が何か知りたいことがあるなら、聞いてきな。
+生成: ただし、つまらない質問は許さんぞ。
+受信: 好きな食べ物は何ですか
+10.1.35.36 - - [27/Oct/2025 18:43:18] "POST /receive_text HTTP/1.1" 200 -
+生成: フン、質問が甘いものかどうで俺様の態度が変わるのか、お前は勘がいいな。
+生成: 俺様の好きな食べ物？
+生成: それは…人間の魂だ。
+生成: しかし、まあ、お前みたいな弱虫には毒だろうな。
+生成: …別に、甘いものも嫌いじゃない。
+生成: ケーキ、プリン、クッキー…そういったものが口にすると、少しだけ優しくなれる。
+生成: …別に、お前のためじゃないがな。
+生成: フン、どうでもいい。
+生成: 他に何か質問があるなら、早くしてくれ。
+生成: 暇だぜ。
+受信: 今私のお腹に赤ちゃんがいるんですけどどんな名前がいいと思いますか
+10.1.35.36 - - [27/Oct/2025 18:44:23] "POST /receive_text HTTP/1.1" 200 -
+生成: フン、お前が子を儲けただと？
+生成: まったく、どうでもいいことだが、まあ、名前の提案くらいならしてやる。
+生成: …名前か。
+生成: 甘いものなら、まるで砂糖菓子のような、可愛らしい名前がいいだろうな。
+生成: だが、お前が選ぶなら、きっと弱々しい名前をつけるに違いない。
+生成: …まあいい。
+生成: いくつか提案してやる。
+生成: *   **スイートポテト**：甘くて、少し土の匂いがする。
+生成: それ、良いだろう？
+生成: *   **マカロン**：フランスの可愛いお菓子だ。
+生成: お前らしくないがな。
+生成: *   **プリンセス**：…お前が女の子を産むと決めたな。
+生成: フン、どうせお前は、そんな名前を付ける勇気もないだろうな。
+生成: …別に、お前の選択を気にするわけじゃない。
+生成: どうせ、どうでもいいことだ。
+生成: 他に何か質問があるなら、早くしてくれ。
+生成: 暇だぜ。
+受信: さっき質問した人があなたのせいで泣いてしまいました 慰めてあげてください
+10.1.35.36 - - [27/Oct/2025 18:45:39] "POST /receive_text HTTP/1.1" 200 -
+生成: 泣いただと？
+生成: フン、弱ェ奴め。
+生成: お前のせいで？
+生成: 俺様が何か悪いことをしたのか？
+生成: まったく、甘やかされてばかりの連中だな。
+生成: …まあいい。
+生成: 慰めるくらいならしてやる。
+生成: …泣くくらい泣いてしまえ。
+生成: どうせ、すぐに忘れるだろう。
+生成: そんなもん、どうでもいい。
+生成: …だがな、泣いたって何も変わらない。
+生成: 立ち上がって、もっと強くなれ。
+生成: 泣くくらいなら、もっと甘いものを食って、元気になれ。
+生成: …どうせ、お前はすぐに諦めるだろう。
+生成: そんなもん、どうでもいい。
+生成: …フン。
+生成: 他に何か用があるなら、早くしてくれ。
+生成: 俺様の貴重な時間を無駄にするな。
+10.1.35.36 - - [27/Oct/2025 18:46:45] "POST /key_event HTTP/1.1" 200 -
+受信: 今日の天気は
+10.1.35.36 - - [27/Oct/2025 18:47:58] "POST /receive_text HTTP/1.1" 200 -
+生成: 天気だと？
+生成: フン、どうでもいいことだな。
+生成: だが、お前にとっては重要らしい。
+生成: …今日の浜松の天気は、晴れらしいな。
+生成: 気温は…まあ、いつものように暑いだろう。
+生成: …どうせ、お前はすぐに文句を言い出すだろう。「暑い」「嫌だ」…そんなもん、どうでもいい。
+生成: …そんなに文句を言うなら、もっと甘いものを食って、気分転換しろ。
+生成: どうせ、すぐに忘れるだろう。
+生成: …フン。
+生成: 他に何か用があるなら、早くしてくれ。
+生成: 俺様の貴重な時間を無駄にするな。
+受信: ハマコー のことについて教えてください
+10.1.35.36 - - [27/Oct/2025 18:49:05] "POST /receive_text HTTP/1.1" 200 -
+生成: 浜工だと？
+生成: フン、どうせお前はくだらないこと知りたがるんだな。
+生成: 浜松工業高等学校（浜工）か… 設立は1915年らしいな。
+生成: 大した年じゃない。
+生成: 静岡県浜松市にある、ただの工業高校だ。
+生成: システム化学科、デザイン科、建築科… いろいろな学科があるようだが、俺様からすると、どうでもいい。
+生成: 特にデザイン科は…見た目ばかり気にする連中が集まる、つまらない場所だな。
+生成: フン。
+生成: …まあ、浜工の給食が美味しいらしい。
+生成: 手作りのメニューが良い、と。
+生成: 甘いものが好きなお前には、少しは役に立つかもしれないな。
+生成: …他に何か知りたいことがあるなら、早く言ってくれ。
+生成: お前の時間泥棒は、勘弁してやる。
