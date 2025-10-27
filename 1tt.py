@@ -21,7 +21,7 @@ import re
 import tempfile
 
 # ==== 映像設定 ====
-w, h = 1920, 1080
+w, h = 1920, 1020
 BG_VIDEO_PATH = "videos/BG.mp4"
 VIDEO_MAIN = "videos/Pumpkin-Center.mov"
 VIDEO_FULL2 = "videos/Pumpkin-Center2Left.mov"
