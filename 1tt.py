@@ -88,7 +88,7 @@ session.mount('http://', requests.adapters.HTTPAdapter(pool_connections=10, pool
 
 # ==== PumpkinTalk V2 クラス ====
 class PumpkinTalkV2:
-    def __init__(self, config_path="pumpkin.json"):
+    def __init__(self, config_path="pumpkin_v2.json"):
         with open(config_path, "r", encoding="utf-8") as f:
             self.config = json.load(f)
         
