@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 最適化版 1.py
+# ストリーミング対応版 1.py - 字幕機能強化版
 
 import os
 import time
@@ -17,7 +17,8 @@ import cv2
 import math
 import threading
 import wave
-from functools import lru_cache
+import re
+import tempfile
 
 # ==== 映像設定 ====
 w, h = 1920, 1020
@@ -32,9 +33,9 @@ VIDEO_FULL7 = "videos/Pumpkin-Right2Center.mov"
 VIDEO_ENTRY = "videos/Pumpkin-Entry.mov"
 VIDEO_FINISH = "videos/Pumpkin-Finish.mov"
 BACK_SPEED_SKIP = 10
-TRANSITION_SPEED = 0.9
+TRANSITION_SPEED = 1.0
 
-# ==== 字幕設定 ====
+# ==== 字幕設定（パンプキンの応答） ====
 SUBTITLE_FONT_SIZE = 48
 SUBTITLE_COLOR = (255, 255, 255)
 SUBTITLE_BG_COLOR = (0, 0, 0, 180)
@@ -42,6 +43,15 @@ SUBTITLE_Y_POSITION = h - 150
 SUBTITLE_MAX_WIDTH = w - 200
 CHAR_DURATION = 0.13
 PUNCTUATION_DURATION = 0.43
+
+# ==== ユーザー質問字幕設定 ====
+USER_SUBTITLE_FONT_SIZE = 36
+USER_SUBTITLE_COLOR = (255, 255, 255)
+USER_SUBTITLE_BG_COLOR = (40, 40, 40, 220)
+USER_SUBTITLE_MAX_WIDTH = w - 400
+USER_SUBTITLE_DISPLAY_TIME = 4.0  # 表示時間（秒）
+USER_SUBTITLE_SLIDE_DURATION = 0.3  # スライドインアニメーション時間
+USER_SUBTITLE_FADE_DURATION = 0.4  # フェードアウト時間
 
 SOUND_FILES = {
     '1': "sounds/OP1.wav",
@@ -62,6 +72,15 @@ state = "idle"
 audio_lock = threading.Lock()
 current_subtitle = ""
 subtitle_lock = threading.Lock()
+is_speaking = False
+
+# ユーザー質問字幕用
+user_subtitle_text = ""
+user_subtitle_start_time = 0
+user_subtitle_active = False
+user_subtitle_lock = threading.Lock()
+
+speaking_lock = threading.Lock()
 
 # HTTPセッション（接続プーリング）
 session = requests.Session()
@@ -95,7 +114,7 @@ class LoadConfig:
     def get_advanced_config(self):
         return self.config.get("advanced", {})
 
-# ==== PumpkinTalk ====
+# ==== PumpkinTalk クラス（修正版） ====
 class PumpkinTalk:
     def __init__(self, config_path="pumpkin.json"):
         self.config_loader = LoadConfig(config_path)
@@ -112,53 +131,95 @@ class PumpkinTalk:
         self.character_prompt = self.config_loader.get_character_prompt()
         self.conversation_history = []
         
-        self.temp_wav_file = "output.wav"
-        
-        # VOICEVOX設定を事前に構築
         self.voicevox_settings = self.system_config.get("voicevox", {})
+        
+        # 字幕キュー管理用
+        self.subtitle_queue = []
+        self.subtitle_queue_lock = threading.Lock()
+        self.subtitle_thread = None
 
-    def generate_response(self, input_text):
+    def split_sentences(self, text):
+        """テキストを文単位に分割"""
+        sentences = re.split(r'([。！？!?])', text)
+        result = []
+        temp = ""
+        
+        for i, part in enumerate(sentences):
+            temp += part
+            if part in ['。', '！', '？', '!', '?']:
+                result.append(temp.strip())
+                temp = ""
+        
+        if temp.strip():
+            result.append(temp.strip())
+        
+        return [s for s in result if s]
+
+    def generate_response_streaming(self, input_text):
+        """ストリーミングで応答生成"""
         if not input_text:
-            return "何か言ったか?もう一度言ってみろよ!"
+            yield "何か言ったか?もう一度言ってみろよ!"
+            return
         
         try:
             self.conversation_history.append(f"ユーザー: {input_text}")
-            recent_history = "\n".join(self.conversation_history[-6:])
+            recent_history = "\n".join(self.conversation_history[-3:])
             
             url = f"{self.ollama_url}/api/generate"
             payload = {
                 "model": self.model,
                 "prompt": f"{self.character_prompt}\n\n【会話履歴】\n{recent_history}\n\nパンプキン: ",
-                "stream": False,
+                "stream": True,
                 "options": self.ollama_config.get("params", {})
             }
             
-            response = session.post(url, json=payload)
+            response = session.post(url, json=payload, stream=True)
             response.raise_for_status()
             
-            result = response.json()
-            response_text = result.get("response", "応答を生成できませんでした。")
+            buffer = ""
+            full_response = ""
             
-            if self.advanced_config:
-                response_text = self.filter_response(response_text)
+            for line in response.iter_lines():
+                if line:
+                    try:
+                        chunk = json.loads(line)
+                        if "response" in chunk:
+                            token = chunk["response"]
+                            buffer += token
+                            full_response += token
+                            
+                            if token in ['。', '！', '？', '!', '?', '\n']:
+                                if buffer.strip():
+                                    sentence = self.filter_response(buffer.strip())
+                                    if sentence:
+                                        yield sentence
+                                    buffer = ""
+                        
+                        if chunk.get("done", False):
+                            break
+                    except json.JSONDecodeError:
+                        continue
             
-            self.conversation_history.append(f"パンプキン: {response_text}")
-            return response_text
+            if buffer.strip():
+                sentence = self.filter_response(buffer.strip())
+                if sentence:
+                    yield sentence
+            
+            self.conversation_history.append(f"パンプキン: {full_response}")
             
         except Exception as e:
             print(f"Ollama APIエラー: {e}")
-            return "ちっ、調子が悪いぞ!もう一度話しかけてみろよ!"
+            yield "ちっ、調子が悪いぞ!もう一度話しかけてみろよ!"
 
-    def text_to_speech(self, text):
+    def text_to_speech_fast(self, text):
+        """高速音声合成"""
         try:
-            # クエリ生成
             query_url = f"{self.voicevox_url}/audio_query"
             query_params = {"text": text, "speaker": self.speaker_id}
             query_response = session.post(query_url, params=query_params)
             query_response.raise_for_status()
             query_data = query_response.json()
             
-            # 設定適用
             if self.voicevox_settings:
                 query_data.update({
                     "speedScale": self.voicevox_settings.get("speed", 1.3),
@@ -168,7 +229,6 @@ class PumpkinTalk:
                     "postPhonemeLength": self.voicevox_settings.get("post_phoneme_length", 0.2)
                 })
             
-            # 音声合成
             synthesis_url = f"{self.voicevox_url}/synthesis"
             synthesis_params = {"speaker": self.speaker_id}
             synthesis_response = session.post(
@@ -179,20 +239,13 @@ class PumpkinTalk:
             )
             synthesis_response.raise_for_status()
             
-            # ファイル保存
-            with open(self.temp_wav_file, "wb") as f:
-                f.write(synthesis_response.content)
-            
-            sample_rate, audio_data = wavfile.read(self.temp_wav_file)
-            
-            if len(audio_data.shape) == 1:
-                audio_data = np.column_stack((audio_data, audio_data))
-            
-            return sample_rate, audio_data
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
+                tmp.write(synthesis_response.content)
+                return tmp.name
             
         except Exception as e:
             print(f"VOICEVOX APIエラー: {e}")
-            return None, None
+            return None
 
     def get_audio_duration(self, wav_file):
         try:
@@ -201,92 +254,119 @@ class PumpkinTalk:
         except:
             return 0
 
-    def display_subtitle_gradually(self, text, duration):
+    def subtitle_worker(self):
+        """字幕表示ワーカースレッド（キュー処理）"""
         global current_subtitle
         
-        if duration <= 0:
-            duration = 3.0
-        
-        sentences = []
-        current_sentence = ""
-        
-        for char in text:
-            current_sentence += char
-            if char in ["。", "!", "?"]:
+        while True:
+            with self.subtitle_queue_lock:
+                if not self.subtitle_queue:
+                    break
+                text, duration = self.subtitle_queue.pop(0)
+            
+            if duration <= 0:
+                duration = 3.0
+            
+            sentences = []
+            current_sentence = ""
+            
+            for char in text:
+                current_sentence += char
+                if char in ["。", "!", "?"]:
+                    sentences.append(current_sentence)
+                    current_sentence = ""
+            
+            if current_sentence:
                 sentences.append(current_sentence)
-                current_sentence = ""
-        
-        if current_sentence:
-            sentences.append(current_sentence)
-        
-        if not sentences:
-            sentences = [text]
-        
-        for sentence in sentences:
-            char_count = len(sentence)
-            comma_count = sentence.count("、")
-            period_count = sentence.count("。")
-            tcomma_count = sentence.count("...")
-            mark_count = sentence.count("!") + sentence.count("?") + sentence.count("*")
-            char_count -= mark_count
             
-            sentence_duration = (
-                char_count * CHAR_DURATION + 
-                (comma_count + period_count + tcomma_count) * PUNCTUATION_DURATION
-            )
+            if not sentences:
+                sentences = [text]
             
-            with subtitle_lock:
-                current_subtitle = sentence
-            
-            time.sleep(sentence_duration)
-            
-            with subtitle_lock:
-                current_subtitle = ""
+            for sentence in sentences:
+                char_count = len(sentence)
+                comma_count = sentence.count("、")
+                period_count = sentence.count("。")
+                tcomma_count = sentence.count("...")
+                mark_count = sentence.count("!") + sentence.count("?") + sentence.count("*")
+                char_count -= mark_count
+                
+                sentence_duration = (
+                    char_count * CHAR_DURATION + 
+                    (comma_count + period_count + tcomma_count) * PUNCTUATION_DURATION
+                )
+                
+                with subtitle_lock:
+                    current_subtitle = sentence
+                
+                time.sleep(sentence_duration)
+                
+                with subtitle_lock:
+                    current_subtitle = ""
 
-    def play_audio_with_aplay(self, wav_file=None, show_subtitle=False, subtitle_text=""):
-        global a_key_active
-        
-        if wav_file is None:
-            wav_file = self.temp_wav_file
+    def display_subtitle_gradually(self, text, duration):
+        """字幕をキューに追加"""
+        with self.subtitle_queue_lock:
+            self.subtitle_queue.append((text, duration))
             
+            # ワーカースレッドが動いていなければ起動
+            if self.subtitle_thread is None or not self.subtitle_thread.is_alive():
+                self.subtitle_thread = threading.Thread(target=self.subtitle_worker, daemon=True)
+                self.subtitle_thread.start()
+
+    def play_audio_with_aplay(self, wav_file, show_subtitle=False, subtitle_text="", is_final=False):
+        global a_key_active, is_speaking
+        
         if not os.path.exists(wav_file) or os.path.getsize(wav_file) == 0:
             return
 
         try:
-            with audio_lock:
-                a_key_active = True
+            with speaking_lock:
+                if not is_speaking:
+                    is_speaking = True
+                    with audio_lock:
+                        a_key_active = True
             
             duration = self.get_audio_duration(wav_file)
             
+            # 字幕をキューに追加（ブロックしない）
             if show_subtitle and subtitle_text:
-                threading.Thread(
-                    target=self.display_subtitle_gradually,
-                    args=(subtitle_text, duration),
-                    daemon=True
-                ).start()
+                self.display_subtitle_gradually(subtitle_text, duration)
             
-            # aplay実行（最優先）
+            # 音声再生（これはブロックする）
             subprocess.run(["aplay", "-q", wav_file], check=False)
+            
+            try:
+                os.unlink(wav_file)
+            except:
+                pass
                 
         except Exception as e:
             print(f"音声再生エラー: {e}")
         finally:
-            with audio_lock:
-                a_key_active = False
+            if is_final:
+                with speaking_lock:
+                    is_speaking = False
+                with audio_lock:
+                    a_key_active = False
 
     def process_input_text(self, input_text):
+        """ストリーミング処理"""
         print(f"受信: {input_text}")
         
-        # 応答生成
-        response_text = self.generate_response(input_text)
-        print(f"応答: {response_text}")
+        # ユーザー質問字幕を表示
+        show_user_subtitle(input_text)
         
-        # 音声合成
-        sample_rate, audio_data = self.text_to_speech(response_text)
+        sentences = list(self.generate_response_streaming(input_text))
+        total = len(sentences)
         
-        # 即座に再生
-        if sample_rate is not None and audio_data is not None:
-            self.play_audio_with_aplay(show_subtitle=True, subtitle_text=response_text)
+        for idx, sentence in enumerate(sentences):
+            if sentence:
+                print(f"生成: {sentence}")
+                wav_file = self.text_to_speech_fast(sentence)
+                
+                if wav_file:
+                    is_final = (idx == total - 1)
+                    self.play_audio_with_aplay(wav_file, show_subtitle=True, subtitle_text=sentence, is_final=is_final)
 
     def filter_response(self, response_text):
         if "response_filtering" in self.advanced_config:
@@ -297,6 +377,17 @@ class PumpkinTalk:
                     response_text = response_text.replace(old, new)
         
         return response_text.strip()
+
+
+# ==== ユーザー質問字幕表示関数 ====
+def show_user_subtitle(text):
+    """ユーザーの質問を上部に表示"""
+    global user_subtitle_text, user_subtitle_start_time, user_subtitle_active
+    
+    with user_subtitle_lock:
+        user_subtitle_text = text
+        user_subtitle_start_time = time.time()
+        user_subtitle_active = True
 
 # ==== 浮遊モーション ====
 def float_motion(t, seed=0, amp_y=16, amp_x=7, base_speed=0.0007):
@@ -340,6 +431,7 @@ def draw_video_fullscreen(screen, video):
     draw_video(screen, frame, 0, 0)
 
 def draw_subtitle(screen, font):
+    """パンプキンの応答字幕（下部）"""
     global current_subtitle
     
     with subtitle_lock:
@@ -390,6 +482,94 @@ def draw_subtitle(screen, font):
     for rendered in rendered_lines:
         x = (w - rendered.get_width()) // 2
         screen.blit(rendered, (x, y_offset))
+        y_offset += rendered.get_height() + 5
+
+def draw_user_subtitle(screen, font):
+    """ユーザー質問字幕（上部・iPhone通知風）"""
+    global user_subtitle_text, user_subtitle_start_time, user_subtitle_active
+    
+    with user_subtitle_lock:
+        if not user_subtitle_active:
+            return
+        
+        text = user_subtitle_text
+        elapsed = time.time() - user_subtitle_start_time
+        
+        # 表示時間を超えたら非表示
+        if elapsed > USER_SUBTITLE_DISPLAY_TIME + USER_SUBTITLE_FADE_DURATION:
+            user_subtitle_active = False
+            return
+    
+    # テキストを折り返し
+    lines = []
+    current_line = ""
+    
+    for char in text:
+        test_line = current_line + char
+        test_surface = font.render(test_line, True, USER_SUBTITLE_COLOR)
+        if test_surface.get_width() > USER_SUBTITLE_MAX_WIDTH:
+            if current_line:
+                lines.append(current_line)
+            current_line = char
+        else:
+            current_line = test_line
+    
+    if current_line:
+        lines.append(current_line)
+    
+    # 描画サイズ計算
+    max_width = 0
+    total_height = 0
+    rendered_lines = []
+    
+    for line in lines:
+        rendered = font.render(line, True, USER_SUBTITLE_COLOR)
+        rendered_lines.append(rendered)
+        max_width = max(max_width, rendered.get_width())
+        total_height += rendered.get_height() + 5
+    
+    padding = 20
+    corner_radius = 15
+    
+    # アニメーション計算
+    y_pos = 20  # 上部からの距離
+    alpha = 255
+    
+    # スライドインアニメーション
+    if elapsed < USER_SUBTITLE_SLIDE_DURATION:
+        progress = elapsed / USER_SUBTITLE_SLIDE_DURATION
+        # easeOutCubic
+        progress = 1 - pow(1 - progress, 3)
+        y_pos = -total_height - padding * 2 + (total_height + padding * 2 + 20) * progress
+    
+    # フェードアウトアニメーション
+    elif elapsed > USER_SUBTITLE_DISPLAY_TIME:
+        fade_progress = (elapsed - USER_SUBTITLE_DISPLAY_TIME) / USER_SUBTITLE_FADE_DURATION
+        alpha = int(255 * (1 - fade_progress))
+    
+    # 背景描画（角丸）
+    bg_rect = pygame.Rect(
+        (w - max_width - padding * 2) // 2,
+        int(y_pos),
+        max_width + padding * 2,
+        total_height + padding * 2
+    )
+    
+    bg_surface = pygame.Surface((bg_rect.width, bg_rect.height), pygame.SRCALPHA)
+    
+    # 角丸矩形描画
+    pygame.draw.rect(bg_surface, (*USER_SUBTITLE_BG_COLOR[:3], min(USER_SUBTITLE_BG_COLOR[3], alpha)), 
+                     (0, 0, bg_rect.width, bg_rect.height), border_radius=corner_radius)
+    
+    screen.blit(bg_surface, bg_rect)
+    
+    # テキスト描画
+    y_offset = int(y_pos) + padding
+    for rendered in rendered_lines:
+        text_surface = rendered.copy()
+        text_surface.set_alpha(alpha)
+        x = (w - rendered.get_width()) // 2
+        screen.blit(text_surface, (x, y_offset))
         y_offset += rendered.get_height() + 5
 
 # ==== おしゃべりモーション ====
@@ -467,8 +647,10 @@ def main():
     
     try:
         font = pygame.font.Font("ZenKakuGothicNew-Regular.ttf", SUBTITLE_FONT_SIZE)
+        user_font = pygame.font.Font("ZenKakuGothicNew-Regular.ttf", USER_SUBTITLE_FONT_SIZE)
     except:
         font = pygame.font.Font(None, SUBTITLE_FONT_SIZE)
+        user_font = pygame.font.Font(None, USER_SUBTITLE_FONT_SIZE)
 
     cap_bg = cv2.VideoCapture(BG_VIDEO_PATH)
     if not cap_bg.isOpened():
@@ -496,7 +678,6 @@ def main():
     float_offset_y = 0.0
     transition_blend = 1.0
 
-    # Flaskサーバー起動
     threading.Thread(
         target=lambda: app_text.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False, threaded=True)
     ).start()
@@ -506,7 +687,7 @@ def main():
     ).start()
     
     time.sleep(1)
-    print("起動完了")
+    print("起動完了(ストリーミングモード)")
 
     while True:
         t = pygame.time.get_ticks()
@@ -544,11 +725,9 @@ def main():
                 if key_num in SOUND_FILES:
                     wav_path = SOUND_FILES[key_num]
                     if os.path.exists(wav_path):
-                        threading.Thread(
-                            target=pumpkin_talk.play_audio_with_aplay, 
-                            args=(wav_path,), 
-                            daemon=True
-                        ).start()
+                        def play_sound():
+                            pumpkin_talk.play_audio_with_aplay(wav_path)
+                        threading.Thread(target=play_sound, daemon=True).start()
 
         # 背景描画
         if bg_counter % BACK_SPEED_SKIP == 0:
@@ -671,7 +850,11 @@ def main():
                 state = "normal"
                 transition_blend = 0.0
 
+        # 字幕描画（パンプキンの応答 - 下部）
         draw_subtitle(screen, font)
+        
+        # ユーザー質問字幕（上部 - iPhone通知風）
+        draw_user_subtitle(screen, user_font)
 
         pygame.display.flip()
         clock.tick(60)
