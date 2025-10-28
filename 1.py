@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# ストリーミング対応版 1.py - 字幕機能強化版
+# ストリーミング対応版 1.py - 緊急スキップ機能追加
 
 import os
 import time
@@ -49,9 +49,9 @@ USER_SUBTITLE_FONT_SIZE = 36
 USER_SUBTITLE_COLOR = (255, 255, 255)
 USER_SUBTITLE_BG_COLOR = (40, 40, 40, 220)
 USER_SUBTITLE_MAX_WIDTH = w - 400
-USER_SUBTITLE_DISPLAY_TIME = 4.0  # 表示時間（秒）
-USER_SUBTITLE_SLIDE_DURATION = 0.3  # スライドインアニメーション時間
-USER_SUBTITLE_FADE_DURATION = 0.4  # フェードアウト時間
+USER_SUBTITLE_DISPLAY_TIME = 4.0
+USER_SUBTITLE_SLIDE_DURATION = 0.3
+USER_SUBTITLE_FADE_DURATION = 0.4
 
 SOUND_FILES = {
     '1': "sounds/OP1.wav",
@@ -74,6 +74,10 @@ current_subtitle = ""
 subtitle_lock = threading.Lock()
 is_speaking = False
 
+# 緊急スキップ用
+skip_flag = False
+skip_lock = threading.Lock()
+
 # ユーザー質問字幕用
 user_subtitle_text = ""
 user_subtitle_start_time = 0
@@ -81,6 +85,10 @@ user_subtitle_active = False
 user_subtitle_lock = threading.Lock()
 
 speaking_lock = threading.Lock()
+
+# モニタリング用
+latest_response = ""
+response_lock = threading.Lock()
 
 # HTTPセッション（接続プーリング）
 session = requests.Session()
@@ -157,6 +165,8 @@ class PumpkinTalk:
 
     def generate_response_streaming(self, input_text):
         """ストリーミングで応答生成"""
+        global skip_flag, latest_response
+        
         if not input_text:
             yield "何か言ったか?もう一度言ってみろよ!"
             return
@@ -180,6 +190,12 @@ class PumpkinTalk:
             full_response = ""
             
             for line in response.iter_lines():
+                # スキップチェック
+                with skip_lock:
+                    if skip_flag:
+                        print("[スキップ検出] 応答生成を中断")
+                        break
+                
                 if line:
                     try:
                         chunk = json.loads(line)
@@ -206,6 +222,10 @@ class PumpkinTalk:
                     yield sentence
             
             self.conversation_history.append(f"パンプキン: {full_response}")
+            
+            # モニタリング用に保存
+            with response_lock:
+                latest_response = full_response
             
         except Exception as e:
             print(f"Ollama APIエラー: {e}")
@@ -256,7 +276,7 @@ class PumpkinTalk:
 
     def subtitle_worker(self):
         """字幕表示ワーカースレッド（キュー処理）"""
-        global current_subtitle
+        global current_subtitle, skip_flag
         
         while True:
             with self.subtitle_queue_lock:
@@ -283,6 +303,14 @@ class PumpkinTalk:
                 sentences = [text]
             
             for sentence in sentences:
+                # スキップチェック
+                with skip_lock:
+                    if skip_flag:
+                        print("[スキップ検出] 字幕表示を中断")
+                        with subtitle_lock:
+                            current_subtitle = ""
+                        return
+                
                 char_count = len(sentence)
                 comma_count = sentence.count("、")
                 period_count = sentence.count("。")
@@ -314,7 +342,7 @@ class PumpkinTalk:
                 self.subtitle_thread.start()
 
     def play_audio_with_aplay(self, wav_file, show_subtitle=False, subtitle_text="", is_final=False):
-        global a_key_active, is_speaking
+        global a_key_active, is_speaking, skip_flag
         
         if not os.path.exists(wav_file) or os.path.getsize(wav_file) == 0:
             return
@@ -331,6 +359,16 @@ class PumpkinTalk:
             # 字幕をキューに追加（ブロックしない）
             if show_subtitle and subtitle_text:
                 self.display_subtitle_gradually(subtitle_text, duration)
+            
+            # スキップチェック
+            with skip_lock:
+                if skip_flag:
+                    print("[スキップ検出] 音声再生をスキップ")
+                    try:
+                        os.unlink(wav_file)
+                    except:
+                        pass
+                    return
             
             # 音声再生（これはブロックする）
             subprocess.run(["aplay", "-q", wav_file], check=False)
@@ -351,15 +389,44 @@ class PumpkinTalk:
 
     def process_input_text(self, input_text):
         """ストリーミング処理"""
+        global skip_flag
+        
         print(f"受信: {input_text}")
+        
+        # スキップフラグをリセット
+        with skip_lock:
+            skip_flag = False
         
         # ユーザー質問字幕を表示
         show_user_subtitle(input_text)
         
         sentences = list(self.generate_response_streaming(input_text))
+        
+        # スキップされた場合は処理を中断
+        with skip_lock:
+            if skip_flag:
+                print("[スキップ完了] 会話を中断しました")
+                # 字幕とオーディオをクリア
+                with self.subtitle_queue_lock:
+                    self.subtitle_queue.clear()
+                with subtitle_lock:
+                    current_subtitle = ""
+                with speaking_lock:
+                    is_speaking = False
+                with audio_lock:
+                    a_key_active = False
+                skip_flag = False  # リセット
+                return
+        
         total = len(sentences)
         
         for idx, sentence in enumerate(sentences):
+            # 各文でスキップチェック
+            with skip_lock:
+                if skip_flag:
+                    print("[スキップ検出] 残りの文をスキップ")
+                    break
+            
             if sentence:
                 print(f"生成: {sentence}")
                 wav_file = self.text_to_speech_fast(sentence)
@@ -613,6 +680,7 @@ app_key = Flask(__name__ + '_key')
 
 @app_key.route('/key_event', methods=['POST'])
 def receive_key_event():
+    global skip_flag
     data = request.get_json()
     key_name = data.get("key")
 
@@ -621,10 +689,16 @@ def receive_key_event():
         'right': K_RIGHT,
         'a': K_a,
         'k': K_k,
-        'l': K_l
+        'l': K_l,
+        'q': K_q  # 追加
     }
     
     if key_name in key_map:
+        if key_name == 'q':
+            # 緊急スキップフラグを立てる
+            with skip_lock:
+                skip_flag = True
+            print("🛑 [緊急スキップ受信]")
         pygame.event.post(pygame.event.Event(KEYDOWN, key=key_map[key_name]))
     elif key_name in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
         pygame.event.post(pygame.event.Event(USEREVENT, key=key_name))
@@ -632,6 +706,16 @@ def receive_key_event():
         return jsonify({"status": "error"}), 400
 
     return jsonify({"status": "success"})
+
+# ==== モニタリングAPI ====
+app_monitor = Flask(__name__ + '_monitor')
+
+@app_monitor.route('/get_response', methods=['GET'])
+def get_response():
+    """最新のAI応答を返す"""
+    global latest_response
+    with response_lock:
+        return jsonify({"response": latest_response})
 
 # ==== メイン ====
 def main():
@@ -686,8 +770,13 @@ def main():
         target=lambda: app_key.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False, threaded=True)
     ).start()
     
+    # モニタリングAPIサーバー起動
+    threading.Thread(
+        target=lambda: app_monitor.run(host='0.0.0.0', port=5002, debug=False, use_reloader=False, threaded=True)
+    ).start()
+    
     time.sleep(1)
-    print("起動完了(ストリーミングモード)")
+    print("起動完了(ストリーミングモード + 緊急スキップ対応)")
 
     while True:
         t = pygame.time.get_ticks()
@@ -720,6 +809,11 @@ def main():
                         state = "full5"
                     elif state == "full6": 
                         state = "full7"
+                elif event.key == K_q:
+                    # qキー押下でスキップ
+                    with skip_lock:
+                        skip_flag = True
+                    print("🛑 [ローカルスキップ実行]")
             elif event.type == USEREVENT:
                 key_num = event.key
                 if key_num in SOUND_FILES:
