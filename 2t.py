@@ -61,7 +61,7 @@ def print_header():
 
 def print_recording_start():
     """録音開始"""
-    print("🎤 録音開始...", end="", flush=True)
+    print("録音開始...", end="", flush=True)
 
 def print_recording_end():
     """録音終了"""
@@ -69,11 +69,11 @@ def print_recording_end():
 
 def print_recognition(text: str):
     """音声認識結果"""
-    print(f"\n📝 認識: {text}")
+    print(f"\n認識: {text}")
 
 def print_send_complete(text: str):
     """送信完了"""
-    print(f"✅ 送信完了")
+    print(f"送信完了")
 
 def print_response(text: str):
     """AI応答"""
@@ -91,7 +91,7 @@ def print_response(text: str):
     if current_line:
         lines.append(current_line)
     
-    print(f"\n🎃 パンプキン:")
+    print(f"\nパンプキン:")
     for line in lines:
         print(f"   {line}")
     print()  # 空行
@@ -104,7 +104,7 @@ def print_exit():
 
 def print_error(message: str):
     """エラー表示"""
-    print(f"❌ エラー: {message}")
+    print(f"エラー: {message}")
 
 # ==== 通信関数（最適化版） ====
 def send_key(key: str):
@@ -116,7 +116,7 @@ def send_key(key: str):
             timeout=config.TIMEOUT_KEY
         )
         if key == 'q':
-            print("\n🛑 緊急スキップ送信")
+            print("\n緊急スキップ送信")
     except:
         pass  # エラーは無視
 
