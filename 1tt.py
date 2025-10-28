@@ -237,10 +237,7 @@ class PumpkinTalkV2:
         
         # メタ発言検出と除去
         meta_patterns = [
-            r"俺様は.*?だが.*?優しくなる",
-            r"甘いもの.*?機嫌.*?良くなる",
-            r"傲慢.*?横柄.*?甘い",
-            r".*らしい(ぜ|な|だ|。)$",  # 文末の「らしい」（自分のことを）
+            
         ]
         
         for pattern in meta_patterns:
