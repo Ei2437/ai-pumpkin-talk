@@ -64,6 +64,15 @@ class SubtitleConfig:
 
 SOUND_FILES = {str(i): f"sounds/sound{i if i > 0 else '0'}.wav" for i in range(10)}
 SOUND_FILES['1'] = "sounds/OP1.wav"
+SOUND_FILES['2'] = "sounds/OP1.wav"
+SOUND_FILES['3'] = "sounds/OP1.wav"
+SOUND_FILES['4'] = "sounds/OP1.wav"
+SOUND_FILES['5'] = "sounds/OP1.wav"
+SOUND_FILES['6'] = "sounds/OP1.wav"
+SOUND_FILES['7'] = "sounds/OP1.wav"
+SOUND_FILES['8'] = "sounds/OP1.wav"
+SOUND_FILES['9'] = "sounds/OP1.wav"
+SOUND_FILES['0'] = "sounds/OP1.wav"
 
 # ==== State ====
 class State(Enum):
