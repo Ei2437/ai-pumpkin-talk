@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-# 最適化版 1t.py - パフォーマンス改善 + コード整理
-
+# ほぼ完成...?
 import os
 import time
 import json
@@ -23,7 +22,7 @@ from typing import Optional, List, Tuple
 from dataclasses import dataclass
 from enum import Enum
 
-# ==== 定数定義 ====
+# ==== 定数群 ====
 @dataclass(frozen=True)
 class DisplayConfig:
     WIDTH: int = 1920
@@ -46,7 +45,7 @@ class VideoConfig:
 
 @dataclass(frozen=True)
 class SubtitleConfig:
-    # パンプキン応答字幕（下部）
+    # 応答字幕
     FONT_SIZE: int = 48
     COLOR: Tuple[int, int, int] = (255, 255, 255)
     BG_COLOR: Tuple[int, int, int, int] = (0, 0, 0, 180)
@@ -54,7 +53,7 @@ class SubtitleConfig:
     CHAR_DURATION: float = 0.13
     PUNCTUATION_DURATION: float = 0.43
     
-    # ユーザー質問字幕（上部）
+    # 質問字幕
     USER_FONT_SIZE: int = 36
     USER_COLOR: Tuple[int, int, int] = (255, 255, 255)
     USER_BG_COLOR: Tuple[int, int, int, int] = (40, 40, 40, 220)
@@ -66,7 +65,7 @@ class SubtitleConfig:
 SOUND_FILES = {str(i): f"sounds/sound{i if i > 0 else '0'}.wav" for i in range(10)}
 SOUND_FILES['1'] = "sounds/OP1.wav"
 
-# ==== State管理 ====
+# ==== State ====
 class State(Enum):
     IDLE = "idle"
     ENTRY = "entry"
@@ -79,7 +78,7 @@ class State(Enum):
     FULL6 = "full6"
     FULL7 = "full7"
 
-# ==== グローバル状態（最小限） ====
+# ==== グローバル状態 ====
 class GlobalState:
     def __init__(self):
         self.a_key_active = False
@@ -93,7 +92,6 @@ class GlobalState:
         self.user_subtitle_active = False
         self.latest_response = ""
         
-        # ロック
         self.audio_lock = threading.Lock()
         self.subtitle_lock = threading.Lock()
         self.user_subtitle_lock = threading.Lock()
@@ -102,8 +100,6 @@ class GlobalState:
         self.response_lock = threading.Lock()
 
 g_state = GlobalState()
-
-# HTTPセッション（再利用）
 session = requests.Session()
 adapter = requests.adapters.HTTPAdapter(
     pool_connections=10,
@@ -143,9 +139,7 @@ class ConfigLoader:
     def get_advanced_config(self) -> dict:
         return self.config.get("advanced", {})
 
-# ==== PumpkinTalk（最適化版） ====
 class PumpkinTalk:
-    # 文分割用正規表現（コンパイル済み）
     SENTENCE_SPLITTER = re.compile(r'([。！？!?])')
     
     def __init__(self, config_path: str = "pumpkin.json"):
@@ -165,13 +159,11 @@ class PumpkinTalk:
         
         self.voicevox_settings = self.system_config.get("voicevox", {})
         
-        # 字幕管理
         self.subtitle_queue = []
         self.subtitle_queue_lock = threading.Lock()
         self.subtitle_thread: Optional[threading.Thread] = None
 
     def split_sentences(self, text: str) -> List[str]:
-        """文分割（最適化版）"""
         parts = self.SENTENCE_SPLITTER.split(text)
         sentences = []
         temp = ""
@@ -189,7 +181,6 @@ class PumpkinTalk:
         return sentences
 
     def generate_response_streaming(self, input_text: str):
-        """ストリーミング応答生成"""
         if not input_text:
             yield "何か言ったか?もう一度言ってみろよ!"
             return
@@ -256,9 +247,7 @@ class PumpkinTalk:
             yield "ちっ、調子が悪いぞ!もう一度話しかけてみろよ!"
 
     def text_to_speech_fast(self, text: str) -> Optional[str]:
-        """高速音声合成（最適化版）"""
         try:
-            # クエリ生成
             query_response = session.post(
                 f"{self.voicevox_url}/audio_query",
                 params={"text": text, "speaker": self.speaker_id},
@@ -266,8 +255,7 @@ class PumpkinTalk:
             )
             query_response.raise_for_status()
             query_data = query_response.json()
-            
-            # 設定適用
+
             if self.voicevox_settings:
                 query_data.update({
                     "speedScale": self.voicevox_settings.get("speed", 1.3),
@@ -277,7 +265,6 @@ class PumpkinTalk:
                     "postPhonemeLength": self.voicevox_settings.get("post_phoneme_length", 0.2)
                 })
             
-            # 音声合成
             synthesis_response = session.post(
                 f"{self.voicevox_url}/synthesis",
                 params={"speaker": self.speaker_id},
@@ -286,7 +273,6 @@ class PumpkinTalk:
             )
             synthesis_response.raise_for_status()
             
-            # 一時ファイル作成
             with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
                 tmp.write(synthesis_response.content)
                 return tmp.name
@@ -296,7 +282,6 @@ class PumpkinTalk:
             return None
 
     def get_audio_duration(self, wav_file: str) -> float:
-        """音声ファイルの長さを取得"""
         try:
             with wave.open(wav_file, 'rb') as wf:
                 return wf.getnframes() / float(wf.getframerate())
@@ -304,7 +289,6 @@ class PumpkinTalk:
             return 0.0
 
     def subtitle_worker(self):
-        """字幕表示ワーカースレッド"""
         while True:
             with self.subtitle_queue_lock:
                 if not self.subtitle_queue:
@@ -321,8 +305,7 @@ class PumpkinTalk:
                         with g_state.subtitle_lock:
                             g_state.current_subtitle = ""
                         return
-                
-                # 表示時間計算
+
                 char_count = len(sentence)
                 punctuation_count = sum(sentence.count(c) for c in ['、', '。', '!', '?', '...'])
                 sentence_duration = (
@@ -339,7 +322,6 @@ class PumpkinTalk:
                     g_state.current_subtitle = ""
 
     def display_subtitle_gradually(self, text: str, duration: float):
-        """字幕をキューに追加"""
         with self.subtitle_queue_lock:
             self.subtitle_queue.append((text, duration))
             
@@ -350,12 +332,10 @@ class PumpkinTalk:
                 )
                 self.subtitle_thread.start()
 
-    def play_audio_with_aplay(self, wav_file: str, show_subtitle: bool = False,
-                             subtitle_text: str = "", is_final: bool = False):
-        """音声再生（最適化版）"""
+    def play_audio_with_aplay(self, wav_file: str, show_subtitle: bool = False, subtitle_text: str = "", is_final: bool = False):
         if not os.path.exists(wav_file) or os.path.getsize(wav_file) == 0:
             return
-
+        
         try:
             with g_state.speaking_lock:
                 if not g_state.is_speaking:
@@ -365,17 +345,14 @@ class PumpkinTalk:
             
             duration = self.get_audio_duration(wav_file)
             
-            # 字幕表示
             if show_subtitle and subtitle_text:
                 self.display_subtitle_gradually(subtitle_text, duration)
             
-            # スキップチェック
             with g_state.skip_lock:
                 if g_state.skip_flag:
                     os.unlink(wav_file)
                     return
             
-            # 音声再生
             subprocess.run(
                 ["aplay", "-q", wav_file],
                 check=False,
@@ -395,20 +372,15 @@ class PumpkinTalk:
                     g_state.a_key_active = False
 
     def process_input_text(self, input_text: str):
-        """入力テキスト処理（最適化版）"""
         print(f"[受信] {input_text}")
-        
-        # スキップフラグリセット
+
         with g_state.skip_lock:
             g_state.skip_flag = False
         
-        # ユーザー字幕表示
         show_user_subtitle(input_text)
         
-        # 応答生成
         sentences = list(self.generate_response_streaming(input_text))
         
-        # スキップチェック
         with g_state.skip_lock:
             if g_state.skip_flag:
                 print("[スキップ] 会話を中断しました")
@@ -423,7 +395,6 @@ class PumpkinTalk:
                 g_state.skip_flag = False
                 return
         
-        # 音声合成・再生
         total = len(sentences)
         for idx, sentence in enumerate(sentences):
             with g_state.skip_lock:
@@ -442,7 +413,6 @@ class PumpkinTalk:
                     )
 
     def filter_response(self, response_text: str) -> str:
-        """応答フィルタリング"""
         if "response_filtering" in self.advanced_config:
             filtering = self.advanced_config["response_filtering"]
             for old, new in filtering.get("replace_patterns", {}).items():
@@ -450,18 +420,16 @@ class PumpkinTalk:
         
         return response_text.strip()
 
-# ==== ユーザー字幕表示 ====
+# ==== 質問字幕 ====
 def show_user_subtitle(text: str):
-    """ユーザーの質問を上部に表示"""
     with g_state.user_subtitle_lock:
         g_state.user_subtitle_text = text
         g_state.user_subtitle_start_time = time.time()
         g_state.user_subtitle_active = True
 
-# ==== 浮遊モーション（最適化版） ====
+# ==== 浮遊モーション ====
 def float_motion(t: int, seed: int = 0, amp_y: int = 16,
                 amp_x: int = 7, base_speed: float = 0.0007) -> Tuple[int, int]:
-    """浮遊モーション計算"""
     dy = int(math.sin(t * base_speed + seed) * amp_y)
     dx = int(
         math.sin(t * base_speed * 1.2 + seed * 2.3) * amp_x +
@@ -470,7 +438,7 @@ def float_motion(t: int, seed: int = 0, amp_y: int = 16,
     )
     return dx, dy
 
-# ==== PyAV動画クラス（最適化版） ====
+# ==== 動画 ====
 class AlphaVideo:
     def __init__(self, path: str):
         container = av.open(path)
@@ -488,9 +456,8 @@ class AlphaVideo:
         idx = max(0, min(idx, self.total - 1))
         return self.frames[idx]
 
-# ==== 描画関数（最適化版） ====
+# ==== 描画関数 ====
 def draw_video(screen: pygame.Surface, frame: np.ndarray, dx: int = 0, dy: int = 0):
-    """動画フレーム描画"""
     config = DisplayConfig()
     frame_resized = cv2.resize(frame, (config.WIDTH, config.HEIGHT))
     surf = pygame.image.frombuffer(
@@ -501,11 +468,9 @@ def draw_video(screen: pygame.Surface, frame: np.ndarray, dx: int = 0, dy: int =
     screen.blit(surf, (dx, dy))
 
 def draw_video_fullscreen(screen: pygame.Surface, video: AlphaVideo):
-    """フルスクリーン動画描画"""
     draw_video(screen, video.get_frame(), 0, 0)
 
 def draw_subtitle(screen: pygame.Surface, font: pygame.font.Font):
-    """パンプキンの応答字幕（下部）"""
     with g_state.subtitle_lock:
         text = g_state.current_subtitle
     
@@ -515,7 +480,6 @@ def draw_subtitle(screen: pygame.Surface, font: pygame.font.Font):
     config = DisplayConfig()
     sub_config = SubtitleConfig()
     
-    # テキスト折り返し
     lines = []
     current_line = ""
     
@@ -531,12 +495,10 @@ def draw_subtitle(screen: pygame.Surface, font: pygame.font.Font):
     if current_line:
         lines.append(current_line)
     
-    # レンダリング
     rendered_lines = [font.render(line, True, sub_config.COLOR) for line in lines]
     max_width = max(surf.get_width() for surf in rendered_lines)
     total_height = sum(surf.get_height() + 5 for surf in rendered_lines)
     
-    # 背景描画
     padding = 20
     y_position = config.HEIGHT - 150
     bg_rect = pygame.Rect(
@@ -550,7 +512,6 @@ def draw_subtitle(screen: pygame.Surface, font: pygame.font.Font):
     bg_surface.fill(sub_config.BG_COLOR)
     screen.blit(bg_surface, bg_rect)
     
-    # テキスト描画
     y_offset = y_position
     for surf in rendered_lines:
         x = (config.WIDTH - surf.get_width()) // 2
@@ -558,7 +519,6 @@ def draw_subtitle(screen: pygame.Surface, font: pygame.font.Font):
         y_offset += surf.get_height() + 5
 
 def draw_user_subtitle(screen: pygame.Surface, font: pygame.font.Font):
-    """ユーザー質問字幕（上部・通知風）"""
     with g_state.user_subtitle_lock:
         if not g_state.user_subtitle_active:
             return
@@ -573,7 +533,6 @@ def draw_user_subtitle(screen: pygame.Surface, font: pygame.font.Font):
     config = DisplayConfig()
     sub_config = SubtitleConfig()
     
-    # テキスト折り返し
     lines = []
     current_line = ""
     
@@ -589,7 +548,6 @@ def draw_user_subtitle(screen: pygame.Surface, font: pygame.font.Font):
     if current_line:
         lines.append(current_line)
     
-    # レンダリング
     rendered_lines = [font.render(line, True, sub_config.USER_COLOR) for line in lines]
     max_width = max(surf.get_width() for surf in rendered_lines)
     total_height = sum(surf.get_height() + 5 for surf in rendered_lines)
@@ -597,7 +555,6 @@ def draw_user_subtitle(screen: pygame.Surface, font: pygame.font.Font):
     padding = 20
     corner_radius = 15
     
-    # アニメーション計算
     y_pos = 20.0
     alpha = 255
     
@@ -609,7 +566,6 @@ def draw_user_subtitle(screen: pygame.Surface, font: pygame.font.Font):
         fade_progress = (elapsed - sub_config.USER_DISPLAY_TIME) / sub_config.USER_FADE_DURATION
         alpha = int(255 * (1 - fade_progress))
     
-    # 背景描画
     bg_rect = pygame.Rect(
         (config.WIDTH - max_width - padding * 2) // 2,
         int(y_pos),
@@ -626,7 +582,6 @@ def draw_user_subtitle(screen: pygame.Surface, font: pygame.font.Font):
     )
     screen.blit(bg_surface, bg_rect)
     
-    # テキスト描画
     y_offset = int(y_pos) + padding
     for surf in rendered_lines:
         surf = surf.copy()
@@ -637,7 +592,6 @@ def draw_user_subtitle(screen: pygame.Surface, font: pygame.font.Font):
 
 # ==== おしゃべりモーション ====
 def handle_a_key_video(vid: AlphaVideo, t: int, seed: int = 0) -> Tuple[np.ndarray, int, int]:
-    """Aキー連動動画処理"""
     dx, dy = float_motion(t, seed=seed, amp_y=22, amp_x=12, base_speed=0.0009)
 
     if g_state.a_key_active:
@@ -710,24 +664,19 @@ app_monitor = Flask(__name__ + '_monitor')
 
 @app_monitor.route('/get_response', methods=['GET'])
 def get_response():
-    """最新のAI応答を返す"""
     with g_state.response_lock:
         return jsonify({"response": g_state.latest_response})
 
-# ==== メイン処理 ====
+# ==== main ====
 def main():
     global pumpkin_talk
-    
     print("初期化中...")
     pumpkin_talk = PumpkinTalk("pumpkin.json")
-    
     pygame.init()
     config = DisplayConfig()
     screen = pygame.display.set_mode((config.WIDTH, config.HEIGHT))
     pygame.display.set_caption("AI_pumpkin_talk")
     clock = pygame.time.Clock()
-    
-    # フォント読み込み
     try:
         font = pygame.font.Font("ZenKakuGothicNew-Regular.ttf", SubtitleConfig.FONT_SIZE)
         user_font = pygame.font.Font("ZenKakuGothicNew-Regular.ttf", SubtitleConfig.USER_FONT_SIZE)
@@ -735,7 +684,6 @@ def main():
         font = pygame.font.Font(None, SubtitleConfig.FONT_SIZE)
         user_font = pygame.font.Font(None, SubtitleConfig.USER_FONT_SIZE)
 
-    # 背景動画
     cap_bg = cv2.VideoCapture(config.BG_VIDEO_PATH)
     if not cap_bg.isOpened():
         print("[ERROR] 背景動画が開けません")
@@ -747,7 +695,6 @@ def main():
         ret_bg, frame_bg = cap_bg.read()
     bg_counter = 0
 
-    # キャラクター動画
     video_config = VideoConfig()
     videos = {
         "normal": AlphaVideo(video_config.MAIN),
@@ -766,7 +713,6 @@ def main():
     float_offset_y = 0.0
     transition_blend = 1.0
 
-    # Flaskサーバー起動
     threading.Thread(
         target=lambda: app_text.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False, threaded=True),
         daemon=True
@@ -785,10 +731,8 @@ def main():
     time.sleep(1)
     print("起動完了(ストリーミングモード + 緊急スキップ対応)")
 
-    # メインループ
     while True:
         t = pygame.time.get_ticks()
-
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
@@ -829,8 +773,6 @@ def main():
                         def play_sound():
                             pumpkin_talk.play_audio_with_aplay(wav_path)
                         threading.Thread(target=play_sound, daemon=True).start()
-
-        # 背景描画
         if bg_counter % config.BACK_SPEED_SKIP == 0:
             ret_bg, frame_bg = cap_bg.read()
             if not ret_bg:
@@ -846,23 +788,16 @@ def main():
             "RGB"
         )
         screen.blit(bg_surf, (0, 0))
-
-        # 浮遊モーション計算
         base_float_x, base_float_y = float_motion(t, seed=1)
         is_transitioning = g_state.state in [State.FULL2, State.FULL4, State.FULL5, State.FULL7]
-        
         if is_transitioning:
             transition_blend = max(0.0, transition_blend - 0.05)
         else:
             transition_blend = min(1.0, transition_blend + 0.05)
-        
         float_offset_x = base_float_x * transition_blend
         float_offset_y = base_float_y * transition_blend
-        
         dx = int(float_offset_x)
         dy = int(float_offset_y)
-
-        # 状態管理
         if g_state.state == State.IDLE:
             pass
             
@@ -956,11 +891,8 @@ def main():
                 videos["full7"].frame_accumulator = 0.0
                 g_state.state = State.NORMAL
                 transition_blend = 0.0
-
-        # 字幕描画
         draw_subtitle(screen, font)
         draw_user_subtitle(screen, user_font)
-
         pygame.display.flip()
         clock.tick(60)
 

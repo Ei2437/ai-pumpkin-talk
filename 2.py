@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-# 最適化版 2t.py - パフォーマンス改善 + 出力整形
-
 import requests
 import numpy as np
 import sounddevice as sd
@@ -37,7 +35,6 @@ class GlobalState:
 g_state = GlobalState()
 config = ServerConfig()
 
-# HTTPセッション（再利用）
 session = requests.Session()
 adapter = requests.adapters.HTTPAdapter(
     pool_connections=5,
@@ -46,9 +43,8 @@ adapter = requests.adapters.HTTPAdapter(
 )
 session.mount('http://', adapter)
 
-# ==== 出力整形関数 ====
+# ==== ヘッダー ====
 def print_header():
-    """ヘッダー表示"""
     print("\n" + "=" * 70)
     print("AI Pumpkin Controller 起動完了".center(70))
     print("=" * 70)
@@ -60,23 +56,14 @@ def print_header():
     print("=" * 70 + "\n")
 
 def print_recording_start():
-    """録音開始"""
     print("録音開始...", end="", flush=True)
-
 def print_recording_end():
-    """録音終了"""
     print(" 完了")
-
 def print_recognition(text: str):
-    """音声認識結果"""
     print(f"\n認識: {text}")
-
 def print_send_complete(text: str):
-    """送信完了"""
     print(f"送信完了")
-
 def print_response(text: str):
-    """AI応答"""
     # 長い応答の場合は折り返し
     max_width = 70
     lines = []
@@ -94,21 +81,17 @@ def print_response(text: str):
     print(f"\nパンプキン:")
     for line in lines:
         print(f"   {line}")
-    print()  # 空行
+    print()
 
 def print_exit():
-    """終了メッセージ"""
     print("\n" + "=" * 70)
     print("終了しました".center(70))
     print("=" * 70 + "\n")
-
 def print_error(message: str):
-    """エラー表示"""
     print(f"エラー: {message}")
 
-# ==== 通信関数（最適化版） ====
+# ==== 通信系 ====
 def send_key(key: str):
-    """キーイベントを送信"""
     try:
         session.post(
             config.KEY_URL,
@@ -118,10 +101,9 @@ def send_key(key: str):
         if key == 'q':
             print("\n緊急スキップ送信")
     except:
-        pass  # エラーは無視
+        pass
 
 def send_text(text: str):
-    """テキストを送信"""
     try:
         session.post(
             config.TEXT_URL,
@@ -133,7 +115,6 @@ def send_text(text: str):
         print_error(f"送信失敗: {e}")
 
 def monitor_responses():
-    """AI応答をポーリングして表示"""
     while g_state.monitoring:
         try:
             response = session.get(
@@ -155,7 +136,6 @@ def monitor_responses():
 
 # ==== キー処理 ====
 def on_key(event):
-    """キー押下時の処理"""
     if event.event_type != keyboard.KEY_DOWN:
         return
     
@@ -165,13 +145,11 @@ def on_key(event):
 
 # ==== 音声処理 ====
 def audio_callback(indata, frames, time_info, status):
-    """音声データのコールバック"""
     if g_state.recording:
         with g_state.audio_lock:
             g_state.audio_frames.append(indata.copy())
 
 def transcribe(audio_data: np.ndarray) -> Optional[str]:
-    """音声認識"""
     recognizer = sr.Recognizer()
     try:
         audio = sr.AudioData(audio_data.tobytes(), config.SAMPLE_RATE, 2)
@@ -187,17 +165,11 @@ def transcribe(audio_data: np.ndarray) -> Optional[str]:
         print_error(f"音声認識エラー: {e}")
         return None
 
-# ==== メイン処理 ====
+# ==== main ====
 def main():
     print_header()
-    
-    # AI応答モニタリングスレッド起動
     Thread(target=monitor_responses, daemon=True).start()
-    
-    # キーフック登録
     keyboard.hook(on_key)
-    
-    # 音声ストリーム開始
     try:
         g_state.stream = sd.InputStream(
             samplerate=config.SAMPLE_RATE,
@@ -212,7 +184,6 @@ def main():
     
     try:
         while True:
-            # Spaceキーの状態をチェック
             if keyboard.is_pressed('space'):
                 if not g_state.recording:
                     print_recording_start()
@@ -224,7 +195,6 @@ def main():
                     print_recording_end()
                     g_state.recording = False
                     
-                    # 音声処理を別スレッドで実行
                     with g_state.audio_lock:
                         data = np.concatenate(g_state.audio_frames) if g_state.audio_frames else None
                     
@@ -237,7 +207,6 @@ def main():
                         
                         Thread(target=process, daemon=True).start()
             
-            # CPU負荷を下げる
             keyboard.read_event(suppress=False)
             
     except KeyboardInterrupt:
