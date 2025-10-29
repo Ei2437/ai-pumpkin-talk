@@ -54,8 +54,8 @@ def print_header():
     print("=" * 70)
     print("\n【操作方法】")
     print("  Space      : 音声録音")
-    print("  Q          : 緊急スキップ (コンプライアンス用)")
-    print("  Left/Right : カメラ切替")
+    print("  Q          : 緊急スキップ")
+    print("  Left/Right : モーション")
     print("  A/K/L/数字 : その他キー送信")
     print("=" * 70 + "\n")
 

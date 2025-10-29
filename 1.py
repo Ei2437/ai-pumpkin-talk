@@ -697,7 +697,7 @@ def receive_key_event():
         if key_name == 'q':
             with g_state.skip_lock:
                 g_state.skip_flag = True
-            print("[🛑 緊急スキップ受信]")
+            print("[緊急スキップ受信]")
         pygame.event.post(pygame.event.Event(KEYDOWN, key=key_map[key_name]))
     elif key_name in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
         pygame.event.post(pygame.event.Event(USEREVENT, key=key_name))
@@ -820,7 +820,7 @@ def main():
                 elif event.key == K_q:
                     with g_state.skip_lock:
                         g_state.skip_flag = True
-                    print("[🛑 ローカルスキップ実行]")
+                    print("[ローカルスキップ実行]")
             elif event.type == USEREVENT:
                 key_num = event.key
                 if key_num in SOUND_FILES:
