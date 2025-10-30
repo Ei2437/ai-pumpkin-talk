@@ -66,12 +66,12 @@ class SubtitleConfig:
 @dataclass(frozen=True)
 class MotionSoundConfig:
     START_SOUND: str = "sounds/start.wav"
-    START_SUBTITLE: str = "スタート"
-    START_DELAY: float = 1.2
+    START_SUBTITLE: str = "お前ら、待たせたな！俺様がパンプキンだ！"
+    START_DELAY: float = 2.0
     
     END_SOUND: str = "sounds/end.wav"
-    END_SUBTITLE: str = "すとっぷ"
-    END_DELAY: float = 1.5
+    END_SUBTITLE: str = "なんだ、もう帰るのか？まぁ、多少は楽しかったぞ。せいぜい気を付けて帰れよ。じゃあな。とう！"
+    END_DELAY: float = 6.0
 
 SOUND_FILES = {str(i): f"sounds/sound{i if i > 0 else '0'}.wav" for i in range(10)}
 SOUND_FILES['1'] = "sounds/OP1.wav"
