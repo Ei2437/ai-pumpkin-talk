@@ -83,12 +83,6 @@ class SubtitleConfig:
     USER_SLIDE_DURATION: float = 0.3
     USER_FADE_DURATION: float = 0.4
 
-@dataclass(frozen=True)
-class SystemConfig:
-    TEMP_CLEANUP_INTERVAL: int = 300  # 5分ごとに一時ファイルをクリーンアップ
-    TEMP_FILE_MAX_AGE: int = 3600  # 1時間以上古い一時ファイルを削除
-    LOG_CLEANUP_INTERVAL: int = 600  # 10分ごとにログをクリーンアップ
-
 SOUND_FILES = {str(i): f"sounds/sound{i if i > 0 else '0'}.wav" for i in range(10)}
 SOUND_FILES['1'] = "sounds/OP1.wav"
 SOUND_FILES['2'] = "sounds/OP1.wav"
@@ -134,12 +128,8 @@ class GlobalState:
         self.speaking_lock = threading.Lock()
         self.skip_lock = threading.Lock()
         self.response_lock = threading.Lock()
-        
-        self.temp_files = []  # 一時ファイル管理
-        self.temp_files_lock = threading.Lock()
 
 g_state = GlobalState()
-system_config = SystemConfig()
 
 session = requests.Session()
 adapter = requests.adapters.HTTPAdapter(
@@ -149,53 +139,6 @@ adapter = requests.adapters.HTTPAdapter(
 )
 session.mount('http://', adapter)
 session.mount('https://', adapter)
-
-# ==== クリーンアップ機能 ====
-def cleanup_temp_files():
-    """定期的に古い一時ファイルを削除"""
-    while True:
-        try:
-            time.sleep(system_config.TEMP_CLEANUP_INTERVAL)
-            
-            temp_dir = tempfile.gettempdir()
-            current_time = time.time()
-            deleted_count = 0
-            
-            # 一時ディレクトリ内のwavファイルをチェック
-            for filename in os.listdir(temp_dir):
-                if filename.endswith('.wav'):
-                    filepath = os.path.join(temp_dir, filename)
-                    try:
-                        # ファイルの更新時刻をチェック
-                        file_age = current_time - os.path.getmtime(filepath)
-                        if file_age > system_config.TEMP_FILE_MAX_AGE:
-                            os.unlink(filepath)
-                            deleted_count += 1
-                    except:
-                        pass
-            
-            # グローバルに追跡している一時ファイルもクリーンアップ
-            with g_state.temp_files_lock:
-                files_to_remove = []
-                for filepath in g_state.temp_files:
-                    if os.path.exists(filepath):
-                        try:
-                            os.unlink(filepath)
-                        except:
-                            pass
-                    files_to_remove.append(filepath)
-                
-                for filepath in files_to_remove:
-                    g_state.temp_files.remove(filepath)
-                    
-        except Exception as e:
-            if ENABLE_CONSOLE_OUTPUT:
-                print(f"[クリーンアップエラー] {e}")
-
-def register_temp_file(filepath: str):
-    """一時ファイルを登録"""
-    with g_state.temp_files_lock:
-        g_state.temp_files.append(filepath)
 
 # ==== Config Loader ====
 class ConfigLoader:
@@ -364,7 +307,6 @@ class PumpkinTalk:
             
             with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
                 tmp.write(synthesis_response.content)
-                register_temp_file(tmp.name)
                 return tmp.name
             
         except Exception as e:
@@ -830,9 +772,6 @@ def main():
         target=lambda: app_monitor.run(host='0.0.0.0', port=5002, debug=False, use_reloader=False, threaded=True),
         daemon=True
     ).start()
-    
-    # クリーンアップスレッド起動
-    threading.Thread(target=cleanup_temp_files, daemon=True).start()
     
     time.sleep(1)
     
