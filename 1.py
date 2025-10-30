@@ -62,11 +62,16 @@ class SubtitleConfig:
     USER_SLIDE_DURATION: float = 0.3
     USER_FADE_DURATION: float = 0.4
 
-# エントリー/フィニッシュの字幕と遅延時間
-ENTRY_SUBTITLE = "スタート"
-FINISH_SUBTITLE = "すとっぷ"
-ENTRY_SOUND_DELAY = 1.2
-FINISH_SOUND_DELAY = 1.5
+# モーション音声設定
+@dataclass(frozen=True)
+class MotionSoundConfig:
+    START_SOUND: str = "sounds/start.wav"
+    START_SUBTITLE: str = "スタート"
+    START_DELAY: float = 1.2
+    
+    END_SOUND: str = "sounds/end.wav"
+    END_SUBTITLE: str = "すとっぷ"
+    END_DELAY: float = 1.5
 
 SOUND_FILES = {str(i): f"sounds/sound{i if i > 0 else '0'}.wav" for i in range(10)}
 SOUND_FILES['1'] = "sounds/OP1.wav"
@@ -79,8 +84,6 @@ SOUND_FILES['7'] = "sounds/OP1.wav"
 SOUND_FILES['8'] = "sounds/OP1.wav"
 SOUND_FILES['9'] = "sounds/OP1.wav"
 SOUND_FILES['0'] = "sounds/OP1.wav"
-SOUND_FILES['start'] = "sounds/start.wav"
-SOUND_FILES['end'] = "sounds/end.wav"
 
 # ==== State ====
 class State(Enum):
@@ -626,28 +629,29 @@ def handle_a_key_video(vid: AlphaVideo, t: int, seed: int = 0) -> Tuple[np.ndarr
 
     return vid.get_frame(), dx, dy
 
-# ==== スタート/フィニッシュ音声再生関数 ====
-def play_start_sound():
-    time.sleep(ENTRY_SOUND_DELAY)
-    wav_path = SOUND_FILES.get('start')
-    if wav_path and os.path.exists(wav_path):
-        pumpkin_talk.play_audio_with_aplay(
-            wav_path,
-            show_subtitle=True,
-            subtitle_text=ENTRY_SUBTITLE,
-            is_final=True
-        )
-
-def play_finish_sound():
-    time.sleep(FINISH_SOUND_DELAY)
-    wav_path = SOUND_FILES.get('end')
-    if wav_path and os.path.exists(wav_path):
-        pumpkin_talk.play_audio_with_aplay(
-            wav_path,
-            show_subtitle=True,
-            subtitle_text=FINISH_SUBTITLE,
-            is_final=True
-        )
+# ==== モーション音声再生 ====
+def play_motion_sound(sound_path: str, subtitle_text: str):
+    """モーション開始/終了時の音声を再生"""
+    if not os.path.exists(sound_path):
+        print(f"[WARNING] 音声ファイルが見つかりません: {sound_path}")
+        return
+    
+    def play():
+        try:
+            # 字幕表示
+            show_user_subtitle(subtitle_text)
+            
+            # 音声再生
+            subprocess.run(
+                ["aplay", "-q", sound_path],
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        except Exception as e:
+            print(f"[ERROR] モーション音声再生: {e}")
+    
+    threading.Thread(target=play, daemon=True).start()
 
 # ==== Flask API ====
 app_text = Flask(__name__ + '_text')
@@ -714,6 +718,7 @@ def main():
     pumpkin_talk = PumpkinTalk("pumpkin.json")
     pygame.init()
     config = DisplayConfig()
+    motion_config = MotionSoundConfig()
     screen = pygame.display.set_mode((config.WIDTH, config.HEIGHT))
     pygame.display.set_caption("AI_pumpkin_talk")
     clock = pygame.time.Clock()
@@ -752,9 +757,14 @@ def main():
     float_offset_x = 0.0
     float_offset_y = 0.0
     transition_blend = 1.0
+    
+    # モーション待機フラグ
+    motion_waiting = False
+    motion_wait_start = 0.0
+    motion_wait_target_state = None
 
     threading.Thread(
-target=lambda: app_text.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False, threaded=True),
+        target=lambda: app_text.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False, threaded=True),
         daemon=True
     ).start()
     
@@ -783,18 +793,18 @@ target=lambda: app_text.run(host='0.0.0.0', port=5000, debug=False, use_reloader
             elif event.type == KEYDOWN:
                 if event.key == K_k:
                     if g_state.state == State.IDLE:
-                        g_state.state = State.ENTRY
-                        videos["entry"].current_frame = 0
-                        videos["entry"].frame_accumulator = 0.0
-                        # スタート音声を別スレッドで再生
-                        threading.Thread(target=play_start_sound, daemon=True).start()
+                        # 音声再生 + 待機開始
+                        play_motion_sound(motion_config.START_SOUND, motion_config.START_SUBTITLE)
+                        motion_waiting = True
+                        motion_wait_start = time.time()
+                        motion_wait_target_state = State.ENTRY
                 elif event.key == K_l:
                     if g_state.state in [State.NORMAL, State.FULL3, State.FULL6]:
-                        g_state.state = State.FINISH
-                        videos["finish"].current_frame = 0
-                        videos["finish"].frame_accumulator = 0.0
-                        # フィニッシュ音声を別スレッドで再生
-                        threading.Thread(target=play_finish_sound, daemon=True).start()
+                        # 音声再生 + 待機開始
+                        play_motion_sound(motion_config.END_SOUND, motion_config.END_SUBTITLE)
+                        motion_waiting = True
+                        motion_wait_start = time.time()
+                        motion_wait_target_state = State.FINISH
                 elif event.key == K_LEFT:
                     if g_state.state == State.NORMAL:
                         g_state.state = State.FULL2
@@ -817,6 +827,23 @@ target=lambda: app_text.run(host='0.0.0.0', port=5000, debug=False, use_reloader
                         def play_sound():
                             pumpkin_talk.play_audio_with_aplay(wav_path)
                         threading.Thread(target=play_sound, daemon=True).start()
+        
+        # モーション待機処理
+        if motion_waiting:
+            elapsed = time.time() - motion_wait_start
+            if motion_wait_target_state == State.ENTRY and elapsed >= motion_config.START_DELAY:
+                g_state.state = State.ENTRY
+                videos["entry"].current_frame = 0
+                videos["entry"].frame_accumulator = 0.0
+                motion_waiting = False
+                motion_wait_target_state = None
+            elif motion_wait_target_state == State.FINISH and elapsed >= motion_config.END_DELAY:
+                g_state.state = State.FINISH
+                videos["finish"].current_frame = 0
+                videos["finish"].frame_accumulator = 0.0
+                motion_waiting = False
+                motion_wait_target_state = None
+        
         if bg_counter % config.BACK_SPEED_SKIP == 0:
             ret_bg, frame_bg = cap_bg.read()
             if not ret_bg:
