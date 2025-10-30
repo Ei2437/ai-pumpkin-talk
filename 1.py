@@ -22,6 +22,9 @@ from typing import Optional, List, Tuple
 from dataclasses import dataclass
 from enum import Enum
 
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
 # ==== 定数群 ====
 @dataclass(frozen=True)
 class DisplayConfig:
