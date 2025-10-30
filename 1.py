@@ -62,6 +62,12 @@ class SubtitleConfig:
     USER_SLIDE_DURATION: float = 0.3
     USER_FADE_DURATION: float = 0.4
 
+# エントリー/フィニッシュの字幕と遅延時間
+ENTRY_SUBTITLE = "スタート"
+FINISH_SUBTITLE = "すとっぷ"
+ENTRY_SOUND_DELAY = 1.2
+FINISH_SOUND_DELAY = 1.5
+
 SOUND_FILES = {str(i): f"sounds/sound{i if i > 0 else '0'}.wav" for i in range(10)}
 SOUND_FILES['1'] = "sounds/OP1.wav"
 SOUND_FILES['2'] = "sounds/OP1.wav"
@@ -73,6 +79,8 @@ SOUND_FILES['7'] = "sounds/OP1.wav"
 SOUND_FILES['8'] = "sounds/OP1.wav"
 SOUND_FILES['9'] = "sounds/OP1.wav"
 SOUND_FILES['0'] = "sounds/OP1.wav"
+SOUND_FILES['start'] = "sounds/start.wav"
+SOUND_FILES['end'] = "sounds/end.wav"
 
 # ==== State ====
 class State(Enum):
@@ -618,6 +626,29 @@ def handle_a_key_video(vid: AlphaVideo, t: int, seed: int = 0) -> Tuple[np.ndarr
 
     return vid.get_frame(), dx, dy
 
+# ==== スタート/フィニッシュ音声再生関数 ====
+def play_start_sound():
+    time.sleep(ENTRY_SOUND_DELAY)
+    wav_path = SOUND_FILES.get('start')
+    if wav_path and os.path.exists(wav_path):
+        pumpkin_talk.play_audio_with_aplay(
+            wav_path,
+            show_subtitle=True,
+            subtitle_text=ENTRY_SUBTITLE,
+            is_final=True
+        )
+
+def play_finish_sound():
+    time.sleep(FINISH_SOUND_DELAY)
+    wav_path = SOUND_FILES.get('end')
+    if wav_path and os.path.exists(wav_path):
+        pumpkin_talk.play_audio_with_aplay(
+            wav_path,
+            show_subtitle=True,
+            subtitle_text=FINISH_SUBTITLE,
+            is_final=True
+        )
+
 # ==== Flask API ====
 app_text = Flask(__name__ + '_text')
 pumpkin_talk: Optional[PumpkinTalk] = None
@@ -723,7 +754,7 @@ def main():
     transition_blend = 1.0
 
     threading.Thread(
-        target=lambda: app_text.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False, threaded=True),
+target=lambda: app_text.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False, threaded=True),
         daemon=True
     ).start()
     
@@ -755,11 +786,15 @@ def main():
                         g_state.state = State.ENTRY
                         videos["entry"].current_frame = 0
                         videos["entry"].frame_accumulator = 0.0
+                        # スタート音声を別スレッドで再生
+                        threading.Thread(target=play_start_sound, daemon=True).start()
                 elif event.key == K_l:
                     if g_state.state in [State.NORMAL, State.FULL3, State.FULL6]:
                         g_state.state = State.FINISH
                         videos["finish"].current_frame = 0
                         videos["finish"].frame_accumulator = 0.0
+                        # フィニッシュ音声を別スレッドで再生
+                        threading.Thread(target=play_finish_sound, daemon=True).start()
                 elif event.key == K_LEFT:
                     if g_state.state == State.NORMAL:
                         g_state.state = State.FULL2
