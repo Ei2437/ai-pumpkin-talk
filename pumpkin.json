@@ -66,7 +66,7 @@
   "api": {
     "ollama": {
       "url": "http://sudume.hamako-ths.ed.jp:11434",
-      "model": "gemma3:latest",
+      "model": "gemma3:4b",
       "params": {
         "temperature": 0.7,
         "top_p": 0.95
@@ -90,7 +90,7 @@
     },
     "ollama": {
       "url": "http://sudume.hamako-ths.ed.jp:11434",
-      "model": "gemma3:latest",
+      "model": "gemma3:4b",
       "generation": {
         "temperature": 0.6,
         "top_p": 0.9
