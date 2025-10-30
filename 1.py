@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# ほぼ完成...?
+# セル完成...?
 import os
 import time
 import json
@@ -21,9 +21,27 @@ import tempfile
 from typing import Optional, List, Tuple
 from dataclasses import dataclass
 from enum import Enum
+import logging
+from datetime import datetime, timedelta
 
+# ==== ログ設定 ====
+# Flaskのログを抑制
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
+
+# 標準出力のリダイレクト設定（オプション）
+ENABLE_CONSOLE_OUTPUT = False  # Falseにするとほぼ全てのログを抑制
+
+class QuietLogger:
+    def write(self, msg):
+        if ENABLE_CONSOLE_OUTPUT and msg.strip():
+            sys.__stdout__.write(msg)
+    def flush(self):
+        pass
+
+if not ENABLE_CONSOLE_OUTPUT:
+    sys.stdout = QuietLogger()
+    sys.stderr = QuietLogger()
 
 # ==== 定数群 ====
 @dataclass(frozen=True)
@@ -64,6 +82,12 @@ class SubtitleConfig:
     USER_DISPLAY_TIME: float = 4.0
     USER_SLIDE_DURATION: float = 0.3
     USER_FADE_DURATION: float = 0.4
+
+@dataclass(frozen=True)
+class SystemConfig:
+    TEMP_CLEANUP_INTERVAL: int = 300  # 5分ごとに一時ファイルをクリーンアップ
+    TEMP_FILE_MAX_AGE: int = 3600  # 1時間以上古い一時ファイルを削除
+    LOG_CLEANUP_INTERVAL: int = 600  # 10分ごとにログをクリーンアップ
 
 SOUND_FILES = {str(i): f"sounds/sound{i if i > 0 else '0'}.wav" for i in range(10)}
 SOUND_FILES['1'] = "sounds/OP1.wav"
@@ -110,8 +134,13 @@ class GlobalState:
         self.speaking_lock = threading.Lock()
         self.skip_lock = threading.Lock()
         self.response_lock = threading.Lock()
+        
+        self.temp_files = []  # 一時ファイル管理
+        self.temp_files_lock = threading.Lock()
 
 g_state = GlobalState()
+system_config = SystemConfig()
+
 session = requests.Session()
 adapter = requests.adapters.HTTPAdapter(
     pool_connections=10,
@@ -120,6 +149,53 @@ adapter = requests.adapters.HTTPAdapter(
 )
 session.mount('http://', adapter)
 session.mount('https://', adapter)
+
+# ==== クリーンアップ機能 ====
+def cleanup_temp_files():
+    """定期的に古い一時ファイルを削除"""
+    while True:
+        try:
+            time.sleep(system_config.TEMP_CLEANUP_INTERVAL)
+            
+            temp_dir = tempfile.gettempdir()
+            current_time = time.time()
+            deleted_count = 0
+            
+            # 一時ディレクトリ内のwavファイルをチェック
+            for filename in os.listdir(temp_dir):
+                if filename.endswith('.wav'):
+                    filepath = os.path.join(temp_dir, filename)
+                    try:
+                        # ファイルの更新時刻をチェック
+                        file_age = current_time - os.path.getmtime(filepath)
+                        if file_age > system_config.TEMP_FILE_MAX_AGE:
+                            os.unlink(filepath)
+                            deleted_count += 1
+                    except:
+                        pass
+            
+            # グローバルに追跡している一時ファイルもクリーンアップ
+            with g_state.temp_files_lock:
+                files_to_remove = []
+                for filepath in g_state.temp_files:
+                    if os.path.exists(filepath):
+                        try:
+                            os.unlink(filepath)
+                        except:
+                            pass
+                    files_to_remove.append(filepath)
+                
+                for filepath in files_to_remove:
+                    g_state.temp_files.remove(filepath)
+                    
+        except Exception as e:
+            if ENABLE_CONSOLE_OUTPUT:
+                print(f"[クリーンアップエラー] {e}")
+
+def register_temp_file(filepath: str):
+    """一時ファイルを登録"""
+    with g_state.temp_files_lock:
+        g_state.temp_files.append(filepath)
 
 # ==== Config Loader ====
 class ConfigLoader:
@@ -255,7 +331,8 @@ class PumpkinTalk:
                 g_state.latest_response = full_response
             
         except Exception as e:
-            print(f"[ERROR] Ollama API: {e}")
+            if ENABLE_CONSOLE_OUTPUT:
+                print(f"[ERROR] Ollama API: {e}")
             yield "ちっ、調子が悪いぞ!もう一度話しかけてみろよ!"
 
     def text_to_speech_fast(self, text: str) -> Optional[str]:
@@ -287,10 +364,12 @@ class PumpkinTalk:
             
             with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
                 tmp.write(synthesis_response.content)
+                register_temp_file(tmp.name)
                 return tmp.name
             
         except Exception as e:
-            print(f"[ERROR] VOICEVOX API: {e}")
+            if ENABLE_CONSOLE_OUTPUT:
+                print(f"[ERROR] VOICEVOX API: {e}")
             return None
 
     def get_audio_duration(self, wav_file: str) -> float:
@@ -375,7 +454,8 @@ class PumpkinTalk:
             os.unlink(wav_file)
                 
         except Exception as e:
-            print(f"[ERROR] 音声再生: {e}")
+            if ENABLE_CONSOLE_OUTPUT:
+                print(f"[ERROR] 音声再生: {e}")
         finally:
             if is_final:
                 with g_state.speaking_lock:
@@ -384,7 +464,8 @@ class PumpkinTalk:
                     g_state.a_key_active = False
 
     def process_input_text(self, input_text: str):
-        print(f"[受信] {input_text}")
+        if ENABLE_CONSOLE_OUTPUT:
+            print(f"[受信] {input_text}")
 
         with g_state.skip_lock:
             g_state.skip_flag = False
@@ -395,7 +476,8 @@ class PumpkinTalk:
         
         with g_state.skip_lock:
             if g_state.skip_flag:
-                print("[スキップ] 会話を中断しました")
+                if ENABLE_CONSOLE_OUTPUT:
+                    print("[スキップ] 会話を中断しました")
                 with self.subtitle_queue_lock:
                     self.subtitle_queue.clear()
                 with g_state.subtitle_lock:
@@ -663,7 +745,6 @@ def receive_key_event():
         if key_name == 'q':
             with g_state.skip_lock:
                 g_state.skip_flag = True
-            print("[緊急スキップ受信]")
         pygame.event.post(pygame.event.Event(KEYDOWN, key=key_map[key_name]))
     elif key_name in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
         pygame.event.post(pygame.event.Event(USEREVENT, key=key_name))
@@ -682,13 +763,22 @@ def get_response():
 # ==== main ====
 def main():
     global pumpkin_talk
-    print("初期化中...")
+    
+    # 起動メッセージ（軽量化モード）
+    if ENABLE_CONSOLE_OUTPUT:
+        print("初期化中...")
+    else:
+        sys.__stdout__.write("AI Pumpkin Talk - 起動完了\n")
+        sys.__stdout__.write("ログ出力: 最小化モード\n")
+        sys.__stdout__.flush()
+    
     pumpkin_talk = PumpkinTalk("pumpkin.json")
     pygame.init()
     config = DisplayConfig()
     screen = pygame.display.set_mode((config.WIDTH, config.HEIGHT))
     pygame.display.set_caption("AI_pumpkin_talk")
     clock = pygame.time.Clock()
+    
     try:
         font = pygame.font.Font("ZenKakuGothicNew-Regular.ttf", SubtitleConfig.FONT_SIZE)
         user_font = pygame.font.Font("ZenKakuGothicNew-Regular.ttf", SubtitleConfig.USER_FONT_SIZE)
@@ -698,7 +788,7 @@ def main():
 
     cap_bg = cv2.VideoCapture(config.BG_VIDEO_PATH)
     if not cap_bg.isOpened():
-        print("[ERROR] 背景動画が開けません")
+        sys.__stderr__.write("[ERROR] 背景動画が開けません\n")
         sys.exit()
     
     ret_bg, frame_bg = cap_bg.read()
@@ -725,6 +815,7 @@ def main():
     float_offset_y = 0.0
     transition_blend = 1.0
 
+    # Flask APIサーバー起動
     threading.Thread(
         target=lambda: app_text.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False, threaded=True),
         daemon=True
@@ -740,8 +831,16 @@ def main():
         daemon=True
     ).start()
     
+    # クリーンアップスレッド起動
+    threading.Thread(target=cleanup_temp_files, daemon=True).start()
+    
     time.sleep(1)
-    print("起動完了(ストリーミングモード + 緊急スキップ対応)")
+    
+    if ENABLE_CONSOLE_OUTPUT:
+        print("起動完了(ストリーミングモード + 緊急スキップ対応)")
+    else:
+        sys.__stdout__.write("システム準備完了\n")
+        sys.__stdout__.flush()
 
     while True:
         t = pygame.time.get_ticks()
@@ -776,7 +875,6 @@ def main():
                 elif event.key == K_q:
                     with g_state.skip_lock:
                         g_state.skip_flag = True
-                    print("[ローカルスキップ実行]")
             elif event.type == USEREVENT:
                 key_num = event.key
                 if key_num in SOUND_FILES:
@@ -785,6 +883,7 @@ def main():
                         def play_sound():
                             pumpkin_talk.play_audio_with_aplay(wav_path)
                         threading.Thread(target=play_sound, daemon=True).start()
+        
         if bg_counter % config.BACK_SPEED_SKIP == 0:
             ret_bg, frame_bg = cap_bg.read()
             if not ret_bg:
@@ -800,6 +899,7 @@ def main():
             "RGB"
         )
         screen.blit(bg_surf, (0, 0))
+        
         base_float_x, base_float_y = float_motion(t, seed=1)
         is_transitioning = g_state.state in [State.FULL2, State.FULL4, State.FULL5, State.FULL7]
         if is_transitioning:
@@ -810,6 +910,7 @@ def main():
         float_offset_y = base_float_y * transition_blend
         dx = int(float_offset_x)
         dy = int(float_offset_y)
+        
         if g_state.state == State.IDLE:
             pass
             
@@ -903,6 +1004,7 @@ def main():
                 videos["full7"].frame_accumulator = 0.0
                 g_state.state = State.NORMAL
                 transition_blend = 0.0
+        
         draw_subtitle(screen, font)
         draw_user_subtitle(screen, user_font)
         pygame.display.flip()
