@@ -4,7 +4,7 @@ import numpy as np
 import sounddevice as sd
 import speech_recognition as sr
 import keyboard
-from threading import Thread, Lock
+from threading import Thread, Lock, Event
 import time
 import sys
 from typing import Optional
@@ -20,7 +20,8 @@ class ServerConfig:
     TIMEOUT_KEY: float = 0.3
     TIMEOUT_TEXT: float = 2.0
     TIMEOUT_MONITOR: float = 1.0
-    MONITOR_INTERVAL: float = 0.3
+    MONITOR_INTERVAL: float = 1.5  # 3回/秒 → 0.67回/秒に変更
+    MONITOR_IDLE_INTERVAL: float = 3.0  # アイドル時はさらに間隔を広げる
 
 # ==== グローバル状態 ====
 class GlobalState:
@@ -31,6 +32,8 @@ class GlobalState:
         self.stream: Optional[sd.InputStream] = None
         self.monitoring = True
         self.last_response = ""
+        self.is_speaking = False  # サーバーが話している状態
+        self.speaking_check_event = Event()  # 話し中検知用
 
 g_state = GlobalState()
 config = ServerConfig()
@@ -111,12 +114,23 @@ def send_text(text: str):
             timeout=config.TIMEOUT_TEXT
         )
         print_send_complete(text)
+        # テキスト送信したら話し中フラグを立てる
+        g_state.is_speaking = True
+        g_state.speaking_check_event.set()
     except Exception as e:
         print_error(f"送信失敗: {e}")
 
 def monitor_responses():
+    consecutive_same_count = 0
+    
     while g_state.monitoring:
         try:
+            # 話し中は短い間隔、アイドル時は長い間隔
+            if g_state.is_speaking:
+                wait_time = config.MONITOR_INTERVAL
+            else:
+                wait_time = config.MONITOR_IDLE_INTERVAL
+            
             response = session.get(
                 config.MONITOR_URL,
                 timeout=config.TIMEOUT_MONITOR
@@ -128,11 +142,18 @@ def monitor_responses():
                 if current_response and current_response != g_state.last_response:
                     print_response(current_response)
                     g_state.last_response = current_response
+                    consecutive_same_count = 0
+                    g_state.is_speaking = False  # 応答取得完了
+                elif current_response == g_state.last_response:
+                    consecutive_same_count += 1
+                    # 同じ応答が5回続いたらアイドル状態と判断
+                    if consecutive_same_count >= 5:
+                        g_state.is_speaking = False
                     
         except:
             pass
         
-        time.sleep(config.MONITOR_INTERVAL)
+        time.sleep(wait_time)
 
 # ==== キー処理 ====
 def on_key(event):
