@@ -20,8 +20,9 @@ class ServerConfig:
     TIMEOUT_KEY: float = 0.3
     TIMEOUT_TEXT: float = 2.0
     TIMEOUT_MONITOR: float = 1.0
-    MONITOR_INTERVAL: float = 1.5  # 3回/秒 → 0.67回/秒に変更
-    MONITOR_IDLE_INTERVAL: float = 3.0  # アイドル時はさらに間隔を広げる
+    MONITOR_INTERVAL: float = 1.5
+    MONITOR_IDLE_INTERVAL: float = 3.0
+    KEY_COOLDOWN: float = 1.0  # アルファベット・数字キーのクールダウン時間（秒）
 
 # ==== グローバル状態 ====
 class GlobalState:
@@ -32,8 +33,10 @@ class GlobalState:
         self.stream: Optional[sd.InputStream] = None
         self.monitoring = True
         self.last_response = ""
-        self.is_speaking = False  # サーバーが話している状態
-        self.speaking_check_event = Event()  # 話し中検知用
+        self.is_speaking = False
+        self.speaking_check_event = Event()
+        self.last_key_time = {}  # キーごとの最終入力時刻を記録
+        self.key_lock = Lock()  # キー入力のロック
 
 g_state = GlobalState()
 config = ServerConfig()
@@ -54,8 +57,10 @@ def print_header():
     print("\n【操作方法】")
     print("  Space      : 音声録音")
     print("  Q          : 緊急スキップ")
+    print("  P          : ブザー音")
     print("  Left/Right : モーション")
     print("  A/K/L/数字 : その他キー送信")
+    print("  ※アルファベット・数字キーは1秒に1回まで")
     print("=" * 70 + "\n")
 
 def print_recording_start():
@@ -67,7 +72,6 @@ def print_recognition(text: str):
 def print_send_complete(text: str):
     print(f"送信完了")
 def print_response(text: str):
-    # 長い応答の場合は折り返し
     max_width = 70
     lines = []
     current_line = ""
@@ -103,6 +107,8 @@ def send_key(key: str):
         )
         if key == 'q':
             print("\n緊急スキップ送信")
+        elif key == 'p':
+            print("\nブザー音送信")
     except:
         pass
 
@@ -114,7 +120,6 @@ def send_text(text: str):
             timeout=config.TIMEOUT_TEXT
         )
         print_send_complete(text)
-        # テキスト送信したら話し中フラグを立てる
         g_state.is_speaking = True
         g_state.speaking_check_event.set()
     except Exception as e:
@@ -125,7 +130,6 @@ def monitor_responses():
     
     while g_state.monitoring:
         try:
-            # 話し中は短い間隔、アイドル時は長い間隔
             if g_state.is_speaking:
                 wait_time = config.MONITOR_INTERVAL
             else:
@@ -143,10 +147,9 @@ def monitor_responses():
                     print_response(current_response)
                     g_state.last_response = current_response
                     consecutive_same_count = 0
-                    g_state.is_speaking = False  # 応答取得完了
+                    g_state.is_speaking = False
                 elif current_response == g_state.last_response:
                     consecutive_same_count += 1
-                    # 同じ応答が5回続いたらアイドル状態と判断
                     if consecutive_same_count >= 5:
                         g_state.is_speaking = False
                     
@@ -156,12 +159,34 @@ def monitor_responses():
         time.sleep(wait_time)
 
 # ==== キー処理 ====
+def check_key_cooldown(key: str) -> bool:
+    """キーのクールダウンをチェック（アルファベットと数字キーのみ）"""
+    # クールダウン対象のキー
+    cooldown_keys = ['a', 'k', 'l', 'p', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+    
+    if key not in cooldown_keys:
+        return True  # クールダウン対象外は常にOK
+    
+    with g_state.key_lock:
+        current_time = time.time()
+        last_time = g_state.last_key_time.get(key, 0)
+        
+        if current_time - last_time < config.KEY_COOLDOWN:
+            return False  # クールダウン中
+        
+        g_state.last_key_time[key] = current_time
+        return True
+
 def on_key(event):
     if event.event_type != keyboard.KEY_DOWN:
         return
     
     key = event.name
-    if key in ['left', 'right', 'a', 'k', 'l', 'q', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
+    if key in ['left', 'right', 'a', 'k', 'l', 'p', 'q', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
+        # クールダウンチェック
+        if not check_key_cooldown(key):
+            return  # クールダウン中は無視
+        
         Thread(target=send_key, args=(key,), daemon=True).start()
 
 # ==== 音声処理 ====

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# ほぼ完成...?
+# セミ完成...?
 import os
 import time
 import json
@@ -67,36 +67,38 @@ class SubtitleConfig:
 @dataclass(frozen=True)
 class MotionSoundConfig:
     START_SOUND: str = "sounds/start.wav"
-    START_SUBTITLE: str = "はーっはっはっはっ！お前ら、待たせたな！俺様がパンプキンだ！"
+    START_SUBTITLE: str = "はーっくっくっく!お前ら、待たせたな!俺様がパンプキンだ!"
     START_DELAY: float = 3.0
     
     END_SOUND: str = "sounds/end.wav"
     END_SUBTITLE: str = "残念だが、そろそろ時間だ。まぁ、多少は楽しかったぞ。せいぜい気を付けて帰れよ。じゃあな。"
     END_DELAY: float = 7.4
+    
+    BUZZER_SOUND: str = "sounds/ブザー.wav"  # ブザー音追加
 
 SOUND_FILES = {
     '1': [
-        {"path": "sounds/始め1.wav", "subtitle": "お前ら、なんだか俺様と話したそうな顔してるな。まぁ、俺様の今日は気分がいいんだ。質問に答えてやろう。質問があるやつは手を挙げな！何人かの話を聞いてやる。"},
-        {"path": "sounds/始め2.wav", "subtitle": "よぉ、お前ら。俺様の輝かしい姿を一目見ようと、ずいぶん早くから並んでたんだろ？まぁ、気持ちはわかるぜ。今日は特別にお前らと話してやる。質問したいやつ、遠慮すんな。指名してやるから、精一杯手をあげろ！"},
-        {"path": "sounds/始め3.wav", "subtitle": "ハハッ、今回も満員御礼ってわけか。さすが俺様だな。お前ら、ラッキーだぜ？今日の俺様は上機嫌なんだ。この貴重な時間を無駄にしたくねぇだろ？質問があるやつは今のうちだ。何人か選んでやるから、全力で手をあげな！"}
+        {"path": "sounds/始め1.wav", "subtitle": "お前ら、なんだか俺様と話したそうな顔してるな。まぁ、俺様の今日は気分がいいんだ。質問に答えてやろう。質問がある奴は手を挙げな!何人かの話を聞いてやる。"},
+        {"path": "sounds/始め2.wav", "subtitle": "よぉ、お前ら。俺様の輝かしい姿を一目見ようと、ずいぶん早くから並んでたんだろ?まぁ、気持ちはわかるぜ。今日は特別にお前らと話してやる。質問したい奴、遠慮すんな。指名してやるから、精一杯手をあげろ!"},
+        {"path": "sounds/始め3.wav", "subtitle": "ハハッ、今回も満員御礼ってわけか。さすが俺様だな。お前ら、ラッキーだぜ!?今日の俺様は上機嫌なんだ。この貴重な時間を無駄にしたくねぇだろ?質問がある奴は今のうちだ。何人か選んでやるから、全力で手をあげな!"}
     ],
     '2': [
-        {"path": "sounds/質問催促1.wav", "subtitle": "おいおい、黙りこくってんじゃねぇよ。せっかく俺様が時間を割いてやってんのに、もったいねぇだろ？質問がないなら、お前らの魂、いただいちまうぞ？俺様の腹も減ってきたしな。ほら、早く手を挙げろ。それとも、食われる方がいいってのか？"},
-        {"path": "sounds/質問催促2.wav", "subtitle": "誰も手を挙げねぇのか。シャイなやつらだな。いいか、俺様の機嫌がいいうちに質問しとけ。このチャンスを逃したら…ククク、お前らの魂が俺様のディナーになるだけだ。美味そうな魂してんなぁ、お前ら。ほら、勇気出せよ？"},
-        {"path": "sounds/質問催促3.wav", "subtitle": "なんだなんだ、緊張してんのか？それとも俺様が怖いのか？ハハッ、正解だ。でもな、質問しねぇ方がもっと怖いことになるぜ？俺様、さっきから何人か目をつけてんだ。魂の味見、させてもらおうかな…って。嫌なら今すぐ質問しな！"}
+        {"path": "sounds/質問催促1.wav", "subtitle": "おいおい、黙りこくってんじゃねぇよ。せっかく俺様が時間を割いてやってんのに、もったいねぇだろ!?質問がないなら、お前らの魂、いただいちまうぞ!?俺様の腹も減ってきたしな。ほら、早く手を挙げろ。それとも、食われる方がいいってのか!?"},
+        {"path": "sounds/質問催促2.wav", "subtitle": "誰も手を挙げねぇのか。シャイな奴らだな。いいか、俺様の機嫌がいいうちに質問しとけ。このチャンスを逃したら…ククク、お前らの魂が俺様のディナーになるだけだ。美味そうな魂してんなぁ、お前ら。ほら、勇気出せよ!?"},
+        {"path": "sounds/質問催促3.wav", "subtitle": "なんだなんだ、緊張してんのか!?それとも俺様が怖いのか!?ハハッ、正解だ。でもな、質問しねぇ方がもっと怖いことになるぜ!?俺様、さっきから何人か目をつけてんだ。魂の味見、させてもらおうかな…って。嫌なら今すぐ質問しな!"}
     ],
     '3': [
-        {"path": "sounds/時間つぶし1.wav", "subtitle": "質問がねぇなら、俺様からも話をしようかな。今日はいい日だよな。お前らは今日のことを「はろうぃん」って呼ぶんだろ？おかげで人間の魂がたくさん集まるんだ。魂は、俺様の好物の一つなんだ。お前らの魂も、なかなかうまそうだぞ...？"},
-        {"path": "sounds/時間つぶし2.wav", "subtitle": "おっと、シーンとしちまったな。じゃあ俺様がサービスで話してやるか。最近気づいたんだが、お前ら人間ってのは面白いよな。毎日毎日、同じことの繰り返しで生きてる癖に、「退屈だ」なんて文句垂れやがる。俺様に言わせりゃ、退屈なのはお前らの頭の中身だ。ま、だからこそ俺様のショーに救いを求めて来るんだろうけどな。感謝しろよ？"},
-        {"path": "sounds/時間つぶし3.wav", "subtitle": "質問はもうないのか？つまんねぇな。まぁいい、特別に俺様の話を聞かせてやる。この世界にはな、二種類の人間しかいねぇんだ。俺様みたいに頂点に立つやつと、お前らみたいに下から見上げるやつだ。でもな、安心しろ。下にいるからこそ、上の景色に憧れられる。その憧れが、お前らを生かしてんだ。感謝の言葉は受け付けねぇからな。"}
+        {"path": "sounds/時間つぶし1.wav", "subtitle": "質問がねぇなら、俺様からも話をしようかな。今日はいい日だよな。お前らは今日のことを、「はろうぃん」って呼ぶんだろ?おかげで人間の魂がたくさん集まるんだ。魂は、俺様の好物の一つなんだ。お前らの魂も、なかなかうまそうだぞ...!?"},
+        {"path": "sounds/時間つぶし2.wav", "subtitle": "おっと、シーンとしちまったな。じゃぁ俺様がサービスで話してやるか。最近気づいたんだが、お前ら人間ってのは面白いよな。毎日毎日、同じことの繰り返しで生きてる癖に、「退屈だ」なんて文句垂れやがる。俺様に言わせりゃ、退屈なのはお前らの頭の中身だ。ま、だからこそ俺様のショーに救いを求めて来るんだろうけどな。感謝しろよ!?"},
+        {"path": "sounds/時間つぶし3.wav", "subtitle": "質問はもうないのか!?つまんねぇな。まぁいい、特別に俺様の話を聞かせてやる。この世界にはな、二種類の人間しかいねぇんだ。俺様みたいに頂点に立つ奴と、お前らみたいに下から見上げる奴だ。でもな、安心しろ。下にいるからこそ、上の景色に憧れられる。その憧れが、お前らを生かしてんだ。感謝の言葉は受け付けねぇからな。"}
     ],
     '4': [
-        {"path": "sounds/OP4.wav", "subtitle": "4番選んだのか？\n面白い選択だぜ。"},
+        {"path": "sounds/OP4.wav", "subtitle": "4番選んだのか!?\n面白い選択だぜ。"},
         {"path": "sounds/OP4_2.wav", "subtitle": "4番か。\n四つ目も捨てたもんじゃねえ。"},
-        {"path": "sounds/OP4_3.wav", "subtitle": "よし、4番だな！\nいい感じだぜ。"}
+        {"path": "sounds/OP4_3.wav", "subtitle": "よし、4番だな!\nいい感じだぜ。"}
     ],
     '5': [
-        {"path": "sounds/OP5.wav", "subtitle": "5番だと？\nちょうど真ん中じゃねえか。"},
+        {"path": "sounds/OP5.wav", "subtitle": "5番だと!?\nちょうど真ん中じゃねぇか。"},
         {"path": "sounds/OP5_2.wav", "subtitle": "5番ね。\nバランス取れてるな。"},
         {"path": "sounds/OP5_3.wav", "subtitle": "5番選んだか。\n中間地点ってやつだな。"}
     ],
@@ -107,13 +109,13 @@ SOUND_FILES = {
     '0': "sounds/sound0.wav"
 }
 
-# 6-0の字幕設定（単一音声用）
+# 6-0の字幕設定(単一音声用)
 SOUND_SUBTITLES = {
     '6': "6番ね。\nいい感じだな。",
-    '7': "ラッキーセブン！\n縁起がいいぜ！",
+    '7': "ラッキーセブン!\n縁起がいいぜ!",
     '8': "8番か。\n末広がりでいいな。",
-    '9': "9番だと？\n最後の方じゃねえか。",
-    '0': "0番？\nゼロから始めるってか？"
+    '9': "9番だと!?\n最後の方じゃねぇか。",
+    '0': "0番!?\nゼロから始まるってか!?"
 }
 
 # ==== State ====
@@ -191,7 +193,7 @@ class ConfigLoader:
         return self.config.get("advanced", {})
 
 class PumpkinTalk:
-    SENTENCE_SPLITTER = re.compile(r'([。！？!?])')
+    SENTENCE_SPLITTER = re.compile(r'([。!?!?])')
     
     def __init__(self, config_path: str = "pumpkin.json"):
         self.config_loader = ConfigLoader(config_path)
@@ -221,7 +223,7 @@ class PumpkinTalk:
         
         for part in parts:
             temp += part
-            if part in ['。', '！', '？', '!', '?']:
+            if part in ['。', '!', '?', '!', '?']:
                 if temp.strip():
                     sentences.append(temp.strip())
                     temp = ""
@@ -271,7 +273,7 @@ class PumpkinTalk:
                             buffer += token
                             full_response += token
                             
-                            if token in ['。', '！', '？', '!', '?', '\n']:
+                            if token in ['。', '!', '?', '!', '?', '\n']:
                                 if buffer.strip():
                                     sentence = self.filter_response(buffer.strip())
                                     if sentence:
@@ -674,7 +676,7 @@ def play_motion_sound(sound_path: str, subtitle_text: str, pumpkin_talk_instance
             # 音声の長さを取得
             duration = pumpkin_talk_instance.get_audio_duration(sound_path)
             
-            # 字幕表示（通常の応答と同じ方式で）
+            # 字幕表示(通常の応答と同じ方式で)
             pumpkin_talk_instance.display_subtitle_gradually(subtitle_text, duration)
             
             # 音声再生
@@ -686,6 +688,27 @@ def play_motion_sound(sound_path: str, subtitle_text: str, pumpkin_talk_instance
             )
         except Exception as e:
             print(f"[ERROR] モーション音声再生: {e}")
+    
+    threading.Thread(target=play, daemon=True).start()
+
+# ==== ブザー音再生 ====
+def play_buzzer_sound(sound_path: str):
+    """ブザー音を再生(字幕なし)"""
+    if not os.path.exists(sound_path):
+        print(f"[WARNING] ブザー音ファイルが見つかりません: {sound_path}")
+        return
+    
+    def play():
+        try:
+            subprocess.run(
+                ["aplay", "-q", sound_path],
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            print("[ブザー音再生完了]")
+        except Exception as e:
+            print(f"[ERROR] ブザー音再生: {e}")
     
     threading.Thread(target=play, daemon=True).start()
 
@@ -718,7 +741,7 @@ def receive_key_event():
     data = request.get_json()
     key_name = data.get("key")
     
-    print(f"[API受信] key={key_name}")  # デバッグ用
+    print(f"[API受信] key={key_name}")
 
     key_map = {
         'left': K_LEFT,
@@ -726,7 +749,8 @@ def receive_key_event():
         'a': K_a,
         'k': K_k,
         'l': K_l,
-        'q': K_q
+        'q': K_q,
+        'p': K_p  # pキー追加
     }
     
     if key_name in key_map:
@@ -734,21 +758,23 @@ def receive_key_event():
             with g_state.skip_lock:
                 g_state.skip_flag = True
             print("[緊急スキップ受信]")
+        elif key_name == 'p':
+            # ブザー音再生
+            motion_config = MotionSoundConfig()
+            play_buzzer_sound(motion_config.BUZZER_SOUND)
+            print("[ブザー音受信]")
         pygame.event.post(pygame.event.Event(KEYDOWN, key=key_map[key_name]))
         return jsonify({"status": "success"}), 200
     elif key_name in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
-        # 数字キーは直接処理（USEREVENTではなく、直接音声再生）
         print(f"[数字キー受信] {key_name}")
         
         if key_name in SOUND_FILES:
             sound_data = SOUND_FILES[key_name]
             
-            # 複数音声対応(1-5)
             if isinstance(sound_data, list):
                 selected = random.choice(sound_data)
                 wav_path = selected["path"]
                 subtitle = selected["subtitle"]
-            # 単一音声(6-0)
             else:
                 wav_path = sound_data
                 subtitle = SOUND_SUBTITLES.get(key_name, "")
@@ -783,8 +809,6 @@ def get_response():
         return jsonify({"response": g_state.latest_response})
 
 # ==== main ====
-# main関数のwhileループ部分を以下のように修正してください
-
 def main():
     global pumpkin_talk
     print("初期化中...")
@@ -851,7 +875,7 @@ def main():
     ).start()
     
     time.sleep(1)
-    print("起動完了(ストリーミングモード + 緊急スキップ対応)")
+    print("起動完了(ストリーミングモード + 緊急スキップ対応 + ブザー音対応)")
 
     while True:
         t = pygame.time.get_ticks()
@@ -875,6 +899,10 @@ def main():
                         motion_waiting = True
                         motion_wait_start = time.time()
                         motion_wait_target_state = State.FINISH
+                elif event.key == K_p:
+                    # ブザー音再生
+                    play_buzzer_sound(motion_config.BUZZER_SOUND)
+                    print("[ローカルブザー音実行]")
                 elif event.key == K_LEFT:
                     if g_state.state == State.NORMAL:
                         g_state.state = State.FULL2
@@ -889,7 +917,6 @@ def main():
                     with g_state.skip_lock:
                         g_state.skip_flag = True
                     print("[ローカルスキップ実行]")
-                # 数字キーの処理を追加
                 elif event.key in [K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9, K_0]:
                     key_map = {
                         K_1: '1', K_2: '2', K_3: '3', K_4: '4', K_5: '5',
@@ -901,12 +928,10 @@ def main():
                     if key_num in SOUND_FILES:
                         sound_data = SOUND_FILES[key_num]
                         
-                        # 複数音声対応(1-5)
                         if isinstance(sound_data, list):
                             selected = random.choice(sound_data)
                             wav_path = selected["path"]
                             subtitle = selected["subtitle"]
-                        # 単一音声(6-0)
                         else:
                             wav_path = sound_data
                             subtitle = SOUND_SUBTITLES.get(key_num, "")
@@ -925,7 +950,6 @@ def main():
                         else:
                             print(f"[エラー] 音声ファイルが見つかりません: {wav_path}")
             elif event.type == USEREVENT:
-                # 2.pyからの数字キー送信用（互換性のため残す）
                 key_num = event.key
                 print(f"[USEREVENT数字キー検出] {key_num}")
                 
