@@ -143,15 +143,6 @@ class GlobalState:
         self.user_subtitle_active = False
         self.latest_response = ""
         
-        # 各キーの再生インデックスを管理
-        self.sound_indices = {
-            '1': 0,
-            '2': 0,
-            '3': 0,
-            '4': 0,
-            '5': 0
-        }
-        
         self.audio_lock = threading.Lock()
         self.subtitle_lock = threading.Lock()
         self.user_subtitle_lock = threading.Lock()
@@ -159,155 +150,45 @@ class GlobalState:
         self.skip_lock = threading.Lock()
         self.response_lock = threading.Lock()
 
+g_state = GlobalState()
+session = requests.Session()
+adapter = requests.adapters.HTTPAdapter(
+    pool_connections=10,
+    pool_maxsize=20,
+    max_retries=3
+)
+session.mount('http://', adapter)
+session.mount('https://', adapter)
 
-# Flask APIのreceive_key_event関数を修正
-@app_key.route('/key_event', methods=['POST'])
-def receive_key_event():
-    data = request.get_json()
-    key_name = data.get("key")
+# ==== Config Loader ====
+class ConfigLoader:
+    def __init__(self, config_path: str = "pumpkin.json"):
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"設定ファイルが見つかりません: {config_path}")
+        
+        with open(config_path, "r", encoding="utf-8") as f:
+            self.config = json.load(f)
     
-    print(f"[API受信] key={key_name}")
-
-    key_map = {
-        'left': K_LEFT,
-        'right': K_RIGHT,
-        'a': K_a,
-        'k': K_k,
-        'l': K_l,
-        'q': K_q
-    }
+    def get_character_prompt(self) -> str:
+        char = self.config["character"]
+        knowledge_dict = self.config.get("knowledge", {})
+        knowledge_str = "\n".join(
+            f"\n【{category}】\n" + "\n".join(items)
+            for category, items in knowledge_dict.items()
+        )
+        return char["prompt"].format(knowledge=knowledge_str)
     
-    if key_name in key_map:
-        if key_name == 'q':
-            with g_state.skip_lock:
-                g_state.skip_flag = True
-            print("[緊急スキップ受信]")
-        pygame.event.post(pygame.event.Event(KEYDOWN, key=key_map[key_name]))
-        return jsonify({"status": "success"}), 200
-    elif key_name in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
-        print(f"[数字キー受信] {key_name}")
-        
-        if key_name in SOUND_FILES:
-            sound_data = SOUND_FILES[key_name]
-            
-            # 複数音声対応(1-5) - ランダムではなく順番に選択
-            if isinstance(sound_data, list):
-                # 現在のインデックスを取得
-                current_index = g_state.sound_indices[key_name]
-                selected = sound_data[current_index]
-                
-                # 次回用にインデックスを更新（循環）
-                g_state.sound_indices[key_name] = (current_index + 1) % len(sound_data)
-                
-                wav_path = selected["path"]
-                subtitle = selected["subtitle"]
-            # 単一音声(6-0)
-            else:
-                wav_path = sound_data
-                subtitle = SOUND_SUBTITLES.get(key_name, "")
-            
-            print(f"[音声ファイル] {wav_path}")
-            if os.path.exists(wav_path):
-                def play_number_sound():
-                    pumpkin_talk.play_audio_with_aplay(
-                        wav_path,
-                        show_subtitle=True,
-                        subtitle_text=subtitle,
-                        is_final=True,
-                        delete_after=False
-                    )
-                threading.Thread(target=play_number_sound, daemon=True).start()
-                return jsonify({"status": "success"}), 200
-            else:
-                print(f"[エラー] 音声ファイルが見つかりません: {wav_path}")
-                return jsonify({"status": "error", "message": "sound file not found"}), 404
-        else:
-            return jsonify({"status": "error", "message": "invalid key"}), 400
-    else:
-        return jsonify({"status": "error", "message": "unknown key"}), 400
-
-    return jsonify({"status": "success"})
-
-
-# メインループ内のキーイベント処理部分を修正
-# event.key in [K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9, K_0]の箇所
-elif event.key in [K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9, K_0]:
-    key_map = {
-        K_1: '1', K_2: '2', K_3: '3', K_4: '4', K_5: '5',
-        K_6: '6', K_7: '7', K_8: '8', K_9: '9', K_0: '0'
-    }
-    key_num = key_map[event.key]
-    print(f"[数字キー検出] {key_num}")
+    def get_ollama_config(self) -> dict:
+        return self.config["api"]["ollama"]
     
-    if key_num in SOUND_FILES:
-        sound_data = SOUND_FILES[key_num]
-        
-        # 複数音声対応(1-5) - ランダムではなく順番に選択
-        if isinstance(sound_data, list):
-            # 現在のインデックスを取得
-            current_index = g_state.sound_indices[key_num]
-            selected = sound_data[current_index]
-            
-            # 次回用にインデックスを更新（循環）
-            g_state.sound_indices[key_num] = (current_index + 1) % len(sound_data)
-            
-            wav_path = selected["path"]
-            subtitle = selected["subtitle"]
-        # 単一音声(6-0)
-        else:
-            wav_path = sound_data
-            subtitle = SOUND_SUBTITLES.get(key_num, "")
-        
-        print(f"[音声ファイル] {wav_path}")
-        if os.path.exists(wav_path):
-            def play_number_sound():
-                pumpkin_talk.play_audio_with_aplay(
-                    wav_path,
-                    show_subtitle=True,
-                    subtitle_text=subtitle,
-                    is_final=True,
-                    delete_after=False
-                )
-            threading.Thread(target=play_number_sound, daemon=True).start()
-        else:
-            print(f"[エラー] 音声ファイルが見つかりません: {wav_path}")
-
-
-# USEREVENTの処理部分も同様に修正
-elif event.type == USEREVENT:
-    key_num = event.key
-    print(f"[USEREVENT数字キー検出] {key_num}")
+    def get_voicevox_config(self) -> dict:
+        return self.config["api"]["voicevox"]
     
-    if key_num in SOUND_FILES:
-        sound_data = SOUND_FILES[key_num]
-        
-        if isinstance(sound_data, list):
-            # 現在のインデックスを取得
-            current_index = g_state.sound_indices[key_num]
-            selected = sound_data[current_index]
-            
-            # 次回用にインデックスを更新（循環）
-            g_state.sound_indices[key_num] = (current_index + 1) % len(sound_data)
-            
-            wav_path = selected["path"]
-            subtitle = selected["subtitle"]
-        else:
-            wav_path = sound_data
-            subtitle = SOUND_SUBTITLES.get(key_num, "")
-        
-        print(f"[音声ファイル] {wav_path}")
-        if os.path.exists(wav_path):
-            def play_number_sound():
-                pumpkin_talk.play_audio_with_aplay(
-                    wav_path,
-                    show_subtitle=True,
-                    subtitle_text=subtitle,
-                    is_final=True,
-                    delete_after=False
-                )
-            threading.Thread(target=play_number_sound, daemon=True).start()
-        else:
-            print(f"[エラー] 音声ファイルが見つかりません: {wav_path}")
+    def get_system_config(self) -> dict:
+        return self.config.get("system", {})
+    
+    def get_advanced_config(self) -> dict:
+        return self.config.get("advanced", {})
 
 class PumpkinTalk:
     SENTENCE_SPLITTER = re.compile(r'([。！？!?])')
