@@ -18,6 +18,7 @@ import threading
 import wave
 import re
 import tempfile
+import random
 from typing import Optional, List, Tuple
 from dataclasses import dataclass
 from enum import Enum
@@ -73,25 +74,41 @@ class MotionSoundConfig:
     END_SUBTITLE: str = "なんだ、もう帰るのか？まぁ、多少は楽しかったぞ。せいぜい気を付けて帰れよ。じゃあな。"
     END_DELAY: float = 7.2
 
-SOUND_FILES = {str(i): f"sounds/sound{i if i > 0 else '0'}.wav" for i in range(10)}
-SOUND_FILES['1'] = "sounds/OP1.wav"
-SOUND_FILES['2'] = "sounds/OP1.wav"
-SOUND_FILES['3'] = "sounds/OP1.wav"
-SOUND_FILES['4'] = "sounds/OP1.wav"
-SOUND_FILES['5'] = "sounds/OP1.wav"
-SOUND_FILES['6'] = "sounds/OP1.wav"
-SOUND_FILES['7'] = "sounds/OP1.wav"
-SOUND_FILES['8'] = "sounds/OP1.wav"
-SOUND_FILES['9'] = "sounds/OP1.wav"
-SOUND_FILES['0'] = "sounds/OP1.wav"
+SOUND_FILES = {
+    '1': [
+        {"path": "sounds/質問催促1.wav", "subtitle": "おっ、1番だな！\n気合い入れていくぜ！"},
+        {"path": "sounds/OP1_2.wav", "subtitle": "1番か。\n最初が肝心だからな。"},
+        {"path": "sounds/OP1_3.wav", "subtitle": "よし、1番！\nトップバッターだぜ！"}
+    ],
+    '2': [
+        {"path": "sounds/OP2.wav", "subtitle": "2番か。\nまあ悪くないな。"},
+        {"path": "sounds/OP2_2.wav", "subtitle": "2番目ってことか。\nセカンドもいいもんだぜ。"},
+        {"path": "sounds/OP2_3.wav", "subtitle": "2番選んだのか？\nなかなかだな。"}
+    ],
+    '3': [
+        {"path": "sounds/OP3.wav", "subtitle": "3番目ってところか。\nそこそこだな。"},
+        {"path": "sounds/OP3_2.wav", "subtitle": "3番だと？\n三番手も悪くねえぞ。"},
+        {"path": "sounds/OP3_3.wav", "subtitle": "3番ね。\nまあまあってとこか。"}
+    ],
+    '4': [
+        {"path": "sounds/OP4.wav", "subtitle": "4番選んだのか？\n面白い選択だぜ。"},
+        {"path": "sounds/OP4_2.wav", "subtitle": "4番か。\n四つ目も捨てたもんじゃねえ。"},
+        {"path": "sounds/OP4_3.wav", "subtitle": "よし、4番だな！\nいい感じだぜ。"}
+    ],
+    '5': [
+        {"path": "sounds/OP5.wav", "subtitle": "5番だと？\nちょうど真ん中じゃねえか。"},
+        {"path": "sounds/OP5_2.wav", "subtitle": "5番ね。\nバランス取れてるな。"},
+        {"path": "sounds/OP5_3.wav", "subtitle": "5番選んだか。\n中間地点ってやつだな。"}
+    ],
+    '6': "sounds/sound6.wav",
+    '7': "sounds/sound7.wav",
+    '8': "sounds/sound8.wav",
+    '9': "sounds/sound9.wav",
+    '0': "sounds/sound0.wav"
+}
 
-# 数字キーの字幕設定
+# 6-0の字幕設定（単一音声用）
 SOUND_SUBTITLES = {
-    '1': "おっ、1番だな！\n気合い入れていくぜ！",
-    '2': "2番か。\nまあ悪くないな。",
-    '3': "3番目ってところか。\nそこそこだな。",
-    '4': "4番選んだのか？\n面白い選択だぜ。",
-    '5': "5番だと？\nちょうど真ん中じゃねえか。",
     '6': "6番ね。\nいい感じだな。",
     '7': "ラッキーセブン！\n縁起がいいぜ！",
     '8': "8番か。\n末広がりでいいな。",
@@ -841,8 +858,19 @@ def main():
             elif event.type == USEREVENT:
                 key_num = event.key
                 if key_num in SOUND_FILES:
-                    wav_path = SOUND_FILES[key_num]
-                    subtitle = SOUND_SUBTITLES.get(key_num, "")
+                    sound_data = SOUND_FILES[key_num]
+                    
+                    # 複数音声対応（1-5）
+                    if isinstance(sound_data, list):
+                        # ランダムに選択
+                        selected = random.choice(sound_data)
+                        wav_path = selected["path"]
+                        subtitle = selected["subtitle"]
+                    # 単一音声（6-0）
+                    else:
+                        wav_path = sound_data
+                        subtitle = SOUND_SUBTITLES.get(key_num, "")
+                    
                     if os.path.exists(wav_path):
                         def play_number_sound():
                             # is_final=Trueで音声再生後にa_key_activeをオフ
