@@ -717,6 +717,8 @@ app_key = Flask(__name__ + '_key')
 def receive_key_event():
     data = request.get_json()
     key_name = data.get("key")
+    
+    print(f"[API受信] key={key_name}")  # デバッグ用
 
     key_map = {
         'left': K_LEFT,
@@ -733,10 +735,43 @@ def receive_key_event():
                 g_state.skip_flag = True
             print("[緊急スキップ受信]")
         pygame.event.post(pygame.event.Event(KEYDOWN, key=key_map[key_name]))
+        return jsonify({"status": "success"}), 200
     elif key_name in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']:
-        pygame.event.post(pygame.event.Event(USEREVENT, key=key_name))
+        # 数字キーは直接処理（USEREVENTではなく、直接音声再生）
+        print(f"[数字キー受信] {key_name}")
+        
+        if key_name in SOUND_FILES:
+            sound_data = SOUND_FILES[key_name]
+            
+            # 複数音声対応(1-5)
+            if isinstance(sound_data, list):
+                selected = random.choice(sound_data)
+                wav_path = selected["path"]
+                subtitle = selected["subtitle"]
+            # 単一音声(6-0)
+            else:
+                wav_path = sound_data
+                subtitle = SOUND_SUBTITLES.get(key_name, "")
+            
+            print(f"[音声ファイル] {wav_path}")
+            if os.path.exists(wav_path):
+                def play_number_sound():
+                    pumpkin_talk.play_audio_with_aplay(
+                        wav_path,
+                        show_subtitle=True,
+                        subtitle_text=subtitle,
+                        is_final=True,
+                        delete_after=False
+                    )
+                threading.Thread(target=play_number_sound, daemon=True).start()
+                return jsonify({"status": "success"}), 200
+            else:
+                print(f"[エラー] 音声ファイルが見つかりません: {wav_path}")
+                return jsonify({"status": "error", "message": "sound file not found"}), 404
+        else:
+            return jsonify({"status": "error", "message": "invalid key"}), 400
     else:
-        return jsonify({"status": "error"}), 400
+        return jsonify({"status": "error", "message": "unknown key"}), 400
 
     return jsonify({"status": "success"})
 
