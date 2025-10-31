@@ -66,7 +66,7 @@ class SubtitleConfig:
 @dataclass(frozen=True)
 class MotionSoundConfig:
     START_SOUND: str = "sounds/start.wav"
-    START_SUBTITLE: str = "はーっはっはっは！お前ら、待たせたな！俺様がパンプキンだ！"
+    START_SUBTITLE: str = "お前ら、待たせたな！俺様がパンプキンだ！"
     START_DELAY: float = 3.0
     
     END_SOUND: str = "sounds/end.wav"
@@ -84,6 +84,20 @@ SOUND_FILES['7'] = "sounds/OP1.wav"
 SOUND_FILES['8'] = "sounds/OP1.wav"
 SOUND_FILES['9'] = "sounds/OP1.wav"
 SOUND_FILES['0'] = "sounds/OP1.wav"
+
+# 数字キーの字幕設定
+SOUND_SUBTITLES = {
+    '1': "おっ、1番だな！\n気合い入れていくぜ！",
+    '2': "2番か。\nまあ悪くないな。",
+    '3': "3番目ってところか。\nそこそこだな。",
+    '4': "4番選んだのか？\n面白い選択だぜ。",
+    '5': "5番だと？\nちょうど真ん中じゃねえか。",
+    '6': "6番ね。\nいい感じだな。",
+    '7': "ラッキーセブン！\n縁起がいいぜ！",
+    '8': "8番か。\n末広がりでいいな。",
+    '9': "9番だと？\n最後の方じゃねえか。",
+    '0': "0番？\nゼロから始めるってか？"
+}
 
 # ==== State ====
 class State(Enum):
@@ -352,7 +366,7 @@ class PumpkinTalk:
                 )
                 self.subtitle_thread.start()
 
-    def play_audio_with_aplay(self, wav_file: str, show_subtitle: bool = False, subtitle_text: str = "", is_final: bool = False):
+    def play_audio_with_aplay(self, wav_file: str, show_subtitle: bool = False, subtitle_text: str = "", is_final: bool = False, delete_after: bool = True):
         if not os.path.exists(wav_file) or os.path.getsize(wav_file) == 0:
             return
         
@@ -370,7 +384,8 @@ class PumpkinTalk:
             
             with g_state.skip_lock:
                 if g_state.skip_flag:
-                    os.unlink(wav_file)
+                    if delete_after:
+                        os.unlink(wav_file)
                     return
             
             subprocess.run(
@@ -380,7 +395,8 @@ class PumpkinTalk:
                 stderr=subprocess.DEVNULL
             )
             
-            os.unlink(wav_file)
+            if delete_after:
+                os.unlink(wav_file)
                 
         except Exception as e:
             print(f"[ERROR] 音声再生: {e}")
@@ -826,10 +842,18 @@ def main():
                 key_num = event.key
                 if key_num in SOUND_FILES:
                     wav_path = SOUND_FILES[key_num]
+                    subtitle = SOUND_SUBTITLES.get(key_num, "")
                     if os.path.exists(wav_path):
-                        def play_sound():
-                            pumpkin_talk.play_audio_with_aplay(wav_path)
-                        threading.Thread(target=play_sound, daemon=True).start()
+                        def play_number_sound():
+                            # is_final=Trueで音声再生後にa_key_activeをオフ
+                            pumpkin_talk.play_audio_with_aplay(
+                                wav_path,
+                                show_subtitle=True,
+                                subtitle_text=subtitle,
+                                is_final=True,
+                                delete_after=False
+                            )
+                        threading.Thread(target=play_number_sound, daemon=True).start()
         
         # モーション待機処理
         if motion_waiting:
