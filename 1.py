@@ -748,6 +748,8 @@ def get_response():
         return jsonify({"response": g_state.latest_response})
 
 # ==== main ====
+# main関数のwhileループ部分を以下のように修正してください
+
 def main():
     global pumpkin_talk
     print("初期化中...")
@@ -794,7 +796,6 @@ def main():
     float_offset_y = 0.0
     transition_blend = 1.0
     
-    # モーション待機フラグ
     motion_waiting = False
     motion_wait_start = 0.0
     motion_wait_target_state = None
@@ -818,59 +819,88 @@ def main():
     print("起動完了(ストリーミングモード + 緊急スキップ対応)")
 
     while True:
-    t = pygame.time.get_ticks()
-    for event in pygame.event.get():
-        if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-            pygame.quit()
-            sys.exit()
-        elif event.type == KEYDOWN and event.key == K_a:
-            with g_state.audio_lock:
-                g_state.a_key_active = not g_state.a_key_active
-        elif event.type == KEYDOWN:
-            if event.key == K_k:
-                if g_state.state == State.IDLE:
-                    play_motion_sound(motion_config.START_SOUND, motion_config.START_SUBTITLE, pumpkin_talk)
-                    motion_waiting = True
-                    motion_wait_start = time.time()
-                    motion_wait_target_state = State.ENTRY
-            elif event.key == K_l:
-                if g_state.state in [State.NORMAL, State.FULL3, State.FULL6]:
-                    play_motion_sound(motion_config.END_SOUND, motion_config.END_SUBTITLE, pumpkin_talk)
-                    motion_waiting = True
-                    motion_wait_start = time.time()
-                    motion_wait_target_state = State.FINISH
-            elif event.key == K_LEFT:
-                if g_state.state == State.NORMAL:
-                    g_state.state = State.FULL2
-                elif g_state.state == State.FULL3:
-                    g_state.state = State.FULL4
-            elif event.key == K_RIGHT:
-                if g_state.state == State.NORMAL:
-                    g_state.state = State.FULL5
-                elif g_state.state == State.FULL6:
-                    g_state.state = State.FULL7
-            elif event.key == K_q:
-                with g_state.skip_lock:
-                    g_state.skip_flag = True
-                print("[ローカルスキップ実行]")
-            # 数字キーの処理を追加
-            elif event.key in [K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9, K_0]:
-                key_map = {
-                    K_1: '1', K_2: '2', K_3: '3', K_4: '4', K_5: '5',
-                    K_6: '6', K_7: '7', K_8: '8', K_9: '9', K_0: '0'
-                }
-                key_num = key_map[event.key]
-                print(f"[数字キー検出] {key_num}")
+        t = pygame.time.get_ticks()
+        for event in pygame.event.get():
+            if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                pygame.quit()
+                sys.exit()
+            elif event.type == KEYDOWN and event.key == K_a:
+                with g_state.audio_lock:
+                    g_state.a_key_active = not g_state.a_key_active
+            elif event.type == KEYDOWN:
+                if event.key == K_k:
+                    if g_state.state == State.IDLE:
+                        play_motion_sound(motion_config.START_SOUND, motion_config.START_SUBTITLE, pumpkin_talk)
+                        motion_waiting = True
+                        motion_wait_start = time.time()
+                        motion_wait_target_state = State.ENTRY
+                elif event.key == K_l:
+                    if g_state.state in [State.NORMAL, State.FULL3, State.FULL6]:
+                        play_motion_sound(motion_config.END_SOUND, motion_config.END_SUBTITLE, pumpkin_talk)
+                        motion_waiting = True
+                        motion_wait_start = time.time()
+                        motion_wait_target_state = State.FINISH
+                elif event.key == K_LEFT:
+                    if g_state.state == State.NORMAL:
+                        g_state.state = State.FULL2
+                    elif g_state.state == State.FULL3:
+                        g_state.state = State.FULL4
+                elif event.key == K_RIGHT:
+                    if g_state.state == State.NORMAL:
+                        g_state.state = State.FULL5
+                    elif g_state.state == State.FULL6:
+                        g_state.state = State.FULL7
+                elif event.key == K_q:
+                    with g_state.skip_lock:
+                        g_state.skip_flag = True
+                    print("[ローカルスキップ実行]")
+                # 数字キーの処理を追加
+                elif event.key in [K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9, K_0]:
+                    key_map = {
+                        K_1: '1', K_2: '2', K_3: '3', K_4: '4', K_5: '5',
+                        K_6: '6', K_7: '7', K_8: '8', K_9: '9', K_0: '0'
+                    }
+                    key_num = key_map[event.key]
+                    print(f"[数字キー検出] {key_num}")
+                    
+                    if key_num in SOUND_FILES:
+                        sound_data = SOUND_FILES[key_num]
+                        
+                        # 複数音声対応(1-5)
+                        if isinstance(sound_data, list):
+                            selected = random.choice(sound_data)
+                            wav_path = selected["path"]
+                            subtitle = selected["subtitle"]
+                        # 単一音声(6-0)
+                        else:
+                            wav_path = sound_data
+                            subtitle = SOUND_SUBTITLES.get(key_num, "")
+                        
+                        print(f"[音声ファイル] {wav_path}")
+                        if os.path.exists(wav_path):
+                            def play_number_sound():
+                                pumpkin_talk.play_audio_with_aplay(
+                                    wav_path,
+                                    show_subtitle=True,
+                                    subtitle_text=subtitle,
+                                    is_final=True,
+                                    delete_after=False
+                                )
+                            threading.Thread(target=play_number_sound, daemon=True).start()
+                        else:
+                            print(f"[エラー] 音声ファイルが見つかりません: {wav_path}")
+            elif event.type == USEREVENT:
+                # 2.pyからの数字キー送信用（互換性のため残す）
+                key_num = event.key
+                print(f"[USEREVENT数字キー検出] {key_num}")
                 
                 if key_num in SOUND_FILES:
                     sound_data = SOUND_FILES[key_num]
                     
-                    # 複数音声対応(1-3)
                     if isinstance(sound_data, list):
                         selected = random.choice(sound_data)
                         wav_path = selected["path"]
                         subtitle = selected["subtitle"]
-                    # 単一音声(4-0)
                     else:
                         wav_path = sound_data
                         subtitle = SOUND_SUBTITLES.get(key_num, "")
@@ -888,6 +918,7 @@ def main():
                         threading.Thread(target=play_number_sound, daemon=True).start()
                     else:
                         print(f"[エラー] 音声ファイルが見つかりません: {wav_path}")
+        
         # モーション待機処理
         if motion_waiting:
             elapsed = time.time() - motion_wait_start
@@ -929,6 +960,7 @@ def main():
         float_offset_y = base_float_y * transition_blend
         dx = int(float_offset_x)
         dy = int(float_offset_y)
+        
         if g_state.state == State.IDLE:
             pass
             
@@ -1022,6 +1054,7 @@ def main():
                 videos["full7"].frame_accumulator = 0.0
                 g_state.state = State.NORMAL
                 transition_blend = 0.0
+        
         draw_subtitle(screen, font)
         draw_user_subtitle(screen, user_font)
         pygame.display.flip()
