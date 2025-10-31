@@ -66,12 +66,12 @@ class SubtitleConfig:
 @dataclass(frozen=True)
 class MotionSoundConfig:
     START_SOUND: str = "sounds/start.wav"
-    START_SUBTITLE: str = "お前ら、待たせたな！俺様がパンプキンだ！"
-    START_DELAY: float = 3.0
+    START_SUBTITLE: str = "スタート"
+    START_DELAY: float = 1.2
     
     END_SOUND: str = "sounds/end.wav"
-    END_SUBTITLE: str = "なんだ、もう帰るのか？まぁ、多少は楽しかったぞ。せいぜい気を付けて帰れよ。じゃあな。とう！"
-    END_DELAY: float = 7.2
+    END_SUBTITLE: str = "すとっぷ"
+    END_DELAY: float = 1.5
 
 SOUND_FILES = {str(i): f"sounds/sound{i if i > 0 else '0'}.wav" for i in range(10)}
 SOUND_FILES['1'] = "sounds/OP1.wav"
@@ -638,8 +638,9 @@ def play_motion_sound(sound_path: str, subtitle_text: str):
     
     def play():
         try:
-            # 字幕表示
-            show_user_subtitle(subtitle_text)
+            # 字幕表示（下部のパンプキン字幕として表示）
+            with g_state.subtitle_lock:
+                g_state.current_subtitle = subtitle_text
             
             # 音声再生
             subprocess.run(
@@ -648,6 +649,10 @@ def play_motion_sound(sound_path: str, subtitle_text: str):
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
+            
+            # 音声再生後に字幕をクリア
+            with g_state.subtitle_lock:
+                g_state.current_subtitle = ""
         except Exception as e:
             print(f"[ERROR] モーション音声再生: {e}")
     
