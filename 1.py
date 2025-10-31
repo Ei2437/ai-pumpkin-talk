@@ -70,7 +70,7 @@ class MotionSoundConfig:
     START_DELAY: float = 3.0
     
     END_SOUND: str = "sounds/end.wav"
-    END_SUBTITLE: str = "なんだ、もう帰るのか？まぁ、多少は楽しかったぞ。せいぜい気を付けて帰れよ。じゃあな。とう！"
+    END_SUBTITLE: str = "なんだ、もう帰るのか？まぁ、多少は楽しかったぞ。せいぜい気を付けて帰れよ。じゃあな。"
     END_DELAY: float = 7.2
 
 SOUND_FILES = {str(i): f"sounds/sound{i if i > 0 else '0'}.wav" for i in range(10)}
@@ -630,7 +630,7 @@ def handle_a_key_video(vid: AlphaVideo, t: int, seed: int = 0) -> Tuple[np.ndarr
     return vid.get_frame(), dx, dy
 
 # ==== モーション音声再生 ====
-def play_motion_sound(sound_path: str, subtitle_text: str):
+def play_motion_sound(sound_path: str, subtitle_text: str, pumpkin_talk_instance: PumpkinTalk):
     """モーション開始/終了時の音声を再生"""
     if not os.path.exists(sound_path):
         print(f"[WARNING] 音声ファイルが見つかりません: {sound_path}")
@@ -638,9 +638,11 @@ def play_motion_sound(sound_path: str, subtitle_text: str):
     
     def play():
         try:
-            # 字幕表示（下部のパンプキン字幕として表示）
-            with g_state.subtitle_lock:
-                g_state.current_subtitle = subtitle_text
+            # 音声の長さを取得
+            duration = pumpkin_talk_instance.get_audio_duration(sound_path)
+            
+            # 字幕表示（通常の応答と同じ方式で）
+            pumpkin_talk_instance.display_subtitle_gradually(subtitle_text, duration)
             
             # 音声再生
             subprocess.run(
@@ -649,10 +651,6 @@ def play_motion_sound(sound_path: str, subtitle_text: str):
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
-            
-            # 音声再生後に字幕をクリア
-            with g_state.subtitle_lock:
-                g_state.current_subtitle = ""
         except Exception as e:
             print(f"[ERROR] モーション音声再生: {e}")
     
@@ -799,14 +797,14 @@ def main():
                 if event.key == K_k:
                     if g_state.state == State.IDLE:
                         # 音声再生 + 待機開始
-                        play_motion_sound(motion_config.START_SOUND, motion_config.START_SUBTITLE)
+                        play_motion_sound(motion_config.START_SOUND, motion_config.START_SUBTITLE, pumpkin_talk)
                         motion_waiting = True
                         motion_wait_start = time.time()
                         motion_wait_target_state = State.ENTRY
                 elif event.key == K_l:
                     if g_state.state in [State.NORMAL, State.FULL3, State.FULL6]:
                         # 音声再生 + 待機開始
-                        play_motion_sound(motion_config.END_SOUND, motion_config.END_SUBTITLE)
+                        play_motion_sound(motion_config.END_SOUND, motion_config.END_SUBTITLE, pumpkin_talk)
                         motion_waiting = True
                         motion_wait_start = time.time()
                         motion_wait_target_state = State.FINISH
