@@ -71,7 +71,7 @@ class MotionSoundConfig:
     
     END_SOUND: str = "sounds/end.wav"
     END_SUBTITLE: str = "なんだ、もう帰るのか？まぁ、多少は楽しかったぞ。せいぜい気を付けて帰れよ。じゃあな。とう！"
-    END_DELAY: float = 7.0
+    END_DELAY: float = 6.7
 
 SOUND_FILES = {str(i): f"sounds/sound{i if i > 0 else '0'}.wav" for i in range(10)}
 SOUND_FILES['1'] = "sounds/OP1.wav"
