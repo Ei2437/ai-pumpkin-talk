@@ -72,7 +72,7 @@ class MotionSoundConfig:
     
     END_SOUND: str = "sounds/end.wav"
     END_SUBTITLE: str = "残念だが、そろそろ時間だ。まぁ、多少は楽しかったぞ。せいぜい気を付けて帰れよ。じゃあな。"
-    END_DELAY: float = 7.2
+    END_DELAY: float = 7.4
 
 SOUND_FILES = {
     '1': [
