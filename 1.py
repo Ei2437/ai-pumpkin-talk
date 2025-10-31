@@ -67,11 +67,11 @@ class SubtitleConfig:
 @dataclass(frozen=True)
 class MotionSoundConfig:
     START_SOUND: str = "sounds/start.wav"
-    START_SUBTITLE: str = "はーっはっはっは！お前ら、待たせたな！俺様がパンプキンだ！"
+    START_SUBTITLE: str = "はーっはっはっはっ！お前ら、待たせたな！俺様がパンプキンだ！"
     START_DELAY: float = 3.0
     
     END_SOUND: str = "sounds/end.wav"
-    END_SUBTITLE: str = "なんだ、もう帰るのか？まぁ、多少は楽しかったぞ。せいぜい気を付けて帰れよ。じゃあな。"
+    END_SUBTITLE: str = "残念だが、そろそろ時間だ。まぁ、多少は楽しかったぞ。せいぜい気を付けて帰れよ。じゃあな。"
     END_DELAY: float = 7.2
 
 SOUND_FILES = {
