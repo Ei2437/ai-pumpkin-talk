@@ -193,7 +193,7 @@ class ConfigLoader:
         return self.config.get("advanced", {})
 
 class PumpkinTalk:
-    SENTENCE_SPLITTER = re.compile(r'([。?！？\n])')
+    SENTENCE_SPLITTER = re.compile(r'([。!?！？\n])')
     
     def __init__(self, config_path: str = "pumpkin.json"):
         self.config_loader = ConfigLoader(config_path)
